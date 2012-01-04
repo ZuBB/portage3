@@ -1,8 +1,5 @@
-# Library supporting analytics scripts running on CloudDB
 #
-# Copyright(c) 2011 by Appcelerator, Inc. All Rights Reserved.
-# This is proprietary software. Do not redistribute without express
-# written permission.
+# Library supporting analytics scripts running on CloudDB
 #
 # Initial Author: Vasyl Zuzyak, 12/12/11
 # Latest Modification: Ronen Botzer, 12/15/11
