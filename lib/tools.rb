@@ -7,9 +7,9 @@
 # Initial Author: Vasyl Zuzyak, 12/12/11
 # Latest Modification: Ronen Botzer, 12/15/11
 #
-require 'rubygems'
-require 'json' unless Object.const_defined?(:JSON)
+require 'time' unless Object.const_defined?(:Time)
 
+TIMESTAMP = "%Y%m%d-%H%M%S"
 STORAGE = {
     :home_folder => 'portage3_data',
     :portage_home => 'portage',
@@ -17,7 +17,7 @@ STORAGE = {
     :root => '/dev/shm'
 }
 
-def some_stub_func()
-    # do nothing
+def get_timestamp()
+    return Time.now.strftime(TIMESTAMP)
 end
 

@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 #
-# here should go some comment
+# Here should go some comment
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'fileutils'
 require 'optparse'
 require 'tools'
-require 'time'
 
 options = {
     :download_snapshot => false,
@@ -99,7 +98,7 @@ if options[:download_snapshot]
     )
 
     if file_location.index('latest') != nil
-        file_location.gsub!("latest", Time.now.strftime("%Y%m%d-%H%M%S"))
+        file_location.gsub!("latest", get_timestamp())
     end
 
     `wget -O #{file_location} #{options[:download_url]}`
