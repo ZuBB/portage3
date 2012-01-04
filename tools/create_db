@@ -9,8 +9,8 @@
 # Initial Author: Maxim Negadaylov, 10/20/11
 # Latest Modification: Ronen Botzer, 12/19/11
 #
-require 'rubygems'
 require 'optparse'
+require 'rubygems'
 require 'sqlite3'
 
 File.delete("../dbs/test2.db") if File.exist?("../dbs/test2.db")

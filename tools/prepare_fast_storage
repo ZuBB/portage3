@@ -1,19 +1,24 @@
 #!/usr/bin/env ruby
-require 'optparse'
+#
+# here should go some comment
+#
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'fileutils'
+require 'optparse'
+require 'tools'
 require 'time'
 
 options = {
     :download_snapshot => false,
-    :home_folder => 'portage3_data',
     :download_url => 'http://de-mirror.org/gentoo/snapshots/portage-latest.tar.bz2',
-    :portage_home => 'portage',
     :recreate_tree => false,
-    :required_space => 700,
-    :snapshots_home => '../snapshots/',
+    :snapshots_home => '../../snapshots/',
     :snapshot_name => 'portage-latest.tar.bz2',
-    :storage => '/dev/shm',
+    :storage => {}
 }
+
+# lets merge stuff from tools lib
+options[:storage].merge!(STORAGE)
 
 OptionParser.new do |opts|
     # help header
@@ -45,44 +50,44 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-print "Checking if '#{options[:storage]}' is a symlink on target system.. "
-if File.symlink?(options[:storage])
-    options[:storage] = File.readlink(options[:storage])
+print "Checking if '#{options[:storage][:root]}' is a symlink on target system.. "
+if File.symlink?(options[:storage][:root])
+    options[:storage][:root] = File.readlink(options[:storage][:root])
     puts "YES"
 else
     puts "NO"
 end
 
-print "Checking if '#{options[:storage]}' path is  present on target system.. "
-if File.exist?(options[:storage])
+print "Checking if '#{options[:storage][:root]}' path is  present on target system.. "
+if File.exist?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage]}' location can not be found on target system"
+    puts "ERROR: '#{options[:storage][:root]}' location can not be found on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage]}' is a directory on target system.. "
-if File.directory?(options[:storage])
+print "Checking if '#{options[:storage][:root]}' is a directory on target system.. "
+if File.directory?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage]}' is not a directory on target system"
+    puts "ERROR: '#{options[:storage][:root]}' is not a directory on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage]}' is writable on target system.. "
-if File.writable?(options[:storage])
+print "Checking if '#{options[:storage][:root]}' is writable on target system.. "
+if File.writable?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage]}' is not writable on target system"
+    puts "ERROR: '#{options[:storage][:root]}' is not writable on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage]}' has enough free space on target system.. "
-space_available = `df -kP #{options[:storage]}`.split("\n")[1].split(" ")[3].to_i
-if space_available > options[:required_space] * 1024
+print "Checking if '#{options[:storage][:root]}' has enough free space on target system.. "
+space_available = `df -kP #{options[:storage][:root]}`.split("\n")[1].split(" ")[3].to_i
+if space_available > options[:storage][:required_space] * 1024
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage]}' does not have enough free space"
+    puts "ERROR: '#{options[:storage][:root]}' does not have enough free space"
     exit(1)
 end
 
@@ -100,14 +105,14 @@ if options[:download_snapshot]
     `wget -O #{file_location} #{options[:download_url]}`
 end
 
-home_path = File.join(options[:storage], options[:home_folder])
-full_path = File.join(home_path, options[:portage_home])
+home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
+full_path = File.join(home_path, options[:storage][:portage_home])
 
 if options[:recreate_tree] || !File.exist?(home_path) || !File.exist?(full_path)
     FileUtils.rm_r(full_path) if File.exist?(full_path)
     Dir.mkdir(home_path) if !File.exist?(home_path)
-    print "Sarting to exctact portage snapshots.. "
-    `tar xjf #{file_location} -C #{full_path}`
+    print "Starting to exctact portage snapshots.. "
+    `tar xjf #{file_location} -C #{home_path}`
     puts "Done"
 end
 
