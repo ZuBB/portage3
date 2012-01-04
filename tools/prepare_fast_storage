@@ -33,6 +33,10 @@ OptionParser.new do |opts|
         options[:recreate_tree] = true
     end
 
+    opts.on("-t", "--temp-dir STRING", "Dir where portage tree will be extraced") do |value|
+        options[:storage][:root] = value
+    end
+
     opts.on("-u", "--url STRING", "URL where snapshot is located") do |value|
         options[:download_url] = value
     end
@@ -57,7 +61,7 @@ else
     puts "NO"
 end
 
-print "Checking if '#{options[:storage][:root]}' path is  present on target system.. "
+print "Checking if '#{options[:storage][:root]}' path is present on target system.. "
 if File.exist?(options[:storage][:root])
     puts "OK"
 else
@@ -111,6 +115,7 @@ if options[:recreate_tree] || !File.exist?(home_path) || !File.exist?(full_path)
     FileUtils.rm_r(full_path) if File.exist?(full_path)
     Dir.mkdir(home_path) if !File.exist?(home_path)
     print "Starting to exctact portage snapshots.. "
+    # TODO passed file should be 'tar.bz2' format
     `tar xjf #{file_location} -C #{home_path}`
     puts "Done"
 end
