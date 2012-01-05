@@ -18,3 +18,14 @@ def get_timestamp()
     return Time.now.strftime(TIMESTAMP)
 end
 
+def get_last_inserted_id(database)
+    return database.execute("SELECT last_insert_rowid();").flatten[0]
+end
+
+def get_clean_value(line)
+    value = line.split('=')[1]
+    value = value.rchomp('"').chomp('"')
+    value = value.rchomp('\'').chomp('\'')
+    return value
+end
+
