@@ -1,70 +1,224 @@
 #!/usr/bin/env ruby
 #
-# Script that finds and kill runaway EMR jobs
+# Here should go some comment
 #
-# Copyright(c) 2011 by Appcelerator, Inc. All Rights Reserved.
-# This is proprietary software. Do not redistribute without express
-# written permission.
+# Initial Author: Vasyl Zuzyak, 01/04/12
+# Latest Modification: Vasyl Zuzyak, 01/06/12
 #
-# Initial Author: Maxim Negadaylov, 10/20/11
-# Latest Modification: Ronen Botzer, 12/19/11
-#
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'optparse'
 require 'rubygems'
 require 'sqlite3'
+require 'tools'
 
-File.delete("../dbs/test2.db") if File.exist?("../dbs/test2.db")
-db = SQLite3::Database.new("/tmp/ramdisk/test2.db")
+# hash with sql code of all tables
+databases = {}
+# hash with options
+options = {
+    :db_filename => File.join(
+        STORAGE[:root],
+        STORAGE[:home_folder],
+        "test-#{get_timestamp()}.sqlite"
+    ),
+    :verbose => false
+}
 
-sql = <<SQL
+databases["categories"] = <<SQL_TABLE_CATEGORIES
 create table categories (
-    id INTEGER NOT NULL PRIMARY KEY,
-    category_name text,
-    description text
+    id INTEGER PRIMARY KEY,
+    category_name text NOT NULL,
+    description text NOT NULL
 );
+SQL_TABLE_CATEGORIES
 
+databases["packages"] = <<SQL_TABLE_PACKAGES
 create table packages (
-    id INTEGER NOT NULL PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     category_id INTEGER NOT NULL,
-    package_name text,
-    description text,
-    homepage text,
-    licence INTEGER
+    package_name text NOT NULL,
+    description text /*NOT NULL*/,
+    homepage text /*NOT NULL*/,
+    maintainer_id INTEGER /*NOT NULL*/
 );
-SQL
-    #licence INTEGER NOT NULL
+SQL_TABLE_PACKAGES
 
-db.execute_batch(sql)
+databases["maintainers"] = <<SQL_TABLE_MAINTAINERS
+create table maintainers (
+    id INTEGER PRIMARY KEY,
+    email text /*UNIQUE NOT NULL*/,
+    name text /*NOT NULL*/
+);
+SQL_TABLE_MAINTAINERS
 
-portage_home = "/tmp/ramdisk/portage/"
-a = []
-start = Time.now
-Dir.new(portage_home).sort.each  { |x|
-    next if x == '.'
-    next if x == '..'
-    next if File.file?(portage_home + x)
-    if x.index('-') == nil
-        a.push(x)
-        puts "skipping #(x)"
-        next
+databases["ebuilds"] = <<SQL_TABLE_EBUILDS
+create table ebuilds (
+    id INTEGER PRIMARY KEY,
+    package_id INTEGER NOT NULL,
+    version text NOT NULL,
+    --licence_id INTEGER NOT NULL,
+    licence text NOT NULL,
+    data blob /*NOT NULL*/,
+    ebuild_state INTEGER NOT NULL,
+    architecture INTEGER NOT NULL,
+    mtime INTEGER NOT NULL,
+    mauthor text NOT NULL,
+    eapi INTEGER /*NOT NULL*/,
+    slot INTEGER NOT NULL
+    -- depend TODO
+    -- rdepend TODO
+    -- sha1/md5 INTEGER NOT NULL
+    -- overlay?
+    -- size of dwonloads?
+    -- compile_flags?
+);
+SQL_TABLE_EBUILDS
+
+databases["use_flags"] = <<SQL_TABLE_USE_FLAGS
+Create table use_flags (
+    id INTEGER PRIMARY KEY,
+    flag_name text NOT NULL,
+    flag_description text NOT NULL
+);
+SQL_TABLE_USE_FLAGS
+
+databases["use_flags2ebuilds"] = <<SQL_TABLE_USE_FLAGS2EBUILDS
+Create table use_flags2ebuilds (
+    id INTEGER PRIMARY KEY,
+    flag_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL
+);
+SQL_TABLE_USE_FLAGS2EBUILDS
+
+databases["architectures"] = <<SQL_TABLE_EBUILD_ARCHITECTURES
+Create table architectures (
+    id INTEGER PRIMARY KEY,
+    architecture text NOT NULL
+    -- smth else?
+);
+SQL_TABLE_EBUILD_ARCHITECTURES
+
+databases["ebuilds2architectures"] = <<SQL_TABLE_EBUILD_EBUILDS2ARCHITECTURES
+Create table ebuilds2architectures (
+    id INTEGER PRIMARY KEY,
+    ebuild_id INTEGER NOT NULL,
+    architecture_id INTEGER NOT NULL
+);
+SQL_TABLE_EBUILD_EBUILDS2ARCHITECTURES
+
+databases["ebuild_states"] = <<SQL_TABLE_EBUILD_STATES
+Create table ebuild_states (
+    id INTEGER PRIMARY KEY,
+    state_name text NOT NULL,
+    state_description text /*NOT NULL*/
+);
+SQL_TABLE_EBUILD_STATES
+
+databases["ebuild_states2architecture"] = <<SQL_TABLE_EBUILD_STATES2ARCHITECTURE
+Create table ebuild_states2architecture (
+    id INTEGER PRIMARY KEY,
+    ebuild_architecture_id INTEGER NOT NULL,
+    ebuild_state_id INTEGER NOT NULL
+);
+SQL_TABLE_EBUILD_STATES2ARCHITECTURE
+
+databases["licences"] = <<SQL_TABLE_LICENCES
+create table licences (
+    id INTEGER PRIMARY KEY,
+    license_name text NOT NULL
+    -- url text ?,
+    -- content blob /*zipped data*/ ?
+);
+SQL_TABLE_LICENCES
+
+databases["licences2ebuilds"] = <<SQL_TABLE_LICENCES2EBUILDS
+create table licences2ebuilds (
+    id INTEGER PRIMARY KEY,
+    license_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL
+);
+SQL_TABLE_LICENCES2EBUILDS
+
+databases["sets"] = <<SQL_TABLE_SETS
+create table sets (
+    id INTEGER PRIMARY KEY,
+    set_name text NOT NULL
+);
+SQL_TABLE_SETS
+
+databases["sets_content"] = <<SQL_TABLE_SETS_CONTENT
+create table sets_content (
+    id INTEGER PRIMARY KEY,
+    set_id text INTEGER NOT NULL,
+    package_id text INTEGER NOT NULL
+);
+SQL_TABLE_SETS_CONTENT
+
+OptionParser.new do |opts|
+    # help header
+    opts.banner = " Usage: purge_s3_data [options]\n"
+    opts.separator " A script that purges outdated data from s3 bucket\n"
+
+    # parsing 'db_filename' option if present
+    opts.on("-f", "--database-file STRING", "Path where new database file will be created") do |value|
+        if File.exists?(value)
+            puts "ERROR: file '#{value}' already exists!"
+            exit(1)
+        end
+
+        base_dir = File.dirname(value)
+
+        if !File.exists?(base_dir)
+            puts "ERROR: directory '#{base_dir}' does not exist!"
+            exit(1)
+        end
+
+        if !File.writable?(base_dir)
+            puts "ERROR: directory '#{base_dir}' is not writable!"
+            exit(1)
+        end
+
+        options[:db_filename] = value
     end
 
-    db.execute("INSERT INTO categories (category_name) VALUES ('#{x}');")
-    last_id = db.execute("SELECT last_insert_rowid();").flatten[0]
+    # parsing 'verbose' option if present
+    opts.on("-v", "--[no]-verbose", "Versbose mode") do |value|
+        options[:verbose] = value
+    end
 
-    Dir.new(portage_home + x).sort.each  { |xz|
-        next if File.file?(xz)
-        db.execute("INSERT INTO packages (category_id, package_name) VALUES (#{last_id}, '#{xz}');")
-        puts "finished processing of `#{xz}`"
-        puts "-"*20 
-    }
+    # parsing 'help' option if present
+    opts.on_tail("-h", "--help", "Show this message") do
+        puts opts
+        exit
+    end
+end.parse!
 
-    puts "finished processing of `#{x}`" 
-    puts "="*20 
-}
-finish = Time.now
+sql = <<SQL_ALL_TABLES
+#{databases["categories"]}
+#{databases["packages"]}
+#{databases["maintainers"]}
+#{databases["ebuilds"]}
+#{databases["use_flags"]}
+#{databases["use_flags2ebuilds"]}
+#{databases["architectures"]}
+#{databases["ebuilds2architectures"]}
+#{databases["ebuild_states"]}
+#{databases["ebuild_states2architecture"]}
+#{databases["licences"]}
+#{databases["licences2ebuilds"]}
+SQL_ALL_TABLES
 
-puts start
-puts finish
+# print sql if verbose is set
+puts sql if options[:verbose]
 
-p db.execute("SELECT * FROM packages where category_id=153;")
+begin
+    db = SQLite3::Database.new(options[:db_filename])
+    db.execute_batch(sql)
+    puts 'Everything is OK. Database was created at:'
+    puts options[:db_filename]
+rescue Exception => msg
+    File.delete(options[:db_filename])
+    puts msg
+ensure
+    db.close() if db.closed? == false
+end
+
