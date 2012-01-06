@@ -1,0 +1,213 @@
+#!/usr/bin/env ruby
+#
+# Here should go some comment
+#
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+require 'optparse'
+require 'rubygems'
+require 'nokogiri'
+require 'sqlite3'
+require 'tools'
+
+def get_ebuild_mtime(line, structured_ebuild_data)
+    if structured_ebuild_data.has_key?('mtime') == false
+        if line.index('# $Header:') == 0
+            date_str = line.match(/\d{4}\/\d\d\/\d\d \d\d:\d\d:\d\d/)
+            structured_ebuild_data["mtime"] = date_str.to_s
+        end
+    end
+
+    return structured_ebuild_data
+end
+
+def get_ebuild_author(line, structured_ebuild_data)
+    if structured_ebuild_data.has_key?('author') == false
+        if line.index('# $Header:') == 0
+            author = line.match(/:\d\d (\w+) Exp \$$/)[1]
+            structured_ebuild_data["author"] = author.to_s
+        end
+    end
+
+    return structured_ebuild_data
+end
+
+def get_eapi(line, structured_ebuild_data)
+    if structured_ebuild_data.has_key?('eapi') == false
+        if line.index('EAPI') != nil
+            structured_ebuild_data["eapi"] = get_clean_value(line)
+        end
+    end
+
+    return structured_ebuild_data
+end
+
+def get_slot(line, structured_ebuild_data)
+    if structured_ebuild_data.has_key?('slot') == false
+        if line.index('SLOT') != nil
+            structured_ebuild_data["slot"] = get_clean_value(line)
+        end
+    end
+
+    return structured_ebuild_data
+end
+
+def get_license(line, structured_ebuild_data)
+    if structured_ebuild_data.has_key?('licence') == false
+        if line.index('LICENSE') != nil
+            structured_ebuild_data["licence"] = get_clean_value(line)
+        end
+    end
+
+    return structured_ebuild_data
+end
+
+def get_ebuild_version(ebuild_filename, structured_ebuild_data)
+    match = ebuild_filename,match('-\d')
+    if match == nil
+        puts 'Failed to get version for ' + ebuild_filename
+    else
+        position = ebuild_filename,index(match)
+        structured_ebuild_data["version"] = line[-(position + 1)..-1]
+    end
+
+    return structured_ebuild_data
+end
+
+def parse_ebuild(package_path, database)
+    Dir.glob(package_path + '/*.ebuild').sort.each do |ebuild|
+        ebuild_data = {}
+        ebuild_data = get_ebuild_version(ebuild, ebuild_data)
+        begin
+            file = File.new(ebuild, "r")
+            while (line = file.gets)
+                ebuild_data = get_ebuild_mtime(line, ebuild_data)
+                ebuild_data = get_ebuild_author(line, ebuild_data)
+                ebuild_data = get_eapi(line, ebuild_data)
+                ebuild_data = get_license(line, ebuild_data)
+                ebuild_data = get_slot(line, ebuild_data)
+                #ebuild_state INTEGER NOT NULL,
+                #architecture INTEGER NOT NULL,
+            end
+            file.close
+        rescue => err
+            puts "Exception: #{err}"
+            err
+        end
+    end
+end
+
+# hash with options
+options = {
+    :db_filename => File.join(
+        STORAGE[:root],
+        STORAGE[:home_folder],
+        "test-#{get_timestamp()}.sqlite"
+    ),
+    :quiet => true,
+    :storage => {}
+}
+
+# lets merge stuff from tools lib
+options[:storage].merge!(STORAGE)
+
+OptionParser.new do |opts|
+    # help header
+    opts.banner = " Usage: purge_s3_data [options]\n"
+    opts.separator " A script that purges outdated data from s3 bucket\n"
+
+    opts.on("-f", "--database-file STRING", "Path where new database file will be created") do |value|
+        # TODO check if path id valid
+        options[:db_filename] = value
+    end
+
+    # parsing 'quite' option if present
+    opts.on("-q", "--quiet", "Quiet mode") do |value|
+        options[:quiet] = true
+    end
+
+    # parsing 'help' option if present
+    opts.on_tail("-h", "--help", "Show this message") do
+        puts opts
+        exit
+    end
+end.parse!
+
+db = SQLite3::Database.new(options[:db_filename])
+
+#/dev/shm/portage3_data/portage/profiles/arch/
+#* stable
+#* unstable
+#* hardmasked
+#* missed for current architecture
+
+home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
+full_path = File.join(home_path, options[:storage][:portage_home])
+
+start = Time.now
+
+Dir.new(full_path).sort.each  { |x|
+    next if x == '.'
+    next if x == '..'
+    next if File.file?(full_path + x)
+    if x.index('-') == nil
+        #a.push(x)
+        puts "skipping #(x)"
+        next
+    end
+
+    metadata_path = File.join(full_path, x, "metadata.xml")
+    if File.exists?(metadata_path) && File.readable?(metadata_path)
+        metadata = IO.read(metadata_path)
+        xml_doc = Nokogiri::XML(metadata)
+        # TODO hardcoded 'en'
+        description_node = xml_doc.xpath('//longdescription[@lang="en"]')
+        description = description_node.children.strip.gsub(/\s{1,}/, ' ')
+    end
+
+    db.execute('INSERT INTO categories (category_name, description) VALUES ("#{x}", "#{description}");')
+    last_id = get_last_inserted_id(db)
+
+    Dir.new(full_path + x).sort.each  { |xz|
+        if File.file?(xz)
+            metadata_path = File.join(full_path, x, xz, "metadata.xml")
+            if File.exists?(metadata_path) && File.readable?(metadata_path)
+                metadata = IO.read(metadata_path)
+                xml_doc = Nokogiri::XML(metadata)
+                email = xml_doc.xpath('//email').children
+                name = xml_doc.xpath('//name').children
+                if email.size > 0 && name.size > 0
+                    sql = <<SALO
+                        INSERT INTO maintainers
+                        (email, name)
+                        VALUES ("#{email}", "#{name}");
+SALO
+                    db.execute(sql)
+                    maintainer_id = get_last_inserted_id(db)
+                end
+            end
+
+        end
+        sql = <<SQL
+            INSERT INTO packages
+            (category_id, package_name, maintainer_id)
+            VALUES (#{last_id}, '#{xz}', #{maintainer_id});
+SQL
+        db.execute(sql)
+
+        puts "finished processing of `#{xz}`"
+        puts "-"*20 
+
+        # TODO pass category_id
+        package_path = File.join(full_path, x, xz)
+        parse_ebuild(package_path, db)
+    }
+
+    puts "finished processing of `#{x}`" 
+    puts "="*20 
+}
+finish = Time.now
+
+puts start
+puts finish
+
+p db.execute("SELECT * FROM packages where category_id=153;")
