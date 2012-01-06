@@ -89,21 +89,21 @@ Create table use_flags2ebuilds (
 );
 SQL_TABLE_USE_FLAGS2EBUILDS
 
-databases["architectures"] = <<SQL_TABLE_EBUILD_ARCHITECTURES
+databases["architectures"] = <<SQL_TABLE_ARCHITECTURES
 Create table architectures (
     id INTEGER PRIMARY KEY,
     architecture text NOT NULL
     -- smth else?
 );
-SQL_TABLE_EBUILD_ARCHITECTURES
+SQL_TABLE_ARCHITECTURES
 
-databases["ebuilds2architectures"] = <<SQL_TABLE_EBUILD_EBUILDS2ARCHITECTURES
+databases["ebuilds2architectures"] = <<SQL_TABLE_EBUILDS2ARCHITECTURES
 Create table ebuilds2architectures (
     id INTEGER PRIMARY KEY,
     ebuild_id INTEGER NOT NULL,
     architecture_id INTEGER NOT NULL
 );
-SQL_TABLE_EBUILD_EBUILDS2ARCHITECTURES
+SQL_TABLE_EBUILDS2ARCHITECTURES
 
 databases["ebuild_states"] = <<SQL_TABLE_EBUILD_STATES
 Create table ebuild_states (
@@ -113,13 +113,13 @@ Create table ebuild_states (
 );
 SQL_TABLE_EBUILD_STATES
 
-databases["ebuild_states2architecture"] = <<SQL_TABLE_EBUILD_STATES2ARCHITECTURE
+databases["ebuild_states2architectures"] = <<SQL_TABLE_EBUILD_STATES2ARCH
 Create table ebuild_states2architecture (
     id INTEGER PRIMARY KEY,
     ebuild_architecture_id INTEGER NOT NULL,
     ebuild_state_id INTEGER NOT NULL
 );
-SQL_TABLE_EBUILD_STATES2ARCHITECTURE
+SQL_TABLE_EBUILD_STATES2ARCH
 
 databases["licences"] = <<SQL_TABLE_LICENCES
 create table licences (
@@ -159,7 +159,8 @@ OptionParser.new do |opts|
     opts.separator " A script that purges outdated data from s3 bucket\n"
 
     # parsing 'db_filename' option if present
-    opts.on("-f", "--database-file STRING", "Path where new database file will be created") do |value|
+    opts.on("-f", "--database-file STRING",
+            "Path where new database file will be created") do |value|
         if File.exists?(value)
             puts "ERROR: file '#{value}' already exists!"
             exit(1)
