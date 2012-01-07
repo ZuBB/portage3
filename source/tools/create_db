@@ -92,7 +92,7 @@ SQL_TABLE_USE_FLAGS2EBUILDS
 databases["architectures"] = <<SQL_TABLE_ARCHITECTURES
 Create table architectures (
     id INTEGER PRIMARY KEY,
-    architecture text NOT NULL
+    architecture text UNIQUE NOT NULL
     -- smth else?
 );
 SQL_TABLE_ARCHITECTURES
