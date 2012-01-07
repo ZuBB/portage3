@@ -1,8 +1,8 @@
 #
 # Library supporting analytics scripts running on CloudDB
 #
-# Initial Author: Vasyl Zuzyak, 12/12/11
-# Latest Modification: Ronen Botzer, 12/15/11
+# Initial Author: Vasyl Zuzyak, 01/04/12
+# Latest Modification: Vasyl Zuzyak, 01/07/12
 #
 require 'time' unless Object.const_defined?(:Time)
 
