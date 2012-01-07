@@ -13,7 +13,7 @@ require 'tools'
 
 # hash with sql code of all tables
 databases = {}
-# hash with options
+# hash with default options
 options = {
     :db_filename => File.join(
         STORAGE[:root],
@@ -26,7 +26,7 @@ options = {
 databases["categories"] = <<SQL_TABLE_CATEGORIES
 create table categories (
     id INTEGER PRIMARY KEY,
-    category_name text NOT NULL,
+    category_name text UNIQUE NOT NULL,
     description text NOT NULL
 );
 SQL_TABLE_CATEGORIES
@@ -34,11 +34,13 @@ SQL_TABLE_CATEGORIES
 databases["packages"] = <<SQL_TABLE_PACKAGES
 create table packages (
     id INTEGER PRIMARY KEY,
+    -- combination of next two fields should be unique
     category_id INTEGER NOT NULL,
     package_name text NOT NULL,
-    description text /*NOT NULL*/,
-    homepage text /*NOT NULL*/,
-    maintainer_id INTEGER /*NOT NULL*/
+    description text NOT NULL,
+    homepage text NOT NULL,
+    maintainer_id INTEGER,
+    CONSTRAINT unq UNIQUE (category_id, package_name)
 );
 SQL_TABLE_PACKAGES
 
