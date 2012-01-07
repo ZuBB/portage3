@@ -58,7 +58,7 @@ create table ebuilds (
     --licence_id INTEGER NOT NULL,
     licence text NOT NULL,
     data blob /*NOT NULL*/,
-    ebuild_state INTEGER NOT NULL,
+    keyword_id INTEGER NOT NULL,
     architecture INTEGER NOT NULL,
     mtime INTEGER NOT NULL,
     mauthor text NOT NULL,
@@ -105,21 +105,21 @@ Create table ebuilds2architectures (
 );
 SQL_TABLE_EBUILDS2ARCHITECTURES
 
-databases["ebuild_states"] = <<SQL_TABLE_EBUILD_STATES
-Create table ebuild_states (
+databases["keywords"] = <<SQL_TABLE_KEYWORDS
+Create table keywords (
     id INTEGER PRIMARY KEY,
-    state_name text NOT NULL,
-    state_description text /*NOT NULL*/
+    keyword text UNIQUE NOT NULL/*,
+    keyword_description text NOT NULL*/
 );
-SQL_TABLE_EBUILD_STATES
+SQL_TABLE_KEYWORDS
 
-databases["ebuild_states2architectures"] = <<SQL_TABLE_EBUILD_STATES2ARCH
-Create table ebuild_states2architecture (
+databases["keywords2architectures"] = <<SQL_TABLE_KEYWORDS2ARCH
+Create table keywords2architectures (
     id INTEGER PRIMARY KEY,
     ebuild_architecture_id INTEGER NOT NULL,
-    ebuild_state_id INTEGER NOT NULL
+    keyword_id INTEGER NOT NULL
 );
-SQL_TABLE_EBUILD_STATES2ARCH
+SQL_TABLE_KEYWORDS2ARCH
 
 databases["licences"] = <<SQL_TABLE_LICENCES
 create table licences (
@@ -202,8 +202,8 @@ sql = <<SQL_ALL_TABLES
 #{databases["use_flags2ebuilds"]}
 #{databases["architectures"]}
 #{databases["ebuilds2architectures"]}
-#{databases["ebuild_states"]}
-#{databases["ebuild_states2architecture"]}
+#{databases["keywords"]}
+#{databases["keywords2architectures"]}
 #{databases["licences"]}
 #{databases["licences2ebuilds"]}
 SQL_ALL_TABLES
