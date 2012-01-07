@@ -2,6 +2,9 @@
 #
 # Here should go some comment
 #
+# Initial Author: Vasyl Zuzyak, 01/04/12
+# Latest Modification: Vasyl Zuzyak, 01/06/12
+#
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'fileutils'
 require 'optparse'
@@ -11,7 +14,7 @@ options = {
     :download_snapshot => false,
     :download_url => 'http://de-mirror.org/gentoo/snapshots/portage-latest.tar.bz2',
     :recreate_tree => false,
-    :snapshots_home => '../../snapshots/',
+    :snapshots_home => '../../snapshots',
     :snapshot_name => 'portage-latest.tar.bz2',
     :storage => {}
 }
@@ -38,6 +41,7 @@ OptionParser.new do |opts|
     end
 
     opts.on("-u", "--url STRING", "URL where snapshot is located") do |value|
+        # TODO process only 'tar.bz2' archives
         options[:download_url] = value
     end
 
@@ -94,18 +98,17 @@ else
     exit(1)
 end
 
+file_location = File.join(options[:snapshots_home], options[:snapshot_name])
+
 if options[:download_snapshot]
     puts "Starting download latest portage snapshot.."
-    file_location = File.join(
-        options[:snapshots_home],
-        options[:snapshot_name]
-    )
 
     if file_location.index('latest') != nil
         file_location.gsub!("latest", get_timestamp())
     end
 
     `wget -O #{file_location} #{options[:download_url]}`
+    #TODO soft link to file that we just downloaded
 end
 
 home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
