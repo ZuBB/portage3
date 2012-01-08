@@ -49,9 +49,19 @@ create table maintainers (
     id INTEGER PRIMARY KEY,
     name text,
     email text,
+    -- this param can not be specified if without previous ones
+    upstream INTEGER,
     CONSTRAINT unq UNIQUE (name, email)
 );
 SQL_TABLE_MAINTAINERS
+
+databases["maintainers2ebuilds"] = <<SQL_TABLE_MAINTAINERS2EBUILDS
+create table maintainers2ebuilds (
+    id INTEGER PRIMARY KEY,
+    maintainer_id INTEGER,
+    package_id INTEGER
+);
+SQL_TABLE_MAINTAINERS2EBUILDS
 
 databases["ebuilds"] = <<SQL_TABLE_EBUILDS
 create table ebuilds (
@@ -200,6 +210,7 @@ sql = <<SQL_ALL_TABLES
 #{databases["categories"]}
 #{databases["packages"]}
 #{databases["maintainers"]}
+#{databases["maintainers2ebuilds"]}
 #{databases["ebuilds"]}
 #{databases["use_flags"]}
 #{databases["use_flags2ebuilds"]}
