@@ -61,7 +61,7 @@ end
 def fill_categories_table(database, portage_home)
     queries_array = []
     Dir.new(portage_home).sort.each do |category|
-        # process all another items
+        # check if current item is valid for us
         next if is_category_invalid(portage_home, category)
 
         # process all another items
@@ -85,13 +85,57 @@ SQL
     database.execute_batch(queries_array.join("\n"))
 end
 
-def process_package_maintainer(database, item_path)
+def is_package_invalid(item_path, package)
+    invalid_package = false
+    # skip system dirs
+    invalid_package = ['.', '..'].index(package) != nil
+    # skip if it is a file
+    item_path = File.file?(item_path)
+    return item_path
+end
+
+def fill_packages_table(database, portage_home)
+    queries_array = nil
+    Dir.new(portage_home).sort.each do |category|
+        # check if current item is valid for us
+        next if is_category_invalid(portage_home, category)
+
+        # get id of the current category from our db
+        sql_query = "SELECT id FROM categories WHERE category_name='#{category}';"
+        category_id = database.execute(sql_query)[0]
+        queries_array = []
+
+        # lets walk through all items in category dir
+        Dir.new(File.join(portage_home, category)).sort.each do |package|
+            # lets get full path for this item
+            item_path = File.join(portage_home, category, package)
+            # skip if it is a ..
+            next if is_package_invalid(item_path, package)
+
+            # get content of the last ebuild for this package
+            ebuild_data = IO.read(Dir.glob(item_path + '/*.ebuild').sort.last).to_a
+            description = get_ebuild_description(ebuild_data)
+            homepage = get_ebuild_homepage(ebuild_data)
+
+            sql_query = <<SQL
+    INSERT INTO packages"
+    (category_id, package_name, description, homepage)
+    VALUES (#{category_id}, '#{package}', \"#{description}\", '#{homepage}');
+SQL
+            queries_array << sql_query
+        end
+        # TODO try/catch
+        database.execute_batch(queries_array.join("\n"))
+    end
+end
+
+def store_package_maintainers(database, item_path)
     metadata_path = File.join(item_path, "metadata.xml")
     if File.exists?(metadata_path) && File.readable?(metadata_path)
         xml_doc = Nokogiri::XML(IO.read(metadata_path))
-        # TODO lots of maintainers
-        # TODO upstream maintainers
-        email_node = xml_doc.xpath('//email').children
+        maintainers = xml_doc.xpath('/pkgmetadata/maintainer')
+        upstream_maintainers = xml_doc.xpath('/pkgmetadata/maintainer')
+        email_nodes = xml_doc.xpath('/pkgmetadata/maintainer')
         name_node = xml_doc.xpath('//name').children
         email = email_node != nil ? email_node.children : ''
         name = name_node != nil ? name_node.children : ''
@@ -102,57 +146,39 @@ def process_package_maintainer(database, item_path)
     end
 end
 
-def fill_packages_table(database, portage_home)
+def fill_maintainers_table(database, portage_home)
+    queries_array = nil
     Dir.new(portage_home).sort.each do |category|
-        # skip system dirs
-        next if ['.', '..'].index(category) != nil
-        # skip files
-        next if File.file?(File.join(portage_home, category))
-        # process all another items
-        next if category.index('-') == nil
-
-        # query for getting id of the current category from our db
-        sql_query = "SELECT id FROM categories WHERE category_name='#{category}';"
-        # get it
-        category_id = database.execute(sql_query)[0]
+        # check if current item is valid for us
+        next if is_category_invalid(portage_home, category)
 
         # lets walk through all items in category dir
         Dir.new(File.join(portage_home, category)).sort.each do |package|
-            # skip system dirs
-            next if ['.', '..'].index(package) != nil
-            # lets get full path for this item
-            item_path = File.join(portage_home, category, package)
-            p item_path
-            # skip if it is a file
-            next if File.file?(item_path)
-            # find a maintainer of this package, add it to database, get id of his record
-            #maintainer_id = process_package_maintainer(database, item_path)
-            maintainer_id = nil
+            # skip if it is a ..
+            next if is_package_invalid(item_path, package)
 
-            # get last ebuild for this package
-            ebuild_path = Dir.glob(item_path + '/*.ebuild').sort.last
-            # get its content
-            ebuild_data = IO.read(ebuild_path).to_a
-            # get description
-            description = get_ebuild_description(ebuild_data)
-            # get homepage
-            homepage = get_ebuild_homepage(ebuild_data)
+            maintainer_ids = store_package_maintainers(
+                database,
+                File.join(portage_home, category, package)
+            )
 
-            sql_part1 = "INSERT INTO packages"
-            sql_part2 = "(category_id, package_name, description, homepage)"
-            sql_part3 = "VALUES (#{category_id}, '#{package}', \"#{description}\", '#{homepage}');"
-            if maintainer_id != nil
-                sql_part2.gsub!(/\),/, ", maintainer_id)")
-                sql_part3.gsub!(/\);/, ", #{maintainer_id});")
+            next if maintainer_ids.empty?
+            maintainer_ids.each do |maintainer_id|
+                sql_query = <<SQL
+    INSERT INTO maintainers2ebuilds"
+    (maintainer_id, package_id)
+    VALUES (#{maintainer_id}, '(
+        SELECT packages.id
+        FROM packages, categories
+        WHERE packages.package_name='#{package} and categories.category_name='#{category}'
+    )');
+SQL
+                queries_array << sql_query
             end
-            sql = sql_part1 + " " + sql_part2 + " " + sql_part3
-            p category
-            p package
-            p sql
-            puts '*'*15
-            database.execute(sql)
         end
     end
+    # TODO try/catch
+    database.execute_batch(queries_array.join("\n"))
 end
 
 def get_ebuild_description(ebuild_data)
@@ -313,6 +339,7 @@ portage_home = File.join(
     # fill ebuilds data
     fill_categories_table(db, portage_home)
     fill_packages_table(db, portage_home)
+    fill_maintainers_table(db, portage_home)
     #fill_ebuilds_table(db, portage_home)
 
     finish = Time.now
