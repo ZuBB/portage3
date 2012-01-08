@@ -12,8 +12,9 @@ require 'nokogiri'
 require 'sqlite3'
 require 'tools'
 
-def get_last_created_database()
-    return nil
+def get_last_created_database(root_path, home_folder)
+    # get last test database
+    return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
 end
 
 def fill_architecture_table(database, portage_home)
@@ -267,7 +268,10 @@ options = {
 # lets merge stuff from tools lib
 options[:storage].merge!(STORAGE)
 # get last created database
-options[:db_filename] = get_last_created_database()
+options[:db_filename] = get_last_created_database(
+    options[:storage][:root],
+    options[:storage][:home_folder]
+)
 
 OptionParser.new do |opts|
     # help header
