@@ -24,8 +24,13 @@ end
 
 def get_clean_value(line)
     value = line.split('=')[1]
-    value = value.rchomp('"').chomp('"')
-    value = value.rchomp('\'').chomp('\'')
+    value = value.gsub(/['"\\]*/, '')
+    # TODO: escape chars in description
+    # TODO: trim '\n' in ebuild lines
+    #value = value.gsub(/^['"]/, '')
+    #value = value.gsub(/['"]$/, '')
+    #value = value.rchomp('"').chomp('"')
+    #value = value.rchomp('\'').chomp('\'')
     return value
 end
 
