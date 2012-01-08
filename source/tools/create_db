@@ -47,8 +47,9 @@ SQL_TABLE_PACKAGES
 databases["maintainers"] = <<SQL_TABLE_MAINTAINERS
 create table maintainers (
     id INTEGER PRIMARY KEY,
-    email text /*UNIQUE NOT NULL*/,
-    name text /*NOT NULL*/
+    name text,
+    email text,
+    CONSTRAINT unq UNIQUE (name, email)
 );
 SQL_TABLE_MAINTAINERS
 
