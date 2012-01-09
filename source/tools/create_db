@@ -25,58 +25,62 @@ options = {
 
 databases["categories"] = <<SQL_TABLE_CATEGORIES
 create table categories (
-    id INTEGER PRIMARY KEY,
+    id INTEGER,
     category_name text UNIQUE NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    PRIMARY KEY (id)
 );
 SQL_TABLE_CATEGORIES
 
 databases["packages"] = <<SQL_TABLE_PACKAGES
 create table packages (
-    id INTEGER PRIMARY KEY,
-    -- combination of next two fields should be unique
+    id INTEGER,
     category_id INTEGER NOT NULL,
     package_name text NOT NULL,
-    description text NOT NULL,
-    homepage text NOT NULL,
-    CONSTRAINT unq UNIQUE (category_id, package_name)
+    description text NOT NULL DEFAULT '', /* default is temporary? workaround*/
+    homepage text NOT NULL DEFAULT '', /* default is temporary? workaround*/
+    CONSTRAINT unq_cat_id8package UNIQUE (category_id, package_name),
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    PRIMARY KEY (id)
 );
 SQL_TABLE_PACKAGES
 
 databases["maintainers"] = <<SQL_TABLE_MAINTAINERS
 create table maintainers (
-    id INTEGER PRIMARY KEY,
+    id INTEGER,
     name text,
-    email text,
-    -- next param can not be specified without previous ones
-    upstream INTEGER,
-    CONSTRAINT unq UNIQUE (name, email)
+    email text UNIQUE NOT NULL,
+    CONSTRAINT unq_name8email UNIQUE (name, email),
+    PRIMARY KEY (id)
 );
 SQL_TABLE_MAINTAINERS
 
-databases["maintainers2ebuilds"] = <<SQL_TABLE_MAINTAINERS2EBUILDS
-create table maintainers2ebuilds (
-    id INTEGER PRIMARY KEY,
-    maintainer_id INTEGER,
-    package_id INTEGER,
-    CONSTRAINT unq UNIQUE (maintainer_id, package_id)
+databases["maintainers2packages"] = <<SQL_TABLE_MAINTAINERS2PACKAGES
+create table maintainers2packages (
+    id INTEGER,
+    package_id INTEGER NOT NULL,
+    maintainer_id INTEGER NOT NULL,
+    upstream_maintainer INTEGER DEFAULT 0,
+    FOREIGN KEY (maintainer_id) REFERENCES maintainers(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    CONSTRAINT unq_maintainer_id2pkg_id UNIQUE (maintainer_id, package_id),
+    PRIMARY KEY (id)
 );
-SQL_TABLE_MAINTAINERS2EBUILDS
+SQL_TABLE_MAINTAINERS2PACKAGES
 
 databases["ebuilds"] = <<SQL_TABLE_EBUILDS
 create table ebuilds (
     id INTEGER PRIMARY KEY,
     package_id INTEGER NOT NULL,
     version text NOT NULL,
-    --licence_id INTEGER NOT NULL,
     licence text NOT NULL,
-    data blob /*NOT NULL*/,
     keyword_id INTEGER NOT NULL,
     architecture INTEGER NOT NULL,
     mtime INTEGER NOT NULL,
     mauthor text NOT NULL,
     eapi INTEGER /*NOT NULL*/,
     slot INTEGER NOT NULL
+    -- data blob /*NOT NULL*/,
     -- depend TODO
     -- rdepend TODO
     -- sha1/md5 INTEGER NOT NULL
@@ -142,6 +146,14 @@ create table licences (
     -- content blob /*zipped data*/ ?
 );
 SQL_TABLE_LICENCES
+
+databases["licences2packages"] = <<SQL_TABLE_LICENCES2PACKAGES
+create table licences2packages (
+    id INTEGER PRIMARY KEY,
+    license_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL
+);
+SQL_TABLE_LICENCES2PACKAGES
 
 databases["licences2ebuilds"] = <<SQL_TABLE_LICENCES2EBUILDS
 create table licences2ebuilds (
@@ -210,7 +222,7 @@ sql = <<SQL_ALL_TABLES
 #{databases["categories"]}
 #{databases["packages"]}
 #{databases["maintainers"]}
-#{databases["maintainers2ebuilds"]}
+#{databases["maintainers2packages"]}
 #{databases["ebuilds"]}
 #{databases["use_flags"]}
 #{databases["use_flags2ebuilds"]}
@@ -219,6 +231,7 @@ sql = <<SQL_ALL_TABLES
 #{databases["keywords"]}
 #{databases["keywords2architectures"]}
 #{databases["licences"]}
+#{databases["licences2packages"]}
 #{databases["licences2ebuilds"]}
 SQL_ALL_TABLES
 
