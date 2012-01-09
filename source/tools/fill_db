@@ -48,14 +48,14 @@ def fill_keywords_table(database)
 end
 
 def is_category_invalid(portage_home, category)
-    invalid_category = false
     # skip system dirs
-    invalid_category = ['.', '..'].index(category) != nil
+    return true if ['.', '..'].index(category) != nil
     # skip files
-    invalid_category = File.file?(File.join(portage_home, category))
+    return true if File.file?(File.join(portage_home, category))
     #TODO what to do with this?
-    invalid_category = category.index('-') == nil
-    return invalid_category
+    return true if category.index('-') == nil
+    # valid one! :)
+    return false
 end
 
 def fill_categories_table(database, portage_home)
@@ -86,12 +86,12 @@ SQL
 end
 
 def is_package_invalid(item_path, package)
-    invalid_package = false
     # skip system dirs
-    invalid_package = ['.', '..'].index(package) != nil
+    return true if ['.', '..'].index(package) != nil
     # skip if it is a file
-    item_path = File.file?(item_path)
-    return item_path
+    return true if  File.file?(item_path)
+    # valid one! :)
+    return false
 end
 
 def fill_packages_table(database, portage_home)
@@ -118,7 +118,7 @@ def fill_packages_table(database, portage_home)
             homepage = get_ebuild_homepage(ebuild_data)
 
             sql_query = <<SQL
-    INSERT INTO packages"
+    INSERT INTO packages
     (category_id, package_name, description, homepage)
     VALUES (#{category_id}, '#{package}', \"#{description}\", '#{homepage}');
 SQL
@@ -131,54 +131,75 @@ end
 
 def store_package_maintainers(database, item_path)
     metadata_path = File.join(item_path, "metadata.xml")
-    if File.exists?(metadata_path) && File.readable?(metadata_path)
-        xml_doc = Nokogiri::XML(IO.read(metadata_path))
-        maintainers = xml_doc.xpath('/pkgmetadata/maintainer')
-        upstream_maintainers = xml_doc.xpath('/pkgmetadata/maintainer')
-        email_nodes = xml_doc.xpath('/pkgmetadata/maintainer')
-        name_node = xml_doc.xpath('//name').children
-        email = email_node != nil ? email_node.children : ''
-        name = name_node != nil ? name_node.children : ''
-        return nil if email.empty? && name.empty?
-        sql = "INSERT INTO maintainers (email, name) VALUES ('#{email}', '#{name}');"
-        database.execute(sql)
-        return get_last_inserted_id(database)
+    return unless File.exists?(metadata_path) && File.readable?(metadata_path)
+
+    xml_doc = Nokogiri::XML(IO.read(metadata_path))
+    maintainer_ids = []
+
+    ['/maintainer', '/upstream/maintainer'].each do |xpath_item|
+        xml_doc.xpath("/pkgmetadata" + xpath_item).each do |maintainer_node|
+            email_node = maintainer_node.xpath('email')
+            name_node = maintainer_node.xpath('name')
+            email = email_node != nil ? email_node.children.to_s : ''
+            name = name_node != nil ? name_node.children.to_s : ''
+            #todo <description>Proxying maintainer.</description>
+            next nil if email.empty?
+            sql_query = "INSERT OR IGNORE INTO maintainers (email, name) VALUES (?, ?);"
+            statement = database.prepare(sql_query)
+            statement.execute(email, name)
+            id_obj = {"id" => get_last_inserted_id(database)}
+            id_obj["upstream"] = 1 if xpath_item.index('upstream') != nil
+            maintainer_ids << id_obj
+        end
     end
+
+    return maintainer_ids
 end
 
 def fill_maintainers_table(database, portage_home)
-    queries_array = nil
+    queries_array = []
     Dir.new(portage_home).sort.each do |category|
         # check if current item is valid for us
         next if is_category_invalid(portage_home, category)
 
         # lets walk through all items in category dir
         Dir.new(File.join(portage_home, category)).sort.each do |package|
+            # lets get full path for this item
+            item_path = File.join(portage_home, category, package)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
-            maintainer_ids = store_package_maintainers(
-                database,
-                File.join(portage_home, category, package)
-            )
+            maintainer_ids = store_package_maintainers(database, item_path)
 
+            p maintainer_ids.size
+            p maintainer_ids
+            p item_path
             next if maintainer_ids.empty?
-            maintainer_ids.each do |maintainer_id|
+            maintainer_ids.each do |maintainer_obj|
                 sql_query = <<SQL
-    INSERT INTO maintainers2ebuilds"
-    (maintainer_id, package_id)
-    VALUES (#{maintainer_id}, '(
-        SELECT packages.id
-        FROM packages, categories
-        WHERE packages.package_name='#{package} and categories.category_name='#{category}'
-    )');
+INSERT INTO maintainers2packages
+(maintainer_id, package_id)
+VALUES (#{maintainer_obj['id']}, '(
+    SELECT packages.id
+    FROM packages, categories
+    WHERE packages.package_name="#{package}" and categories.category_name="#{category}"
+)');
 SQL
-                queries_array << sql_query
+                if (maintainer_obj.has_key?("upstream"))
+                    sql_query.gsub!(/, package_id\)/, ", package_id, upstream_maintainer)")
+                    sql_query.gsub!(/\)'\);/, ")', 1);")
+                end
+                #queries_array << sql_query
+                p sql_query
+                puts '='*9
+                database.execute(sql_query)
             end
+                puts '='*5
         end
     end
     # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
+    #puts queries_array
+    #database.execute_batch(queries_array.join("\n"))
 end
 
 def get_ebuild_description(ebuild_data)
@@ -349,7 +370,7 @@ portage_home = File.join(
     puts finish
 #rescue Exception => msg
     #File.delete(options[:db_filename])
-    puts msg
+    #puts msg
 #ensure
     db.close() if db.closed? == false
 #end
