@@ -48,6 +48,24 @@ def fill_keywords_table(database)
     database.execute_batch(queries_array.join("\n"))
 end
 
+def fill_responsibilities_table(database)
+    # array of all inserts
+    queries_array = []
+    # array of all responsibilities
+    [
+        'gentoo maintainer',
+        'upstream maintainer',
+        'proxying maintainer'
+    ].each { |resp|
+        # create query for responsibility and add it into array
+        sql_query = "INSERT INTO responsibilities (responsibility) VALUES ('#{resp}');"
+        queries_array << sql_query
+    }
+
+    # TODO try/catch
+    database.execute_batch(queries_array.join("\n"))
+end
+
 def is_category_invalid(portage_home, category)
     # skip system dirs
     return true if ['.', '..'].index(category) != nil
@@ -130,14 +148,12 @@ SQL
     end
 end
 
-def store_package_maintainers(database, item_path)
+def get_package_maintainers(database, item_path)
     metadata_path = File.join(item_path, "metadata.xml")
-    return unless File.exists?(metadata_path) && File.readable?(metadata_path)
+    return [] unless File.exists?(metadata_path) && File.readable?(metadata_path)
 
     xml_doc = Nokogiri::XML(IO.read(metadata_path))
-    maintainer_ids = []
-    upstream_maintainer_ids = []
-    maintainers_array = []
+    persons = []
 
     ['/maintainer', '/upstream/maintainer'].each do |xpath_item|
         xml_doc.xpath("/pkgmetadata" + xpath_item).each do |maintainer_node|
@@ -149,47 +165,89 @@ def store_package_maintainers(database, item_path)
             # skip if email is empty or email is a stub
             next nil if email.empty? || 'maintainer-needed@gentoo.org' == email
 
-            sql_query = "SELECT * FROM maintainers WHERE email='#{email}';"
-            result = database.execute(sql_query)
-            id_obj = {}
-
-            if (result.empty?)
-                sql_query = "INSERT INTO maintainers (email, name) VALUES (?, ?);"
-                statement = database.prepare(sql_query)
-                statement.execute(email, name)
-                id = get_last_inserted_id(database)
-            else
-                if !name.empty? && result[0][1].empty?
-                    sql_query = "UPDATE maintainers SET name=? where id=?;"
-                    statement = database.prepare(sql_query)
-                    statement.execute(name, result[0][0])
-                end
-                id = result[0][0]
-            end
-
-            if xpath_item.index('upstream') != nil
-                upstream_maintainer_ids << id
-            else
-                maintainer_ids << id
-            end
+            person = {}
+            person["name"] = name
+            person["email"] = email
+            person["responsibility"] = xpath_item.index('upstream') != nil ?
+                "upstream maintainer" : "gentoo maintainer"
+            persons << person
         end
     end
 
-    if upstream_maintainer_ids.size > 0 && maintainer_ids.size > 0
-        maintainer_ids.delete_if { |key, value|
-            upstream_maintainer_ids.include?(key)
-        }
+    return persons
+end
+
+def store_persons(database, persons)
+    sql_query1 = "SELECT * FROM persons WHERE email=?;"
+    statement1 = database.prepare(sql_query1)
+    sql_query2 = "INSERT INTO persons (email, name) VALUES (?, ?);"
+    statement2 = database.prepare(sql_query2)
+    sql_query3 = "UPDATE persons SET name=? where id=?;"
+    statement3 = database.prepare(sql_query3)
+
+    persons.each do |person|
+        result = statement1.execute!(person["email"])
+
+        if (result.empty?)
+            statement2.execute(person["email"], person["name"])
+            person["person_id"] = get_last_inserted_id(database)
+        else
+            if !person["name"].empty? && result[0][1].empty?
+                statement3.execute(person["name"], result[0][0])
+            end
+            person["person_id"] = result[0][0]
+        end
     end
 
-    maintainer_ids.each { |value|
-        maintainers_array << {'id' => value}
-    }
+    #statement1.finalize()
+    #statement2.finalize()
+    #statement3.finalize()
 
-    upstream_maintainer_ids.each { |value|
-        maintainers_array << {'id' => value, "upstream" => 1}
-    }
+    return persons
+end
 
-    return maintainers_array
+def store_persons_responsibilities(database, persons)
+    sql_query = <<SQL
+INSERT OR IGNORE INTO persons2responsibilities
+(person_id, responsibility_id)
+VALUES (?, (
+    SELECT id
+    FROM responsibilities
+    WHERE responsibility=?
+));
+SQL
+    statement = database.prepare(sql_query)
+
+    persons.each do |person|
+        statement.execute(person["person_id"], person["responsibility"])
+        person["responsibility_id"] = get_last_inserted_id(database)
+    end
+
+    #statement.finalize()
+
+    return persons
+end
+
+def store_package_maintainers(database, persons, category, package)
+    sql_query = <<SQL
+INSERT INTO maintainers2packages
+(maintainer_id, package_id)
+VALUES (?, (
+    SELECT packages.id
+    FROM packages, categories
+    WHERE
+        categories.category_name=? and
+        packages.category_id = categories.id and
+        packages.package_name=?
+));
+SQL
+    statement = database.prepare(sql_query)
+
+    persons.each do |person|
+        statement.execute(person["responsibility_id"], category, package)
+    end
+
+    #statement.finalize()
 end
 
 def fill_maintainers_table(database, portage_home)
@@ -205,28 +263,11 @@ def fill_maintainers_table(database, portage_home)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
-            maintainer_ids = store_package_maintainers(database, item_path)
-
-            next if maintainer_ids.empty?
-            maintainer_ids.each do |maintainer_obj|
-                sql_query = <<SQL
-INSERT INTO maintainers2packages
-(maintainer_id, package_id)
-VALUES (#{maintainer_obj['id']}, (
-    SELECT packages.id
-    FROM packages, categories
-    WHERE
-        packages.package_name="#{package}" and
-        categories.category_name="#{category}" and
-        packages.category_id = categories.id
-));
-SQL
-                if (maintainer_obj.has_key?("upstream"))
-                    sql_query.gsub!(/, package_id\)/, ", package_id, upstream_maintainer)")
-                    sql_query.gsub!(/\)\);/, "), 1);")
-                end
-                queries_array << sql_query
-            end
+            #maintainer_ids = get_package_maintainers(database, item_path)
+            persons = get_package_maintainers(database, item_path)
+            persons = store_persons(database, persons)
+            persons = store_persons_responsibilities(database, persons)
+            store_package_maintainers(database, persons, category, package)
         end
     end
     # TODO try/catch
@@ -387,12 +428,14 @@ portage_home = File.join(
     # fill static/predefined data
     fill_architecture_table(db, portage_home)
     fill_keywords_table(db)
+    fill_responsibilities_table(db)
 
     # fill ebuilds data
     fill_categories_table(db, portage_home)
     fill_packages_table(db, portage_home)
     fill_maintainers_table(db, portage_home)
     #fill_ebuilds_table(db, portage_home)
+    #db.finalize()
 
     finish = Time.now
 

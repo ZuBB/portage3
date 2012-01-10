@@ -45,25 +45,44 @@ create table packages (
 );
 SQL_TABLE_PACKAGES
 
-databases["maintainers"] = <<SQL_TABLE_MAINTAINERS
-create table maintainers (
+databases["persons"] = <<SQL_TABLE_PERSONS
+create table persons (
     id INTEGER,
     name text,
     email text UNIQUE NOT NULL,
+    nickname text UNIQUE,
     CONSTRAINT unq_name8email UNIQUE (name, email),
     PRIMARY KEY (id)
 );
-SQL_TABLE_MAINTAINERS
+SQL_TABLE_PERSONS
+
+databases["responsibilities"] = <<SQL_TABLE_RESPONSIBILITIES
+create table responsibilities (
+    id INTEGER,
+    responsibility text UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+SQL_TABLE_RESPONSIBILITIES
+
+databases["persons2responsibilities"] = <<SQL_TABLE_PERSONS2RESPONSIBILITIES
+create table persons2responsibilities (
+    id INTEGER,
+    person_id INTEGER NOT NULL,
+    responsibility_id INTEGER NOT NULL,
+    FOREIGN KEY (person_id) REFERENCES persons(id),
+    FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id),
+    CONSTRAINT unq_perdon_id8resp UNIQUE (person_id, responsibility_id),
+    PRIMARY KEY (id)
+);
+SQL_TABLE_PERSONS2RESPONSIBILITIES
 
 databases["maintainers2packages"] = <<SQL_TABLE_MAINTAINERS2PACKAGES
 create table maintainers2packages (
     id INTEGER,
     package_id INTEGER NOT NULL,
     maintainer_id INTEGER NOT NULL,
-    upstream_maintainer INTEGER DEFAULT 0,
-    FOREIGN KEY (maintainer_id) REFERENCES maintainers(id),
+    FOREIGN KEY (maintainer_id) REFERENCES persons2responsibilities(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    CONSTRAINT unq_maintainer_id2pkg_id UNIQUE (maintainer_id, package_id),
     PRIMARY KEY (id)
 );
 SQL_TABLE_MAINTAINERS2PACKAGES
@@ -221,7 +240,9 @@ end.parse!
 sql = <<SQL_ALL_TABLES
 #{databases["categories"]}
 #{databases["packages"]}
-#{databases["maintainers"]}
+#{databases["persons"]}
+#{databases["responsibilities"]}
+#{databases["persons2responsibilities"]}
 #{databases["maintainers2packages"]}
 #{databases["ebuilds"]}
 #{databases["use_flags"]}
@@ -233,6 +254,8 @@ sql = <<SQL_ALL_TABLES
 #{databases["licences"]}
 #{databases["licences2packages"]}
 #{databases["licences2ebuilds"]}
+#{databases["sets"]}
+#{databases["sets_content"]}
 SQL_ALL_TABLES
 
 # print sql if verbose is set
