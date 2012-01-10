@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
 #
 # Here should go some comment
 #
@@ -135,25 +136,60 @@ def store_package_maintainers(database, item_path)
 
     xml_doc = Nokogiri::XML(IO.read(metadata_path))
     maintainer_ids = []
+    upstream_maintainer_ids = []
+    maintainers_array = []
 
     ['/maintainer', '/upstream/maintainer'].each do |xpath_item|
         xml_doc.xpath("/pkgmetadata" + xpath_item).each do |maintainer_node|
-            email_node = maintainer_node.xpath('email')
-            name_node = maintainer_node.xpath('name')
-            email = email_node != nil ? email_node.children.to_s : ''
-            name = name_node != nil ? name_node.children.to_s : ''
-            #todo <description>Proxying maintainer.</description>
-            next nil if email.empty?
-            sql_query = "INSERT OR IGNORE INTO maintainers (email, name) VALUES (?, ?);"
-            statement = database.prepare(sql_query)
-            statement.execute(email, name)
-            id_obj = {"id" => get_last_inserted_id(database)}
-            id_obj["upstream"] = 1 if xpath_item.index('upstream') != nil
-            maintainer_ids << id_obj
+            # lets get email and name
+            email = maintainer_node.xpath('email').inner_text rescue ''
+            name = maintainer_node.xpath('name').inner_text rescue ''
+            # TODO <description>Proxying maintainer.</description> and possible other tags
+
+            # skip if email is empty or email is a stub
+            next nil if email.empty? || 'maintainer-needed@gentoo.org' == email
+
+            sql_query = "SELECT * FROM maintainers WHERE email='#{email}';"
+            result = database.execute(sql_query)
+            id_obj = {}
+
+            if (result.empty?)
+                sql_query = "INSERT INTO maintainers (email, name) VALUES (?, ?);"
+                statement = database.prepare(sql_query)
+                statement.execute(email, name)
+                id = get_last_inserted_id(database)
+            else
+                if !name.empty? && result[0][1].empty?
+                    sql_query = "UPDATE maintainers SET name=? where id=?;"
+                    statement = database.prepare(sql_query)
+                    statement.execute(name, result[0][0])
+                end
+                id = result[0][0]
+            end
+
+            if xpath_item.index('upstream') != nil
+                upstream_maintainer_ids << id
+            else
+                maintainer_ids << id
+            end
         end
     end
 
-    return maintainer_ids
+    if upstream_maintainer_ids.size > 0 && maintainer_ids.size > 0
+        maintainer_ids.delete_if { |key, value|
+            upstream_maintainer_ids.include?(key)
+        }
+    end
+
+    maintainer_ids.each { |value|
+        maintainers_array << {'id' => value}
+    }
+
+    upstream_maintainer_ids.each { |value|
+        maintainers_array << {'id' => value, "upstream" => 1}
+    }
+
+    return maintainers_array
 end
 
 def fill_maintainers_table(database, portage_home)
@@ -171,35 +207,30 @@ def fill_maintainers_table(database, portage_home)
 
             maintainer_ids = store_package_maintainers(database, item_path)
 
-            p maintainer_ids.size
-            p maintainer_ids
-            p item_path
             next if maintainer_ids.empty?
             maintainer_ids.each do |maintainer_obj|
                 sql_query = <<SQL
 INSERT INTO maintainers2packages
 (maintainer_id, package_id)
-VALUES (#{maintainer_obj['id']}, '(
+VALUES (#{maintainer_obj['id']}, (
     SELECT packages.id
     FROM packages, categories
-    WHERE packages.package_name="#{package}" and categories.category_name="#{category}"
-)');
+    WHERE
+        packages.package_name="#{package}" and
+        categories.category_name="#{category}" and
+        packages.category_id = categories.id
+));
 SQL
                 if (maintainer_obj.has_key?("upstream"))
                     sql_query.gsub!(/, package_id\)/, ", package_id, upstream_maintainer)")
-                    sql_query.gsub!(/\)'\);/, ")', 1);")
+                    sql_query.gsub!(/\)\);/, "), 1);")
                 end
-                #queries_array << sql_query
-                p sql_query
-                puts '='*9
-                database.execute(sql_query)
+                queries_array << sql_query
             end
-                puts '='*5
         end
     end
     # TODO try/catch
-    #puts queries_array
-    #database.execute_batch(queries_array.join("\n"))
+    database.execute_batch(queries_array.join("\n"))
 end
 
 def get_ebuild_description(ebuild_data)
