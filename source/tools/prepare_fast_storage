@@ -32,11 +32,11 @@ OptionParser.new do |opts|
         options[:recreate_tree] = true
     end
 
-    opts.on("-r", "--recreate-tree", "Recreate portage tree") do |value|
+    opts.on("-t", "--recreate-tree", "Recreate portage tree") do |value|
         options[:recreate_tree] = true
     end
 
-    opts.on("-t", "--temp-dir STRING", "Dir where portage tree will be extraced") do |value|
+    opts.on("-r", "--root-dir STRING", "Dir where portage tree will be extraced") do |value|
         options[:storage][:root] = value
     end
 
