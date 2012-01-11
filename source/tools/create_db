@@ -11,7 +11,7 @@ require 'rubygems'
 require 'sqlite3'
 require 'tools'
 
-# hash with default options
+# hash with default settings
 options = {
     :sql_src => '../sql/portage-sqlite.sql',
     :db_filename => "test-#{get_timestamp()}.sqlite",
@@ -30,14 +30,15 @@ OptionParser.new do |opts|
     opts.banner = " Usage: create_db [options]\n"
     opts.separator " Creates empty database file for Gentoo portage\n"
 
-    # parsing 'batch_mode' option if present
-    opts.on("-b", "--batch-mode", "Batch mode") do |value|
-        options[:batch_mode] = true
-    end
-
     # parsing 'provide_listing' option if present
     opts.on("-l", "--list-recent", "List recent dbs") do |value|
         options[:list] = true
+    end
+
+    # parsing 'batch_mode' option if present
+    opts.on("-b", "--batch-mode", "Batch mode") do |value|
+        options[:batch_mode] = true
+        options[:list] = false
     end
 
     # parsing 'root' option if present
