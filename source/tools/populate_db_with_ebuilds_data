@@ -61,7 +61,6 @@ def is_package_invalid(item_path, package)
 end
 
 def fill_packages_table(database, portage_home)
-    queries_array = nil
     Dir.new(portage_home).sort.each do |category|
         # check if current item is valid for us
         next if is_category_invalid(portage_home, category)
@@ -69,7 +68,6 @@ def fill_packages_table(database, portage_home)
         # get id of the current category from our db
         sql_query = "SELECT id FROM categories WHERE category_name=?;"
         category_id = database.execute(sql_query, category)[0]
-        queries_array = []
 
         # lets walk through all items in category dir
         Dir.new(File.join(portage_home, category)).sort.each do |package|
@@ -79,19 +77,17 @@ def fill_packages_table(database, portage_home)
             next if is_package_invalid(item_path, package)
 
             # get content of the last ebuild for this package
-            ebuild_data = IO.read(Dir.glob(item_path + '/*.ebuild').sort.last).to_a
-            description = get_ebuild_description(ebuild_data)
-            homepage = get_ebuild_homepage(ebuild_data)
+            ebuild_text = IO.read(Dir.glob(item_path + '/*.ebuild').sort.last).to_a
+            description = get_ebuild_description(ebuild_text)
+            homepage = get_ebuild_homepage(ebuild_text)
 
             sql_query = <<SQL
     INSERT INTO packages
     (category_id, package_name, description, homepage)
-    VALUES (#{category_id}, '#{package}', \"#{description}\", '#{homepage}');
+    VALUES (?, ?, ?, ?);
 SQL
-            queries_array << sql_query
+            database.execute(sql_query, category_id, package, description, homepage)
         end
-        # TODO try/catch
-        database.execute_batch(queries_array.join("\n"))
     end
 end
 
@@ -176,7 +172,6 @@ SQL
 end
 
 def fill_maintainers_table(database, portage_home)
-    queries_array = []
     Dir.new(portage_home).sort.each do |category|
         # check if current item is valid for us
         next if is_category_invalid(portage_home, category)
@@ -188,116 +183,149 @@ def fill_maintainers_table(database, portage_home)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
-            #maintainer_ids = get_package_maintainers(database, item_path)
             persons = get_package_maintainers(database, item_path)
             persons = store_persons(database, persons)
             persons = store_persons_responsibilities(database, persons)
             store_package_maintainers(database, persons, category, package)
         end
     end
-    # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
 end
 
-def get_ebuild_description(ebuild_data)
-    ebuild_data.each { |line|
+def get_ebuild_description(ebuild_text)
+    ebuild_text.each { |line|
         return get_clean_value(line) if line.index('DESCRIPTION=') != nil
     }
 
     return ''
 end
 
-def get_ebuild_homepage(ebuild_data)
-    ebuild_data.each { |line|
+def get_ebuild_homepage(ebuild_text)
+    ebuild_text.each { |line|
         return get_clean_value(line) if line.index('HOMEPAGE=') != nil
     }
 
     return ''
 end
 
-def get_ebuild_mtime(line, structured_ebuild_data)
-    if structured_ebuild_data.has_key?('mtime') == false
-        if line.index('# $Header:') == 0
-            date_str = line.match(/\d{4}\/\d\d\/\d\d \d\d:\d\d:\d\d/)
-            structured_ebuild_data["mtime"] = date_str.to_s
+def get_ebuild_mtime(ebuild_text)
+    ebuild_text.each { |line|
+        if line.index('# $Header:') != nil
+            # https://bugs.gentoo.org/show_bug.cgi?id=398567
+            return line.match(/\d{4}\/\d\d\/\d\d \d\d:\d\d:\d\d/).to_s rescue '1970'
         end
-    end
+    }
 
-    return structured_ebuild_data
+    return ''
 end
 
-def get_ebuild_author(line, structured_ebuild_data)
-    if structured_ebuild_data.has_key?('author') == false
-        if line.index('# $Header:') == 0
-            author = line.match(/:\d\d (\w+) Exp \$$/)[1]
-            structured_ebuild_data["author"] = author.to_s
+def get_ebuild_author(ebuild_text)
+    ebuild_text.each { |line|
+        if line.index('# $Header:') != nil
+            # https://bugs.gentoo.org/show_bug.cgi?id=398567
+            return line.match(/:\d\d ([\w_\-\.]+) Exp \$$/)[1].to_s rescue 'anonymous'
         end
-    end
+    }
 
-    return structured_ebuild_data
+    return ''
 end
 
-def get_eapi(line, structured_ebuild_data)
-    if structured_ebuild_data.has_key?('eapi') == false
-        if line.index('EAPI') != nil
-            structured_ebuild_data["eapi"] = get_clean_value(line)
-        end
-    end
+def get_eapi(ebuild_text)
+    ebuild_text.each { |line|
+        return get_clean_value(line) if line.index('EAPI') != nil
+    }
 
-    return structured_ebuild_data
+    return 'unknown'
 end
 
-def get_slot(line, structured_ebuild_data)
-    if structured_ebuild_data.has_key?('slot') == false
-        if line.index('SLOT') != nil
-            structured_ebuild_data["slot"] = get_clean_value(line)
-        end
-    end
+def get_slot(ebuild_text)
+    ebuild_text.each { |line|
+        # app-editors/nvi/nvi-1.81.6-r3.ebuild
+        return get_clean_value(line) if line.index('SLOT') == 0
+    }
 
-    return structured_ebuild_data
+    return ''
 end
 
-def get_license(line, structured_ebuild_data)
-    if structured_ebuild_data.has_key?('licence') == false
-        if line.index('LICENSE') != nil
-            structured_ebuild_data["licence"] = get_clean_value(line)
-        end
-    end
+def get_license(ebuild_text)
+    ebuild_text.each { |line|
+        return get_clean_value(line) if line.index('LICENSE') != nil
+    }
 
-    return structured_ebuild_data
+    return ''
 end
 
-def get_ebuild_version(ebuild_filename, structured_ebuild_data)
-    match = ebuild_filename,match('-\d')
-    if match == nil
+def get_ebuild_version(ebuild_filename)
+    result = 'undefined'
+    filename = File.basename(ebuild_filename, ".ebuild")
+    match = filename.match('-\d').to_s
+
+    if match.nil? || match.empty?
         puts 'Failed to get version for ' + ebuild_filename
     else
-        position = ebuild_filename,index(match)
-        structured_ebuild_data["version"] = line[-(position + 1)..-1]
+        position = filename.index(match)
+        result = filename[(position + 1)..-1]
     end
 
-    return structured_ebuild_data
+    return result
 end
 
-def parse_ebuild(package_path, database)
-    Dir.glob(package_path + '/*.ebuild').sort.each do |ebuild|
-        ebuild_data = {}
-        ebuild_data = get_ebuild_version(ebuild, ebuild_data)
-        begin
-            file = File.new(ebuild, "r")
-            while (line = file.gets)
-                ebuild_data = get_ebuild_mtime(line, ebuild_data)
-                ebuild_data = get_ebuild_author(line, ebuild_data)
-                ebuild_data = get_eapi(line, ebuild_data)
-                ebuild_data = get_license(line, ebuild_data)
-                ebuild_data = get_slot(line, ebuild_data)
-                #ebuild_state INTEGER NOT NULL,
-                #architecture INTEGER NOT NULL,
+def parse_ebuild(database, category, package, ebuild_filename)
+    ebuild_obj = { "version" => get_ebuild_version(ebuild_filename) }
+    ebuild_text = nil
+    #p ebuild_filename
+
+    begin
+        ebuild_text = IO.read(ebuild_filename).to_a
+    rescue => err
+        puts "Exception: #{err}"
+    end
+        ebuild_obj["mtime"] = get_ebuild_mtime(ebuild_text)
+        ebuild_obj["author"] = get_ebuild_author(ebuild_text)
+        ebuild_obj["eapi"] = get_eapi(ebuild_text)
+        ebuild_obj["slot"] = get_slot(ebuild_text)
+        ebuild_obj["license"] = get_license(ebuild_text)
+
+    sql_query = <<SQL
+INSERT INTO ebuilds
+(package_id, version, mtime, mauthor, eapi, slot, license)
+VALUES ((
+    SELECT packages.id
+    FROM packages, categories
+    WHERE
+        categories.category_name=? and
+        packages.package_name=? and
+        packages.category_id = categories.id
+), ?, ?, ?, ?, ?, ?);
+SQL
+
+    database.execute(
+        sql_query, 
+        category,
+        package,
+        ebuild_obj["version"],
+        ebuild_obj["mtime"],
+        ebuild_obj["author"],
+        ebuild_obj["eapi"],
+        ebuild_obj["slot"],
+        ebuild_obj["license"]
+    )
+end
+
+def fill_ebuilds_table(database, portage_home)
+    Dir.new(portage_home).sort.each do |category|
+        # check if current item is valid for us
+        next if is_category_invalid(portage_home, category)
+
+        # lets walk through all items in category dir
+        Dir.new(File.join(portage_home, category)).sort.each do |package|
+            # lets get full path for this item
+            item_path = File.join(portage_home, category, package)
+            # skip if it is a ..
+            next if is_package_invalid(item_path, package)
+
+            Dir.glob(File.join(item_path, '*.ebuild')).sort.each do |ebuild|
+                parse_ebuild(database, category, package, ebuild)
             end
-            file.close
-        rescue => err
-            puts "Exception: #{err}"
-            err
         end
     end
 end
@@ -354,7 +382,7 @@ portage_home = File.join(
     fill_categories_table(db, portage_home)
     fill_packages_table(db, portage_home)
     fill_maintainers_table(db, portage_home)
-    #fill_ebuilds_table(db, portage_home)
+    fill_ebuilds_table(db, portage_home)
 
     finish = Time.now
 
