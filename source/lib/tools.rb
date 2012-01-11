@@ -34,3 +34,8 @@ def get_clean_value(line)
     return value
 end
 
+def get_last_created_database(root_path, home_folder)
+    # get last test database
+    return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
+end
+

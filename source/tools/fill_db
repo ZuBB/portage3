@@ -13,59 +13,6 @@ require 'nokogiri'
 require 'sqlite3'
 require 'tools'
 
-def get_last_created_database(root_path, home_folder)
-    # get last test database
-    return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
-end
-
-def fill_architecture_table(database, portage_home)
-    # array of all inserts
-    queries_array = []
-    # walk through all items in architectures dir
-    Dir.new(File.join(portage_home, "profiles/arch")).sort.each do |arch|
-        # skip system dirs
-        next if ['.', '..'].index(arch) != nil
-        # create query for current arch
-        query = "INSERT INTO architectures (architecture) VALUES ('#{arch}');"
-        # add query into array
-        queries_array << query
-    end
-
-    # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
-end
-
-def fill_keywords_table(database)
-    # array of all inserts
-    queries_array = []
-    # array of all keywords
-    ['stable', 'unstable', 'hardmasked'].each { |keyword|
-        # create query for keyword and add it into array
-        queries_array << "INSERT INTO keywords (keyword) VALUES ('#{keyword}');"
-    }
-
-    # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
-end
-
-def fill_responsibilities_table(database)
-    # array of all inserts
-    queries_array = []
-    # array of all responsibilities
-    [
-        'gentoo maintainer',
-        'upstream maintainer',
-        'proxying maintainer'
-    ].each { |resp|
-        # create query for responsibility and add it into array
-        sql_query = "INSERT INTO responsibilities (responsibility) VALUES ('#{resp}');"
-        queries_array << sql_query
-    }
-
-    # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
-end
-
 def is_category_invalid(portage_home, category)
     # skip system dirs
     return true if ['.', '..'].index(category) != nil
@@ -424,11 +371,6 @@ portage_home = File.join(
     db = SQLite3::Database.new(options[:db_filename])
 
     start = Time.now
-
-    # fill static/predefined data
-    fill_architecture_table(db, portage_home)
-    fill_keywords_table(db)
-    fill_responsibilities_table(db)
 
     # fill ebuilds data
     fill_categories_table(db, portage_home)
