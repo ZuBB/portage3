@@ -39,7 +39,7 @@ create table persons2responsibilities (
     responsibility_id INTEGER NOT NULL,
     FOREIGN KEY (person_id) REFERENCES persons(id),
     FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id),
-    CONSTRAINT unq_perdon_id8resp UNIQUE (person_id, responsibility_id),
+    CONSTRAINT unq_person_id8resp UNIQUE (person_id, responsibility_id),
     PRIMARY KEY (id)
 );
 
