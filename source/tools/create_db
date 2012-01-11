@@ -13,8 +13,7 @@ require 'tools'
 
 # hash with default options
 options = {
-    :sql_src_home => '../sql',
-    :sql_src => 'portage-sqlite.sql',
+    :sql_src => '../sql/portage-sqlite.sql',
     :db_filename => "test-#{get_timestamp()}.sqlite",
     :db_path => nil,
     :storage => {},
@@ -94,7 +93,7 @@ OptionParser.new do |opts|
 end.parse!
 
 # get sql code
-sql = IO.read(File.join('./', options[:sql_src_home], options[:sql_src]))
+sql = IO.read(File.join(File.dirname(__FILE__), options[:sql_src]))
 # get path to the database file
 options[:db_path] = File.join(
     options[:storage][:root],
