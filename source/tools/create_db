@@ -75,7 +75,7 @@ OptionParser.new do |opts|
             exit(1)
         end
  
-        value << '.sqlite' if File.extname(value) !== 'sqlite'
+        value << '.sqlite' if File.extname(value) != 'sqlite'
  
         options[:db_filename] = value
         options[:list] = false
