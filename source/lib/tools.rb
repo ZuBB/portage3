@@ -23,13 +23,26 @@ def get_last_inserted_id(database)
 end
 
 def get_clean_value(line)
-    #http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/app-admin/eselect-python/eselect-python-99999999.ebuild?r1=1.5&r2=1.6
-    if line.index('=').nil?
-        value = line
+    value = line
+    if !value.include?('=') && value.index('#') == 0
+        # TODO what is correct value to set here
+        value = '0_#'
+    elsif ((value.include?('=') && !value.include?('#')) ||
+           (value.index('=') < Integer(value.index('#'))))
+        # get rid of new line
+        value = value.chomp() if !value.empty?
+        # get rid of comments
+        value = value.gsub(/#.+$/, '')
+        # get actually value only
+        value = value.split('=')[1] if !value.empty?
+        # strip \s at the end
+        value = value.strip() if !value.empty?
+        # strip quotes at the begining
+        value = value.gsub(/^['"]/, '') if !value.empty?
+        # strip quotes at the end
+        value = value.gsub(/['"]$/, '') if !value.empty?
     else
-        value = line.chomp.split('=')[1]
-        value = value.gsub(/^['"]/, '')
-        value = value.gsub(/['"]$/, '')
+        value = ''
     end
 
     return value
