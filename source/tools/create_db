@@ -11,10 +11,10 @@ require 'rubygems'
 require 'sqlite3'
 require 'tools'
 
-# hash with sql code of all tables
-databases = {}
 # hash with default options
 options = {
+    :sql_src_home => '../sql',
+    :sql_src => 'portage-sqlite.sql',
     :db_filename => File.join(
         STORAGE[:root],
         STORAGE[:home_folder],
@@ -23,188 +23,13 @@ options = {
     :verbose => false
 }
 
-databases["categories"] = <<SQL_TABLE_CATEGORIES
-create table categories (
-    id INTEGER,
-    category_name text UNIQUE NOT NULL,
-    description text NOT NULL,
-    PRIMARY KEY (id)
-);
-SQL_TABLE_CATEGORIES
-
-databases["packages"] = <<SQL_TABLE_PACKAGES
-create table packages (
-    id INTEGER,
-    category_id INTEGER NOT NULL,
-    package_name text NOT NULL,
-    description text NOT NULL DEFAULT '', /* default is temporary? workaround*/
-    homepage text NOT NULL DEFAULT '', /* default is temporary? workaround*/
-    CONSTRAINT unq_cat_id8package UNIQUE (category_id, package_name),
-    FOREIGN KEY (category_id) REFERENCES categories(id),
-    PRIMARY KEY (id)
-);
-SQL_TABLE_PACKAGES
-
-databases["persons"] = <<SQL_TABLE_PERSONS
-create table persons (
-    id INTEGER,
-    name text,
-    email text UNIQUE NOT NULL,
-    nickname text UNIQUE,
-    CONSTRAINT unq_name8email UNIQUE (name, email),
-    PRIMARY KEY (id)
-);
-SQL_TABLE_PERSONS
-
-databases["responsibilities"] = <<SQL_TABLE_RESPONSIBILITIES
-create table responsibilities (
-    id INTEGER,
-    responsibility text UNIQUE NOT NULL,
-    PRIMARY KEY (id)
-);
-SQL_TABLE_RESPONSIBILITIES
-
-databases["persons2responsibilities"] = <<SQL_TABLE_PERSONS2RESPONSIBILITIES
-create table persons2responsibilities (
-    id INTEGER,
-    person_id INTEGER NOT NULL,
-    responsibility_id INTEGER NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES persons(id),
-    FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id),
-    CONSTRAINT unq_perdon_id8resp UNIQUE (person_id, responsibility_id),
-    PRIMARY KEY (id)
-);
-SQL_TABLE_PERSONS2RESPONSIBILITIES
-
-databases["maintainers2packages"] = <<SQL_TABLE_MAINTAINERS2PACKAGES
-create table maintainers2packages (
-    id INTEGER,
-    package_id INTEGER NOT NULL,
-    maintainer_id INTEGER NOT NULL,
-    FOREIGN KEY (maintainer_id) REFERENCES persons2responsibilities(id),
-    FOREIGN KEY (package_id) REFERENCES packages(id),
-    PRIMARY KEY (id)
-);
-SQL_TABLE_MAINTAINERS2PACKAGES
-
-databases["ebuilds"] = <<SQL_TABLE_EBUILDS
-create table ebuilds (
-    id INTEGER PRIMARY KEY,
-    package_id INTEGER NOT NULL,
-    version text NOT NULL,
-    licence text NOT NULL,
-    keyword_id INTEGER NOT NULL,
-    architecture INTEGER NOT NULL,
-    mtime INTEGER NOT NULL,
-    mauthor text NOT NULL,
-    eapi INTEGER /*NOT NULL*/,
-    slot INTEGER NOT NULL
-    -- data blob /*NOT NULL*/,
-    -- depend TODO
-    -- rdepend TODO
-    -- sha1/md5 INTEGER NOT NULL
-    -- overlay?
-    -- size of dwonloads?
-    -- compile_flags?
-);
-SQL_TABLE_EBUILDS
-
-databases["use_flags"] = <<SQL_TABLE_USE_FLAGS
-Create table use_flags (
-    id INTEGER PRIMARY KEY,
-    flag_name text NOT NULL,
-    flag_description text NOT NULL
-);
-SQL_TABLE_USE_FLAGS
-
-databases["use_flags2ebuilds"] = <<SQL_TABLE_USE_FLAGS2EBUILDS
-Create table use_flags2ebuilds (
-    id INTEGER PRIMARY KEY,
-    flag_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL
-);
-SQL_TABLE_USE_FLAGS2EBUILDS
-
-databases["architectures"] = <<SQL_TABLE_ARCHITECTURES
-Create table architectures (
-    id INTEGER PRIMARY KEY,
-    architecture text UNIQUE NOT NULL
-    -- smth else?
-);
-SQL_TABLE_ARCHITECTURES
-
-databases["ebuilds2architectures"] = <<SQL_TABLE_EBUILDS2ARCHITECTURES
-Create table ebuilds2architectures (
-    id INTEGER PRIMARY KEY,
-    ebuild_id INTEGER NOT NULL,
-    architecture_id INTEGER NOT NULL
-);
-SQL_TABLE_EBUILDS2ARCHITECTURES
-
-databases["keywords"] = <<SQL_TABLE_KEYWORDS
-Create table keywords (
-    id INTEGER PRIMARY KEY,
-    keyword text UNIQUE NOT NULL/*,
-    keyword_description text NOT NULL*/
-);
-SQL_TABLE_KEYWORDS
-
-databases["keywords2architectures"] = <<SQL_TABLE_KEYWORDS2ARCH
-Create table keywords2architectures (
-    id INTEGER PRIMARY KEY,
-    ebuild_architecture_id INTEGER NOT NULL,
-    keyword_id INTEGER NOT NULL
-);
-SQL_TABLE_KEYWORDS2ARCH
-
-databases["licences"] = <<SQL_TABLE_LICENCES
-create table licences (
-    id INTEGER PRIMARY KEY,
-    license_name text NOT NULL
-    -- url text ?,
-    -- content blob /*zipped data*/ ?
-);
-SQL_TABLE_LICENCES
-
-databases["licences2packages"] = <<SQL_TABLE_LICENCES2PACKAGES
-create table licences2packages (
-    id INTEGER PRIMARY KEY,
-    license_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL
-);
-SQL_TABLE_LICENCES2PACKAGES
-
-databases["licences2ebuilds"] = <<SQL_TABLE_LICENCES2EBUILDS
-create table licences2ebuilds (
-    id INTEGER PRIMARY KEY,
-    license_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL
-);
-SQL_TABLE_LICENCES2EBUILDS
-
-databases["sets"] = <<SQL_TABLE_SETS
-create table sets (
-    id INTEGER PRIMARY KEY,
-    set_name text NOT NULL
-);
-SQL_TABLE_SETS
-
-databases["sets_content"] = <<SQL_TABLE_SETS_CONTENT
-create table sets_content (
-    id INTEGER PRIMARY KEY,
-    set_id text INTEGER NOT NULL,
-    package_id text INTEGER NOT NULL
-);
-SQL_TABLE_SETS_CONTENT
-
 OptionParser.new do |opts|
     # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
+    opts.banner = " Usage: create_db [options]\n"
+    opts.separator " Creates empty database file for Gentoo portage\n"
 
     # parsing 'db_filename' option if present
-    opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
+    opts.on("-f", "--database-file STRING", "Path to new database file") do |value|
         if File.exists?(value)
             puts "ERROR: file '#{value}' already exists!"
             exit(1)
@@ -226,8 +51,8 @@ OptionParser.new do |opts|
     end
 
     # parsing 'verbose' option if present
-    opts.on("-v", "--[no]-verbose", "Versbose mode") do |value|
-        options[:verbose] = value
+    opts.on("-v", "--verbose", "Versbose mode") do |value|
+        options[:verbose] = true
     end
 
     # parsing 'help' option if present
@@ -237,39 +62,31 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-sql = <<SQL_ALL_TABLES
-#{databases["categories"]}
-#{databases["packages"]}
-#{databases["persons"]}
-#{databases["responsibilities"]}
-#{databases["persons2responsibilities"]}
-#{databases["maintainers2packages"]}
-#{databases["ebuilds"]}
-#{databases["use_flags"]}
-#{databases["use_flags2ebuilds"]}
-#{databases["architectures"]}
-#{databases["ebuilds2architectures"]}
-#{databases["keywords"]}
-#{databases["keywords2architectures"]}
-#{databases["licences"]}
-#{databases["licences2packages"]}
-#{databases["licences2ebuilds"]}
-#{databases["sets"]}
-#{databases["sets_content"]}
-SQL_ALL_TABLES
+sql = IO.read(File.join(
+    File.dirname(__FILE__),
+    options[:sql_src_home],
+    options[:sql_src]
+))
 
 # print sql if verbose is set
-puts sql if options[:verbose]
+if options[:verbose]
+    puts '='*30
+    puts sql
+    puts '='*30
+end
 
 begin
     db = SQLite3::Database.new(options[:db_filename])
     db.execute_batch(sql)
-    puts 'Everything is OK. Database was created at:'
+    puts 'Everything is OK. Database was created at:' if options[:verbose]
     puts options[:db_filename]
+    error_code = 0
 rescue Exception => msg
     File.delete(options[:db_filename])
-    puts msg
+    puts msg if options[:verbose]
+    error_code = 1
 ensure
     db.close() if db.closed? == false
 end
 
+exit(error_code)
