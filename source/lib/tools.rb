@@ -23,14 +23,15 @@ def get_last_inserted_id(database)
 end
 
 def get_clean_value(line)
-    value = line.split('=')[1]
-    value = value.gsub(/['"\\]*/, '')
-    # TODO: escape chars in description
-    # TODO: trim '\n' in ebuild lines
-    #value = value.gsub(/^['"]/, '')
-    #value = value.gsub(/['"]$/, '')
-    #value = value.rchomp('"').chomp('"')
-    #value = value.rchomp('\'').chomp('\'')
+    #http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/app-admin/eselect-python/eselect-python-99999999.ebuild?r1=1.5&r2=1.6
+    if line.index('=').nil?
+        value = line
+    else
+        value = line.chomp.split('=')[1]
+        value = value.gsub(/^['"]/, '')
+        value = value.gsub(/['"]$/, '')
+    end
+
     return value
 end
 
