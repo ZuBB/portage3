@@ -72,37 +72,37 @@ create table ebuilds (
     -- compile_flags?
 );
 
-Create table use_flags (
+create table use_flags (
     id INTEGER PRIMARY KEY,
     flag_name text NOT NULL,
     flag_description text NOT NULL
 );
 
-Create table use_flags2ebuilds (
+create table use_flags2ebuilds (
     id INTEGER PRIMARY KEY,
     flag_id INTEGER NOT NULL,
     ebuild_id INTEGER NOT NULL
 );
 
-Create table architectures (
+create table architectures (
     id INTEGER PRIMARY KEY,
     architecture text UNIQUE NOT NULL
     -- smth else?
 );
 
-Create table ebuilds2architectures (
+create table ebuilds2architectures (
     id INTEGER PRIMARY KEY,
     ebuild_id INTEGER NOT NULL,
     architecture_id INTEGER NOT NULL
 );
 
-Create table keywords (
+create table keywords (
     id INTEGER PRIMARY KEY,
     keyword text UNIQUE NOT NULL/*,
     keyword_description text NOT NULL*/
 );
 
-Create table keywords2architectures (
+create table keywords2architectures (
     id INTEGER PRIMARY KEY,
     ebuild_architecture_id INTEGER NOT NULL,
     keyword_id INTEGER NOT NULL
