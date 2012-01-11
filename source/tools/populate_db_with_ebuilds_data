@@ -67,8 +67,8 @@ def fill_packages_table(database, portage_home)
         next if is_category_invalid(portage_home, category)
 
         # get id of the current category from our db
-        sql_query = "SELECT id FROM categories WHERE category_name='#{category}';"
-        category_id = database.execute(sql_query)[0]
+        sql_query = "SELECT id FROM categories WHERE category_name=?;"
+        category_id = database.execute(sql_query, category)[0]
         queries_array = []
 
         # lets walk through all items in category dir
@@ -96,61 +96,47 @@ SQL
 end
 
 def get_package_maintainers(database, item_path)
-    metadata_path = File.join(item_path, "metadata.xml")
-    return [] unless File.exists?(metadata_path) && File.readable?(metadata_path)
-
-    xml_doc = Nokogiri::XML(IO.read(metadata_path))
     persons = []
+    metadata_path = File.join(item_path, "metadata.xml")
+    return persons unless (File.readable?(metadata_path) rescue false)
 
-    ['/maintainer', '/upstream/maintainer'].each do |xpath_item|
-        xml_doc.xpath("/pkgmetadata" + xpath_item).each do |maintainer_node|
-            # lets get email and name
-            email = maintainer_node.xpath('email').inner_text rescue ''
-            name = maintainer_node.xpath('name').inner_text rescue ''
-            # TODO <description>Proxying maintainer.</description> and possible other tags
+    Nokogiri::XML(IO.read(metadata_path)).xpath("//maintainer").each do |node|
+        # lets get email and name
+        email = node.xpath('email').inner_text rescue ''
+        name = node.xpath('name').inner_text rescue ''
+        # TODO <description>Proxying maintainer.</description> and possible other tags
 
-            # skip if email is empty or email is a stub
-            next nil if email.empty? || 'maintainer-needed@gentoo.org' == email
+        # skip if email is empty or email is a stub
+        next nil if email.empty? || 'maintainer-needed@gentoo.org' == email
 
-            person = {}
-            person["name"] = name
-            person["email"] = email
-            person["responsibility"] = xpath_item.index('upstream') != nil ?
-                "upstream maintainer" : "gentoo maintainer"
-            persons << person
-        end
+        person = {}
+        person["name"] = name
+        person["email"] = email
+        person["responsibility"] = node.parent().name() == 'upstream' ?
+            "upstream maintainer" : "gentoo maintainer"
+        persons << person
     end
 
     return persons
 end
 
 def store_persons(database, persons)
-    sql_query1 = "SELECT * FROM persons WHERE email=?;"
-    statement1 = database.prepare(sql_query1)
-    sql_query2 = "INSERT INTO persons (email, name) VALUES (?, ?);"
-    statement2 = database.prepare(sql_query2)
-    sql_query3 = "UPDATE persons SET name=? where id=?;"
-    statement3 = database.prepare(sql_query3)
-
     persons.each do |person|
-        result = statement1.execute!(person["email"])
+        sql_query = "SELECT * FROM persons WHERE email=?;"
+        result = database.execute(sql_query, person["email"])
 
         if (result.empty?)
-            statement2.execute(person["email"], person["name"])
+            sql_query = "INSERT INTO persons (email, name) VALUES (?, ?);"
+            database.execute(sql_query, person["email"], person["name"])
             person["person_id"] = get_last_inserted_id(database)
         else
             if !person["name"].empty? && result[0][1].empty?
-                statement3.execute(person["name"], result[0][0])
+                sql_query = "UPDATE persons SET name=? where id=?;"
+                database.execute(sql_query, person["name"], result[0][0])
             end
             person["person_id"] = result[0][0]
         end
     end
-
-    #statement1.finalize()
-    #statement2.finalize()
-    #statement3.finalize()
-
-    return persons
 end
 
 def store_persons_responsibilities(database, persons)
@@ -163,16 +149,11 @@ VALUES (?, (
     WHERE responsibility=?
 ));
 SQL
-    statement = database.prepare(sql_query)
 
     persons.each do |person|
-        statement.execute(person["person_id"], person["responsibility"])
+        database.execute(sql_query, person["person_id"], person["responsibility"])
         person["responsibility_id"] = get_last_inserted_id(database)
     end
-
-    #statement.finalize()
-
-    return persons
 end
 
 def store_package_maintainers(database, persons, category, package)
@@ -188,13 +169,10 @@ VALUES (?, (
         packages.package_name=?
 ));
 SQL
-    statement = database.prepare(sql_query)
 
     persons.each do |person|
-        statement.execute(person["responsibility_id"], category, package)
+        database.execute(sql_query, person["responsibility_id"], category, package)
     end
-
-    #statement.finalize()
 end
 
 def fill_maintainers_table(database, portage_home)
@@ -377,7 +355,6 @@ portage_home = File.join(
     fill_packages_table(db, portage_home)
     fill_maintainers_table(db, portage_home)
     #fill_ebuilds_table(db, portage_home)
-    #db.finalize()
 
     finish = Time.now
 
