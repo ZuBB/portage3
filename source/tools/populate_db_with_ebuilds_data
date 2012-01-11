@@ -273,6 +273,7 @@ def parse_ebuild(database, category, package, ebuild_filename)
     rescue => err
         puts "Exception: #{err}"
     end
+
     ebuild_obj["mtime"] = get_ebuild_mtime(ebuild_text)
     ebuild_obj["author"] = get_ebuild_author(ebuild_text)
     ebuild_obj["eapi"] = get_eapi(ebuild_text)
