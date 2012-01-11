@@ -53,23 +53,27 @@ create table maintainers2packages (
 );
 
 create table ebuilds (
-    id INTEGER PRIMARY KEY,
+    id INTEGER,
     package_id INTEGER NOT NULL,
     version text NOT NULL,
-    licence text NOT NULL,
-    keyword_id INTEGER NOT NULL,
-    architecture INTEGER NOT NULL,
-    mtime INTEGER NOT NULL,
+    license text NOT NULL,
+    mtime text NOT NULL,
     mauthor text NOT NULL,
-    eapi INTEGER /*NOT NULL*/,
-    slot INTEGER NOT NULL
-    -- data blob /*NOT NULL*/,
-    -- depend TODO
-    -- rdepend TODO
-    -- sha1/md5 INTEGER NOT NULL
+    eapi text /*NOT NULL*/,
+    slot text NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    -- keyword_id text NOT NULL,
+    -- architecture text NOT NULL,
+    -- flags?
+    -- enabled flags?
+    -- depend
+    -- rdepend
     -- overlay?
+    -- inherit
+    PRIMARY KEY (id)
+    -- sha1/md5 INTEGER NOT NULL
     -- size of dwonloads?
-    -- compile_flags?
+    -- data blob /*NOT NULL*/,
 );
 
 create table use_flags (
