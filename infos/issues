@@ -1,0 +1,12 @@
+http://devmanual.gentoo.org
+http://znurt.org
+
+stuff from app-dicts/aspell-* does not have description
+stuff from app-dicts/aspell-* does not have homepage
+
+package description: metadata vs ebuild
+
+versionator.eclass
+
+lrwxrwxrwx 1 root root      40 гру 29 22:27 make.globals -> ../usr/share/portage/config/make.globals
+lrwxrwxrwx 1 root root      46 лис 14  2009 make.profile -> ../usr/portage/profiles/default/linux/x86/10.0
