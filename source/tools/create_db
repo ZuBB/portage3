@@ -13,13 +13,16 @@ require 'tools'
 
 # hash with default settings
 options = {
-    :sql_src => '../sql/portage-sqlite.sql',
+    :sql_src_home => '../sql',
+    :sql_src => 'portage.sqlite.sql',
+    :sql_extra_src => 'portage.notes.sqlite.sql',
     :db_filename => "test-#{get_timestamp()}.sqlite",
     :db_path => nil,
     :storage => {},
     :batch_mode => false,
     :verbose => false,
-    :list => false
+    :list => false,
+    :extra => true
 }
 
 # lets merge stuff from tools lib
@@ -94,7 +97,18 @@ OptionParser.new do |opts|
 end.parse!
 
 # get sql code
-sql = IO.read(File.join(File.dirname(__FILE__), options[:sql_src]))
+sql = IO.read(File.join(
+    File.dirname(__FILE__),
+    options[:sql_src_home],
+    options[:sql_src]
+))
+
+sql_extra = IO.read(File.join(
+    File.dirname(__FILE__),
+    options[:sql_src_home],
+    options[:sql_extra_src]
+))
+
 # get path to the database file
 options[:db_path] = File.join(
     options[:storage][:root],
@@ -109,6 +123,7 @@ puts '='*30, sql, '='*30 if options[:verbose]
 begin
     db = SQLite3::Database.new(options[:db_path])
     db.execute_batch(sql)
+    db.execute_batch(sql_extra) if options[:extra]
 
     if File.size(options[:db_path]) == 0
         message = 'Something went wrong. created db has zero size'
