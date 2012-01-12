@@ -11,9 +11,9 @@ create table packages (
     id INTEGER,
     category_id INTEGER NOT NULL,
     package_name text NOT NULL,
-    description text NOT NULL DEFAULT '', /* default is temporary? workaround*/
-    homepage text NOT NULL DEFAULT '', /* default is temporary? workaround*/
-    CONSTRAINT unq_cat_id8package UNIQUE (category_id, package_name),
+    description text NOT NULL,
+    homepage text NOT NULL,
+    CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
     PRIMARY KEY (id)
 );
@@ -23,7 +23,7 @@ create table persons (
     name text,
     email text UNIQUE NOT NULL,
     nickname text UNIQUE,
-    CONSTRAINT unq_name8email UNIQUE (name, email),
+    CONSTRAINT idx1_unq UNIQUE (name, email, nickname),
     PRIMARY KEY (id)
 );
 
@@ -40,6 +40,7 @@ create table persons2responsibilities (
     FOREIGN KEY (person_id) REFERENCES persons(id),
     FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id),
     CONSTRAINT unq_person_id8resp UNIQUE (person_id, responsibility_id),
+    CONSTRAINT idx1_unq UNIQUE (person_id, responsibility_id),
     PRIMARY KEY (id)
 );
 
@@ -49,6 +50,7 @@ create table maintainers2packages (
     maintainer_id INTEGER NOT NULL,
     FOREIGN KEY (maintainer_id) REFERENCES persons2responsibilities(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
+    CONSTRAINT idx1_unq UNIQUE (package_id, maintainer_id),
     PRIMARY KEY (id)
 );
 
@@ -76,6 +78,8 @@ create table ebuilds (
     -- size of dwonloads?
     -- data blob /*NOT NULL*/,
 );
+CREATE UNIQUE INDEX idx1_unq
+ON ebuilds(package_id, version);
 
 create table eapis (
     id INTEGER,
