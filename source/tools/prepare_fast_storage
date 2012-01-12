@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
 #
-# Here should go some comment
+# Helper script that puts unpacked portage tree
+# to the directory in the fast storage (tmpfs)
 #
 # Initial Author: Vasyl Zuzyak, 01/04/12
-# Latest Modification: Vasyl Zuzyak, 01/06/12
+# Latest Modification: Vasyl Zuzyak, 01/12/12
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'fileutils'
@@ -16,7 +17,9 @@ options = {
     :recreate_tree => false,
     :snapshots_home => '../../snapshots',
     :snapshot_name => 'portage-latest.tar.bz2',
-    :storage => {}
+    :storage => {},
+    :clean => false,
+    :quiet => false
 }
 
 # lets merge stuff from tools lib
@@ -24,46 +27,50 @@ options[:storage].merge!(STORAGE)
 
 OptionParser.new do |opts|
     # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
+    opts.banner = " Usage: prepare_fast_storage [options]"
+    opts.separator "\n A script that puts portage tree to own directory in the fast storage"
+    opts.separator " Usually its a shared memory (tmpfs). As a rule its mounted at /dev/shm"
+    opts.separator "\n Command line options"
+
+    opts.on("-c", "--clean-after", "Clean previous snapshot if new one has been downloaded") do |value|
+        options[:clean] = true
+    end
 
     opts.on("-d", "--download-snapshot", "Redownload latest snapshot") do |value|
         options[:download_snapshot] = true
+        # if we dowloading new snapshot, we need to recreate tree
         options[:recreate_tree] = true
     end
 
-    opts.on("-t", "--recreate-tree", "Recreate portage tree") do |value|
+    opts.on("-f", "--root-folder STRING", "Dir where portage tree will be extracted") do |value|
+        options[:storage][:root] = File.expand_path(value)
+    end
+
+    opts.on("-r", "--recreate-tree", "Recreate portage tree") do |value|
         options[:recreate_tree] = true
     end
 
-    opts.on("-r", "--root-dir STRING", "Dir where portage tree will be extraced") do |value|
-        options[:storage][:root] = value
+    opts.on("-u", "--url STRING", "URL for downloading snapshot") do |value|
+        if value[-7..-1] == 'tar.bz2'
+            # if we got new dowload url,
+            options[:download_url] = value
+            # we need to download new snapshot and recreate tree
+            options[:download_snapshot] = options[:recreate_tree] = true
+        else
+            puts 'Script workds only with `bz2` archives'
+            exit(2)
+        end
     end
 
-    opts.on("-u", "--url STRING", "URL where snapshot is located") do |value|
-        # TODO process only 'tar.bz2' archives
-        options[:download_url] = value
+    opts.on("-q", "--[no]-quiet", "Quiet mode") do |value|
+        options[:quiet] = value
     end
 
-    # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
-    end
-
-    # parsing 'help' option if present
     opts.on_tail("-h", "--help", "Show this message") do
         puts opts
         exit
     end
 end.parse!
-
-print "Checking if '#{options[:storage][:root]}' is a symlink on target system.. "
-if File.symlink?(options[:storage][:root])
-    options[:storage][:root] = File.readlink(options[:storage][:root])
-    puts "YES"
-else
-    puts "NO"
-end
 
 print "Checking if '#{options[:storage][:root]}' path is present on target system.. "
 if File.exist?(options[:storage][:root])
@@ -98,28 +105,52 @@ else
     exit(1)
 end
 
-file_location = File.join(options[:snapshots_home], options[:snapshot_name])
+soft_link = File.join(
+    File.dirname(__FILE__),
+    options[:snapshots_home],
+    options[:snapshot_name]
+)
 
 if options[:download_snapshot]
     puts "Starting download latest portage snapshot.."
 
-    if file_location.index('latest') != nil
-        file_location.gsub!("latest", get_timestamp())
-    end
+    # get correct filename
+    filename = File.join(
+        File.dirname(__FILE__),
+        options[:snapshots_home],
+        (options[:download_url].include?('latest') ?
+             options[:snapshot_name].gsub("latest", get_timestamp()) :
+             File.basename(options[:download_url])
+        )
+    )
 
-    `wget -O #{file_location} #{options[:download_url]}`
-    #TODO soft link to file that we just downloaded
+    # create wget command
+    wget_command = "wget -O #{filename}"
+    wget_command << " #{options[:quiet] ? '-q' : ''}"
+    wget_command << " #{options[:download_url]}"
+
+    # download new snapshot
+    %x[#{wget_command}]
+    # remove outdated one
+    if options[:clean] 
+        File.delete(File.join(
+            File.dirname(__FILE__),
+            options[:snapshots_home],
+            File.readlink(soft_link)
+        ))
+    end
+    # update softlink
+    `ln -fs #{File.basename(filename)} #{soft_link}`
 end
 
 home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
 full_path = File.join(home_path, options[:storage][:portage_home])
 
-if options[:recreate_tree] || !File.exist?(home_path) || !File.exist?(full_path)
+if options[:recreate_tree] || (!File.exist?(full_path) rescue true)
     FileUtils.rm_r(full_path) if File.exist?(full_path)
     Dir.mkdir(home_path) if !File.exist?(home_path)
     print "Starting to exctact portage snapshots.. "
-    # TODO passed file should be 'tar.bz2' format
-    `tar xjf #{file_location} -C #{home_path}`
+    `tar xjf #{soft_link} -C #{home_path}`
     puts "Done"
 end
 
