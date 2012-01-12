@@ -59,9 +59,10 @@ create table ebuilds (
     license text NOT NULL,
     mtime text NOT NULL,
     mauthor text NOT NULL,
-    eapi text /*NOT NULL*/,
+    eapi_id INTEGER NOT NULL,
     slot text NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (eapi_id) REFERENCES eapis(id),
     -- keyword_id text NOT NULL,
     -- architecture text NOT NULL,
     -- flags?
@@ -74,6 +75,12 @@ create table ebuilds (
     -- sha1/md5 INTEGER NOT NULL
     -- size of dwonloads?
     -- data blob /*NOT NULL*/,
+);
+
+create table eapis (
+    id INTEGER,
+    eapi_version INTEGER UNIQUE NOT NULL,
+    PRIMARY KEY (id)
 );
 
 create table use_flags (
