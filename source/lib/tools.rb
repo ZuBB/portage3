@@ -79,3 +79,16 @@ def get_last_created_database(root_path, home_folder)
     return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
 end
 
+def get_package_id(database, category, package)
+    sql_query = <<SQL
+SELECT packages.id
+FROM packages, categories
+WHERE
+    categories.category_name=? and
+    packages.package_name=? and
+    packages.category_id = categories.id
+SQL
+
+    # get category_id
+    database.execute(sql_query, category, package)[0][0]
+end
