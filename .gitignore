@@ -1,5 +1,2 @@
-infos
-examples/apt2
-examples/portage
-examples/yum
+infos/examples
 snapshots/*.tar.bz2
