@@ -136,8 +136,18 @@ def store_persons(database, persons)
 end
 
 def store_persons_responsibilities(database, persons)
-    sql_query = <<SQL
-INSERT OR IGNORE INTO persons2responsibilities
+    sql_query1 = <<SQL
+SELECT id
+FROM persons2responsibilities
+WHERE person_id=? and responsibility_id = (
+    SELECT id
+    FROM responsibilities
+    WHERE responsibility=?
+);"
+SQL
+
+    sql_query2 = <<SQL
+INSERT INTO persons2responsibilities
 (person_id, responsibility_id)
 VALUES (?, (
     SELECT id
@@ -147,27 +157,29 @@ VALUES (?, (
 SQL
 
     persons.each do |person|
-        database.execute(sql_query, person["person_id"], person["responsibility"])
-        person["responsibility_id"] = get_last_inserted_id(database)
+        result = database.execute(
+            sql_query1,
+            person["person_id"],
+            person["responsibility"]
+        )
+
+        if (result.empty?)
+            database.execute(sql_query2, person["person_id"], person["responsibility"])
+            person["persons_resp_id"] = get_last_inserted_id(database)
+        else
+            person["persons_resp_id"] = result[0][0]
+        end
     end
 end
 
-def store_package_maintainers(database, persons, category, package)
+def store_package_maintainers(database, persons, package_id)
     sql_query = <<SQL
 INSERT INTO maintainers2packages
 (maintainer_id, package_id)
-VALUES (?, (
-    SELECT packages.id
-    FROM packages, categories
-    WHERE
-        categories.category_name=? and
-        packages.category_id = categories.id and
-        packages.package_name=?
-));
+VALUES (?, ?);
 SQL
-
     persons.each do |person|
-        database.execute(sql_query, person["responsibility_id"], category, package)
+        database.execute(sql_query, person["persons_resp_id"], package_id)
     end
 end
 
@@ -183,10 +195,12 @@ def fill_maintainers_table(database, portage_home)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
+            # get category_id
+            package_id = get_package_id(database, category, package)
             persons = get_package_maintainers(database, item_path)
             persons = store_persons(database, persons)
             persons = store_persons_responsibilities(database, persons)
-            store_package_maintainers(database, persons, category, package)
+            store_package_maintainers(database, persons, package_id)
         end
     end
 end
@@ -282,21 +296,13 @@ def parse_ebuild(database, category, package, ebuild_filename)
 
     sql_query = <<SQL
 INSERT INTO ebuilds
-(package_id, version, mtime, mauthor, eapi, slot, license)
-VALUES ((
-    SELECT packages.id
-    FROM packages, categories
-    WHERE
-        categories.category_name=? and
-        packages.package_name=? and
-        packages.category_id = categories.id
-), ?, ?, ?, ?, ?, ?);
+(package_id, version, mtime, mauthor, eapi_id, slot, license)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 SQL
 
     database.execute(
         sql_query, 
-        category,
-        package,
+        package_id,
         ebuild_obj["version"],
         ebuild_obj["mtime"],
         ebuild_obj["author"],
@@ -318,8 +324,10 @@ def fill_ebuilds_table(database, portage_home)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
+            # get category_id
+            package_id = get_package_id(database, category, package)
             Dir.glob(File.join(item_path, '*.ebuild')).sort.each do |ebuild|
-                parse_ebuild(database, category, package, ebuild)
+                parse_ebuild(database, package_id, ebuild)
             end
         end
     end
