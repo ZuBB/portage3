@@ -11,4 +11,13 @@ create table _note_eapi_0_nf (
     PRIMARY KEY (id)
 );
 
+create table _note_email_mn (
+    -- this is a table with ids of packages that have
+    -- 'maintainer-needed@gentoo.org' email as maintainer's email
+    id INTEGER,
+    package_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    PRIMARY KEY (id)
+);
+
 COMMIT;
