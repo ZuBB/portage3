@@ -22,7 +22,8 @@ def get_last_inserted_id(database)
     return database.execute("SELECT last_insert_rowid();").flatten[0]
 end
 
-def get_clean_value(line)
+def clean_ini_value(line)
+    # TODO: move it inside parent function
     value = line
     if !value.include?('=') && value.index('#') == 0
         # TODO what is correct value to set here
@@ -48,29 +49,32 @@ def get_clean_value(line)
     return value
 end
 
-def get_ebuild_from_cvs_header(ebuild_text)
+def get_value_from_cvs_header(ebuild_text, regexp)
     ebuild_text.each { |line|
-        if line.index('# $Header:') == 0
+        if line.include?('# $Header:') # TODO: or index == 0 ?
             # https://bugs.gentoo.org/show_bug.cgi?id=398567
-            return line.match(/^# \$Header: ([^,]+),/)[1].to_s rescue 'package X'
+            match = line.match(regexp)
+            match = match[1] if !match.nil? && !match[1].nil?
+            return (match.to_s rescue nil)
         end
     }
 
-    return 'package X'
+    return nil
 end
 
 def get_single_line_ini_value(ebuild_text, keyword)
     values = []
     ebuild_text.each { |line|
         # '==' because of app-editors/nvi/nvi-1.81.6-r3.ebuild
-        values << get_clean_value(line) if line.index(keyword) == 0
+        values << clean_ini_value(line) if line.index(keyword) == 0
     }
 
     if (values.compact!.uniq! rescue []).size > 1
-        print "found #{values.size} values of '#{keyword}'"
-        puts "for #{get_ebuild_from_cvs_header(ebuild_text)}"
+        # TODO replace false with some good condition
+        print "found #{values.size} values of '#{keyword}'" if false
     end
 
+    # TODO return values.join(',') rescue nil
     return values[0] rescue nil
 end
 

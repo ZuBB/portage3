@@ -12,6 +12,7 @@ require 'rubygems'
 require 'nokogiri'
 require 'sqlite3'
 require 'tools'
+require 'time'
 
 def is_category_invalid(portage_home, category)
     # skip system dirs
@@ -100,7 +101,8 @@ def get_package_maintainers(database, item_path)
         # lets get email and name
         email = node.xpath('email').inner_text rescue ''
         name = node.xpath('name').inner_text rescue ''
-        # TODO <description>Proxying maintainer.</description> and possible other tags
+        # TODO also handle next tag and possible other tags/values
+        # <description>Proxying maintainer.</description>
 
         # skip if email is empty or email is a stub
         next nil if email.empty? || 'maintainer-needed@gentoo.org' == email
@@ -195,52 +197,33 @@ def fill_maintainers_table(database, portage_home)
             # skip if it is a ..
             next if is_package_invalid(item_path, package)
 
-            # get category_id
-            package_id = get_package_id(database, category, package)
             persons = get_package_maintainers(database, item_path)
             persons = store_persons(database, persons)
             persons = store_persons_responsibilities(database, persons)
+            package_id = get_package_id(database, category, package)
             store_package_maintainers(database, persons, package_id)
         end
     end
 end
 
 def get_ebuild_description(ebuild_text)
-    ebuild_text.each { |line|
-        return get_clean_value(line) if line.index('DESCRIPTION=') != nil
-    }
-
-    return ''
+    return get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
 end
 
 def get_ebuild_homepage(ebuild_text)
-    ebuild_text.each { |line|
-        return get_clean_value(line) if line.index('HOMEPAGE=') != nil
-    }
-
-    return ''
+    return get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
 end
 
 def get_ebuild_mtime(ebuild_text)
-    ebuild_text.each { |line|
-        if line.index('# $Header:') != nil
-            # https://bugs.gentoo.org/show_bug.cgi?id=398567
-            return line.match(/\d{4}\/\d\d\/\d\d \d\d:\d\d:\d\d/).to_s rescue '1970'
-        end
-    }
-
-    return ''
+    regexp = Regexp.new("\\d{4}\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d")
+    result = get_value_from_cvs_header(ebuild_text, regexp)
+    return (Time.parse(result).to_i rescue '0_TIME_NF')
 end
 
 def get_ebuild_author(ebuild_text)
-    ebuild_text.each { |line|
-        if line.index('# $Header:') != nil
-            # https://bugs.gentoo.org/show_bug.cgi?id=398567
-            return line.match(/:\d\d ([\w_\-\.]+) Exp \$$/)[1].to_s rescue 'anonymous'
-        end
-    }
-
-    return ''
+    regexp = Regexp.new(":\\d\\d ([\\w_\\-\\.]+) Exp \\$$")
+    result = get_value_from_cvs_header(ebuild_text, regexp)
+    return result || '0_AUTHOR_NF'
 end
 
 def get_eapi(ebuild_text)
@@ -248,41 +231,31 @@ def get_eapi(ebuild_text)
     # ./media-gfx/dawn/dawn-3.88a.ebuild
     # http://devmanual.gentoo.org/ebuild-writing/eapi/index.html
     # NF is 'not found'. means we din not find eapi declaration here
-    return get_single_line_ini_value(ebuild_text, 'EAPI') || '0_EAPI_NF'
+    return get_single_line_ini_value(ebuild_text, 'EAPI').to_i || '0_EAPI_NF'
 end
 
 def get_slot(ebuild_text)
     # app-admin/phpsyslogng/phpsyslogng-2.8-r1.ebuild
     # NSP is 'no slot present'. means we din not find eapi declaration here
     # http://devmanual.gentoo.org/general-concepts/slotting/index.html
-    return get_single_line_ini_value(ebuild_text, 'SLOT') || '0NSP'
+    return get_single_line_ini_value(ebuild_text, 'SLOT').to_i || '0_SLOT_NF'
 end
 
 def get_license(ebuild_text)
     # https://bugs.gentoo.org/show_bug.cgi?id=398575
-    return get_single_line_ini_value(ebuild_text, 'LICENSE') || 'missed'
+    return get_single_line_ini_value(ebuild_text, 'LICENSE') || '0_LICENSE_NF'
 end
 
-def get_ebuild_version(ebuild_filename)
-    # TODO get version from $Header: /var/cvsroot
-    result = 'undefined'
-    filename = File.basename(ebuild_filename, ".ebuild")
-    match = filename.match('-\d').to_s
-
-    if match.nil? || match.empty?
-        puts 'Failed to get version for ' + ebuild_filename
-    else
-        position = filename.index(match)
-        result = filename[(position + 1)..-1]
-    end
-
-    return result
+def get_ebuild_version(ebuild_text)
+    regexp = Regexp.new("-(\\d.*)\\.ebuild,v")
+    result = get_value_from_cvs_header(ebuild_text, regexp)
+    return result || '0_VERSION_NF'
 end
 
 def get_eapi_id(database, ebuild_obj)
     if ebuild_obj["eapi"] == '0_EAPI_NF'
         ebuild_obj["eapi"] = 0
-        ebuild_obj["eapi_real"] = true
+        ebuild_obj["real_eapi"] = '0_EAPI_NF'
     end
 
     sql_query = "SELECT id FROM eapis WHERE eapi_version=?;"
@@ -297,8 +270,7 @@ def store_real_eapi(database, ebuild_obj)
 end
 
 def parse_ebuild(database, package_id, ebuild_filename)
-    ebuild_obj = { "version" => get_ebuild_version(ebuild_filename) }
-    ebuild_text = nil
+    ebuild_text, ebuild_obj = nil, {"package_id" => package_id}
 
     begin
         ebuild_text = IO.read(ebuild_filename).to_a
@@ -309,9 +281,12 @@ def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj["mtime"] = get_ebuild_mtime(ebuild_text)
     ebuild_obj["author"] = get_ebuild_author(ebuild_text)
     ebuild_obj["eapi"] = get_eapi(ebuild_text)
-    ebuild_obj = get_eapi_id(database, ebuild_obj)
     ebuild_obj["slot"] = get_slot(ebuild_text)
     ebuild_obj["license"] = get_license(ebuild_text)
+    ebuild_obj["version"] = get_ebuild_version(ebuild_text)
+
+    ebuild_obj = get_eapi_id(database, ebuild_obj)
+    #ebuild_obj = get_license_id(database, ebuild_obj)
 
     sql_query = <<SQL
 INSERT INTO ebuilds
@@ -321,7 +296,7 @@ SQL
 
     database.execute(
         sql_query, 
-        package_id,
+        ebuild_obj["package_id"],
         ebuild_obj["version"],
         ebuild_obj["mtime"],
         ebuild_obj["author"],
