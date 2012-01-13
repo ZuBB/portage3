@@ -74,7 +74,7 @@ def fill_responsibilities_table(database)
         'proxying maintainer'
     ].each { |resp|
         # create query for responsibility and add it into array
-        sql_query = "INSERT INTO responsibilities (responsibility) VALUES ('#{resp}');"
+        sql_query = "INSERT INTO roles (role) VALUES ('#{resp}');"
         queries_array << sql_query
     }
 

@@ -27,30 +27,29 @@ create table persons (
     PRIMARY KEY (id)
 );
 
-create table responsibilities (
+create table roles (
     id INTEGER,
-    responsibility text UNIQUE NOT NULL,
+    role text UNIQUE NOT NULL,
     PRIMARY KEY (id)
 );
 
-create table persons2responsibilities (
+create table persons2roles (
     id INTEGER,
     person_id INTEGER NOT NULL,
-    responsibility_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
     FOREIGN KEY (person_id) REFERENCES persons(id),
-    FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id),
-    CONSTRAINT unq_person_id8resp UNIQUE (person_id, responsibility_id),
-    CONSTRAINT idx1_unq UNIQUE (person_id, responsibility_id),
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    CONSTRAINT idx1_unq UNIQUE (person_id, role_id),
     PRIMARY KEY (id)
 );
 
-create table maintainers2packages (
+create table person_roles2packages (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    maintainer_id INTEGER NOT NULL,
-    FOREIGN KEY (maintainer_id) REFERENCES persons2responsibilities(id),
+    persons_role_id INTEGER NOT NULL,
+    FOREIGN KEY (persons_role_id) REFERENCES persons2roles(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    CONSTRAINT idx1_unq UNIQUE (package_id, maintainer_id),
+    CONSTRAINT idx1_unq UNIQUE (package_id, persons_role_id),
     PRIMARY KEY (id)
 );
 

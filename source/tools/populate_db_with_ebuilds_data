@@ -108,7 +108,7 @@ def get_package_maintainers(database, item_path)
         person = {}
         person["name"] = name
         person["email"] = email
-        person["responsibility"] = node.parent().name() == 'upstream' ?
+        person["role"] = node.parent().name() == 'upstream' ?
             "upstream maintainer" : "gentoo maintainer"
         persons << person
     end
@@ -138,21 +138,21 @@ end
 def store_persons_responsibilities(database, persons)
     sql_query1 = <<SQL
 SELECT id
-FROM persons2responsibilities
-WHERE person_id=? and responsibility_id = (
+FROM persons2roles
+WHERE person_id=? and role_id = (
     SELECT id
-    FROM responsibilities
-    WHERE responsibility=?
-);"
+    FROM roles
+    WHERE role=?
+);
 SQL
 
     sql_query2 = <<SQL
-INSERT INTO persons2responsibilities
-(person_id, responsibility_id)
+INSERT INTO persons2roles
+(person_id, role_id)
 VALUES (?, (
     SELECT id
-    FROM responsibilities
-    WHERE responsibility=?
+    FROM roles
+    WHERE role=?
 ));
 SQL
 
@@ -160,26 +160,26 @@ SQL
         result = database.execute(
             sql_query1,
             person["person_id"],
-            person["responsibility"]
+            person["role"]
         )
 
         if (result.empty?)
-            database.execute(sql_query2, person["person_id"], person["responsibility"])
-            person["persons_resp_id"] = get_last_inserted_id(database)
+            database.execute(sql_query2, person["person_id"], person["role"])
+            person["persons_role_id"] = get_last_inserted_id(database)
         else
-            person["persons_resp_id"] = result[0][0]
+            person["persons_role_id"] = result[0][0]
         end
     end
 end
 
 def store_package_maintainers(database, persons, package_id)
     sql_query = <<SQL
-INSERT INTO maintainers2packages
-(maintainer_id, package_id)
+INSERT INTO person_roles2packages
+(persons_role_id, package_id)
 VALUES (?, ?);
 SQL
     persons.each do |person|
-        database.execute(sql_query, person["persons_resp_id"], package_id)
+        database.execute(sql_query, person["persons_role_id"], package_id)
     end
 end
 
@@ -248,7 +248,7 @@ def get_eapi(ebuild_text)
     # ./media-gfx/dawn/dawn-3.88a.ebuild
     # http://devmanual.gentoo.org/ebuild-writing/eapi/index.html
     # NF is 'not found'. means we din not find eapi declaration here
-    return get_single_line_ini_value(ebuild_text, 'EAPI') || '0_NF'
+    return get_single_line_ini_value(ebuild_text, 'EAPI') || '0_EAPI_NF'
 end
 
 def get_slot(ebuild_text)
@@ -264,6 +264,7 @@ def get_license(ebuild_text)
 end
 
 def get_ebuild_version(ebuild_filename)
+    # TODO get version from $Header: /var/cvsroot
     result = 'undefined'
     filename = File.basename(ebuild_filename, ".ebuild")
     match = filename.match('-\d').to_s
@@ -279,9 +280,9 @@ def get_ebuild_version(ebuild_filename)
 end
 
 def get_eapi_id(database, ebuild_obj)
-    if ebuild_obj["eapi"] == '0_NF'
-        ebuild_obj["eapi"] = '0'
-        ebuild_obj["eapi_real"] = '0_NF'
+    if ebuild_obj["eapi"] == '0_EAPI_NF'
+        ebuild_obj["eapi"] = 0
+        ebuild_obj["eapi_real"] = true
     end
 
     sql_query = "SELECT id FROM eapis WHERE eapi_version=?;"
@@ -307,7 +308,6 @@ def parse_ebuild(database, package_id, ebuild_filename)
 
     ebuild_obj["mtime"] = get_ebuild_mtime(ebuild_text)
     ebuild_obj["author"] = get_ebuild_author(ebuild_text)
-    #store_author(database, ebuild_obj["author"])
     ebuild_obj["eapi"] = get_eapi(ebuild_text)
     ebuild_obj = get_eapi_id(database, ebuild_obj)
     ebuild_obj["slot"] = get_slot(ebuild_text)
