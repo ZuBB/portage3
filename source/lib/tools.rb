@@ -7,12 +7,25 @@
 require 'time' unless Object.const_defined?(:Time)
 
 TIMESTAMP = "%Y%m%d-%H%M%S"
-STORAGE = {
-    :home_folder => 'portage3_data',
-    :portage_home => 'portage',
-    :required_space => 700,
-    :root => '/dev/shm'
+OPTIONS = {
+    :quiet => true,
+    :db_filename => nil,
+    :storage => {
+		:root => '/dev/shm',
+		:home_folder => 'portage3_data',
+		:portage_home => 'portage',
+		:full_tree_path => nil,
+		:required_space => 700
+	},
 }
+
+def get_full_tree_path(options)
+    File.join(
+        options[:storage][:root],
+        options[:storage][:home_folder],
+        options[:storage][:portage_home]
+    )
+end
 
 def get_timestamp()
     return Time.now.strftime(TIMESTAMP)
@@ -78,9 +91,12 @@ def get_single_line_ini_value(ebuild_text, keyword)
     return values[0] rescue nil
 end
 
-def get_last_created_database(root_path, home_folder)
-    # get last test database
-    return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
+def get_last_created_database(options)
+    return Dir.glob(File.join(
+        options[:storage][:root],
+        options[:storage][:home_folder],
+		'/*.sqlite'
+    )).sort.last
 end
 
 def get_package_id(database, category, package)
@@ -95,4 +111,17 @@ SQL
 
     # get category_id
     database.execute(sql_query, category, package)[0][0]
+end
+
+def fill_table_X(db_filename, table_name, fill_table, params)
+	# TODO: check if all dependant tables are filled
+    start = Time.now
+
+	database = SQLite3::Database.new(db_filename)
+	# TODO params
+	# TODO do we need an try/catch here?
+	fill_table.call(database, params[0])
+	database.close() if database.closed? == false
+
+	return start.to_i - Time.now.to_i
 end
