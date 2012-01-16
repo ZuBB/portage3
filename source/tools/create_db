@@ -16,17 +16,15 @@ options = {
     :sql_src_home => '../sql',
     :sql_src => 'portage.sqlite.sql',
     :sql_extra_src => 'portage.notes.sqlite.sql',
-    :db_filename => "test-#{get_timestamp()}.sqlite",
     :db_path => nil,
-    :storage => {},
     :batch_mode => false,
     :verbose => false,
     :list => false,
     :extra => true
-}
-
 # lets merge stuff from tools lib
-options[:storage].merge!(STORAGE)
+}.merge!(OPTIONS)
+# db_filename
+options[:db_filename] = "test-#{get_timestamp()}.sqlite"
 
 OptionParser.new do |opts|
     # help header

@@ -17,13 +17,13 @@ options = {
     :recreate_tree => false,
     :snapshots_home => '../../snapshots',
     :snapshot_name => 'portage-latest.tar.bz2',
-    :storage => {},
-    :clean => false,
-    :quiet => false
+    :clean => false
 }
 
 # lets merge stuff from tools lib
-options[:storage].merge!(STORAGE)
+options.merge!(OPTIONS)
+# set real default
+options[:quiet] = false
 
 OptionParser.new do |opts|
     # help header
