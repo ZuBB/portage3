@@ -120,6 +120,7 @@ def fill_table_X(db_filename, table_name, fill_table, params)
     database = SQLite3::Database.new(db_filename)
     # TODO params
     # TODO do we need an try/catch here?
+    # http://stackoverflow.com/questions/522720/passing-a-method-as-a-parameter-in-ruby
     fill_table.call(database, params)
     database.close() if database.closed? == false
 
