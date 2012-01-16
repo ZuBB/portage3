@@ -113,16 +113,31 @@ SQL
     database.execute(sql_query, category, package)[0][0]
 end
 
-def fill_table_X(db_filename, table_name, fill_table, params)
-    # TODO: check if all dependant tables are filled
+def fill_table_X(db_filename, fill_table, params)
     start = Time.now
 
     database = SQLite3::Database.new(db_filename)
-    # TODO params
     # TODO do we need an try/catch here?
     # http://stackoverflow.com/questions/522720/passing-a-method-as-a-parameter-in-ruby
     fill_table.call(database, params)
     database.close() if database.closed? == false
 
     return start.to_i - Time.now.to_i
+end
+
+def walk_through_categories(params)
+    Dir.new(params[:portage_home]).sort.each do |category|
+        # skip system dirs
+        next if ['.', '..'].index(category) != nil
+        # skip files
+        next if File.file?(File.join(params[:portage_home], category))
+        #TODO what to do with this?
+        next if category.index('-') == nil
+
+        params[:block].call(
+            params[:database],
+            params[:portage_home],
+            category
+        )
+    end
 end

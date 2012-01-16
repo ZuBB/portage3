@@ -62,9 +62,9 @@ def fill_table(database, params)
     database.execute_batch(queries_array.join("\n"))
 end
 
+#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 fill_table_X(
     options[:db_filename],
-    File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
     method(:fill_table),
     {}
 )
