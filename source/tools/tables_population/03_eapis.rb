@@ -33,7 +33,7 @@ OptionParser.new do |opts|
     opts.separator " A script that purges outdated data from s3 bucket\n"
 
     opts.on("-f", "--database-file STRING",
-			"Path where new database file will be created") do |value|
+            "Path where new database file will be created") do |value|
         # TODO check if path id valid
         options[:db_filename] = value
     end
