@@ -72,11 +72,14 @@ OptionParser.new do |opts|
     end
 end.parse!
 
+home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
+full_path = File.join(home_path, options[:storage][:portage_home])
+
 print "Checking if '#{options[:storage][:root]}' path is present on target system.. "
 if File.exist?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage][:root]}' location can not be found on target system"
+    puts "\nERROR: '#{options[:storage][:root]}' location can not be found on target system"
     exit(1)
 end
 
@@ -84,7 +87,7 @@ print "Checking if '#{options[:storage][:root]}' is a directory on target system
 if File.directory?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage][:root]}' is not a directory on target system"
+    puts "\nERROR: '#{options[:storage][:root]}' is not a directory on target system"
     exit(1)
 end
 
@@ -92,16 +95,23 @@ print "Checking if '#{options[:storage][:root]}' is writable on target system.. 
 if File.writable?(options[:storage][:root])
     puts "OK"
 else
-    puts "ERROR: '#{options[:storage][:root]}' is not writable on target system"
+    puts "\nERROR: '#{options[:storage][:root]}' is not writable on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage][:root]}' has enough free space on target system.. "
-space_available = `df -kP #{options[:storage][:root]}`.split("\n")[1].split(" ")[3].to_i
+space_line = `df -kP #{options[:storage][:root]}`.split("\n")[1]
+
+print "Checking if '#{options[:storage][:root]}' has enough space on target system.. "
+total_space = space_line.split(" ")[1].to_i
+space_available = space_line.split(" ")[3].to_i
+portage_size = `du -s #{full_path}`.split(' ')[0].to_i if File.exist?(full_path)
+
 if space_available > options[:storage][:required_space] * 1024
     puts "OK"
+elsif File.exist?(full_path) && portage_size + space_available > options[:storage][:required_space] * 1024
+    puts "OK"
 else
-    puts "ERROR: '#{options[:storage][:root]}' does not have enough free space"
+    puts "\nERROR: '#{options[:storage][:root]}' does not have enough space"
     exit(1)
 end
 
@@ -143,14 +153,16 @@ if options[:download_snapshot]
     `ln -fs #{File.basename(filename)} #{soft_link}`
 end
 
-home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
-full_path = File.join(home_path, options[:storage][:portage_home])
-
 if options[:recreate_tree] || (!File.exist?(full_path) rescue true)
     FileUtils.rm_r(full_path) if File.exist?(full_path)
     Dir.mkdir(home_path) if !File.exist?(home_path)
     print "Starting to exctact portage snapshots.. "
     `tar xjf #{soft_link} -C #{home_path}`
     puts "Done"
+elsif File.exist?(full_path)
+	puts "Portage dir already present"
+	puts "Its size equals to #{portage_size / 1024} Mb"
+	puts "It has #{Dir.glob(full_path + '/*/').size} subdirectories inside"
+	puts "SUGGESTION: you can append '-r' option, that will cause tree to be recreated"
 end
 
