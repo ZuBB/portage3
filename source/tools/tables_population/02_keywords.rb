@@ -13,19 +13,7 @@ require 'sqlite3'
 require 'tools'
 
 # hash with options
-options = {
-    :db_filename => nil,
-    :storage => {},
-    :quiet => true
-}
-
-# lets merge stuff from tools lib
-options[:storage].merge!(STORAGE)
-# get last created database
-options[:db_filename] = get_last_created_database(
-    options[:storage][:root],
-    options[:storage][:home_folder]
-)
+options = Hash.new.merge!(OPTIONS)
 
 OptionParser.new do |opts|
     # help header
@@ -38,6 +26,7 @@ OptionParser.new do |opts|
         options[:db_filename] = value
     end
 
+    #TODO do we need a setting `:root` option here?
     # parsing 'quite' option if present
     opts.on("-q", "--quiet", "Quiet mode") do |value|
         options[:quiet] = true
@@ -50,36 +39,29 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-portage_home = File.join(
-    options[:storage][:root],
-    options[:storage][:home_folder],
-    options[:storage][:portage_home]
-)
+# get true portage home
+portage_home = get_full_tree_path(options)
+if options[:db_filename].nil?
+    # get last created database
+    options[:db_filename] = get_last_created_database(options)
+end
 
-begin
-    start = Time.now
-
-    db = SQLite3::Database.new(options[:db_filename])
+def fill_table(database, params)
     # array of all inserts
     queries_array = []
     # array of all keywords
     ['stable', 'unstable', 'hardmasked'].each { |keyword|
         # create query for keyword and add it into array
-        sql_query << "INSERT INTO keywords (keyword) VALUES ('#{keyword}');"
+        sql_query = "INSERT INTO keywords (keyword) VALUES ('#{keyword}');"
         queries_array << sql_query
     }
 
-    # TODO try/catch
     database.execute_batch(queries_array.join("\n"))
-
-    finish = Time.now
-
-    puts 'Everything is OK!'
-    puts start
-    puts finish
-rescue Exception => msg
-    File.delete(options[:db_filename])
-    puts msg
-ensure
-    db.close() if db.closed? == false
 end
+
+fill_table_X(
+    options[:db_filename],
+    File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
+    method(:fill_table),
+    {}
+)

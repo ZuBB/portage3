@@ -11,12 +11,12 @@ OPTIONS = {
     :quiet => true,
     :db_filename => nil,
     :storage => {
-		:root => '/dev/shm',
-		:home_folder => 'portage3_data',
-		:portage_home => 'portage',
-		:full_tree_path => nil,
-		:required_space => 700
-	},
+        :root => '/dev/shm',
+        :home_folder => 'portage3_data',
+        :portage_home => 'portage',
+        :full_tree_path => nil,
+        :required_space => 700
+    },
 }
 
 def get_full_tree_path(options)
@@ -95,7 +95,7 @@ def get_last_created_database(options)
     return Dir.glob(File.join(
         options[:storage][:root],
         options[:storage][:home_folder],
-		'/*.sqlite'
+        '/*.sqlite'
     )).sort.last
 end
 
@@ -114,14 +114,14 @@ SQL
 end
 
 def fill_table_X(db_filename, table_name, fill_table, params)
-	# TODO: check if all dependant tables are filled
+    # TODO: check if all dependant tables are filled
     start = Time.now
 
-	database = SQLite3::Database.new(db_filename)
-	# TODO params
-	# TODO do we need an try/catch here?
-	fill_table.call(database, params[0])
-	database.close() if database.closed? == false
+    database = SQLite3::Database.new(db_filename)
+    # TODO params
+    # TODO do we need an try/catch here?
+    fill_table.call(database, params)
+    database.close() if database.closed? == false
 
-	return start.to_i - Time.now.to_i
+    return start.to_i - Time.now.to_i
 end

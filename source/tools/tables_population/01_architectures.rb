@@ -26,11 +26,7 @@ OptionParser.new do |opts|
         options[:db_filename] = value
     end
 
-    opts.on("-r", "--root-folder STRING",
-            "Dir where portage database will be created") do |value|
-        options[:storage][:root] = File.expand_path(value)
-    end
-
+    #TODO do we need a setting `:root` option here?
     # parsing 'quite' option if present
     opts.on("-q", "--quiet", "Quiet mode") do |value|
         options[:quiet] = true
@@ -46,15 +42,16 @@ end.parse!
 # get true portage home
 portage_home = get_full_tree_path(options)
 if options[:db_filename].nil?
-	# get last created database
-	options[:db_filename] = get_last_created_database(options)
+    # get last created database
+    options[:db_filename] = get_last_created_database(options)
 end
 
-def fill_table(database, portage_home)
+def fill_table(database, params)
     # array of all inserts
     queries_array = []
+    arches_home = File.join(params[:portage_home], "profiles/arch")
     # walk through all items in architectures dir
-    Dir.new(File.join(portage_home, "profiles/arch")).sort.each do |arch|
+    Dir.new(arches_home).sort.each do |arch|
         # skip system dirs
         next if ['.', '..'].index(arch) != nil
         # create query for current arch
@@ -68,7 +65,7 @@ end
 
 fill_table_X(
     options[:db_filename],
-	File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
-	method(:fill_table),
-	[portage_home]
+    File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
+    method(:fill_table),
+    {:portage_home => portage_home}
 )
