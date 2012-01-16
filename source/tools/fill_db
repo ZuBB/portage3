@@ -31,7 +31,8 @@ OptionParser.new do |opts|
     opts.banner = " Usage: purge_s3_data [options]\n"
     opts.separator " A script that purges outdated data from s3 bucket\n"
 
-    opts.on("-f", "--database-file STRING", "Path where new database file will be created") do |value|
+    opts.on("-f", "--database-file STRING",
+			"Path where new database file will be created") do |value|
         # TODO check if path id valid
         options[:db_filename] = value
     end
@@ -56,6 +57,8 @@ portage_home = File.join(
 
 options[:db_filename] = ARGV[0] if ARGV.size == 1
 
-`./populate_db_with_static_data -f #{options[:db_filename]}`
-`./populate_db_with_ebuilds_data -f #{options[:db_filename]}`
+`./tables_population/01_architectures.rb -f #{options[:db_filename]}`
+#`./tables_population/02_keywords.rb -f #{options[:db_filename]}`
+#`./tables_population/03_eapis.rb -f #{options[:db_filename]}`
+#`./tables_population/04_roles.rb -f #{options[:db_filename]}`
 

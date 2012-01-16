@@ -6,7 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, 01/11/12
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
 require 'sqlite3'

@@ -6,7 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, 01/11/12
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
 require 'sqlite3'
@@ -56,6 +56,8 @@ portage_home = File.join(
     options[:storage][:portage_home]
 )
 
+# TODO check if this can be put into some general func (behaving as wrapper)
+# TODO do we need an ty/catch here?
 begin
     start = Time.now
 
@@ -74,7 +76,7 @@ begin
     end
 
     # TODO try/catch
-    database.execute_batch(queries_array.join("\n"))
+    db.execute_batch(queries_array.join("\n"))
 
     finish = Time.now
 
@@ -82,7 +84,7 @@ begin
     puts start
     puts finish
 rescue Exception => msg
-    File.delete(options[:db_filename])
+    #File.delete(options[:db_filename])
     puts msg
 ensure
     db.close() if db.closed? == false
