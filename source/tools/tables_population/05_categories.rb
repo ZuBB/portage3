@@ -69,16 +69,11 @@ def insert_category(params)
     )
 end
 
-def fill_table(database, params)
-    walk_through_categories({
-        :portage_home => params[:portage_home],
-        :block => method(:insert_category),
-        :database => database
-    })
+def fill_table(params)
+    walk_through_categories(
+        {:block => method(:insert_category)}.merge!(params)
+    )
 end
-
-# TODO: check if all dependant tables are filled
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 
 fill_table_X(
     options[:db_filename],

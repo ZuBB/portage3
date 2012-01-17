@@ -91,16 +91,11 @@ SQL
     params[:database].execute(sql_query, params[:category_id], params[:package], description, homepage)
 end
 
-def fill_table(database, params)
-    walk_through_categories({
-        :portage_home => params[:portage_home],
-        :block => method(:category_block),
-        :database => database
-    })
+def fill_table(params)
+    walk_through_categories(
+        {:block => method(:category_block)}.merge!(params)
+    )
 end
-
-# TODO: check if all dependant tables are filled
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 
 fill_table_X(
     options[:db_filename],

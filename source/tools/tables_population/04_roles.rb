@@ -45,7 +45,7 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def fill_table(database, params)
+def fill_table(params)
     # array of all inserts
     queries_array = []
     # TODO: get all responsibilities
@@ -59,10 +59,9 @@ def fill_table(database, params)
         queries_array << sql_query
     }
 
-    database.execute_batch(queries_array.join("\n"))
+    params[:database].execute_batch(queries_array.join("\n"))
 end
 
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 fill_table_X(
     options[:db_filename],
     method(:fill_table),

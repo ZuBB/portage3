@@ -46,7 +46,7 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def fill_table(database, params)
+def fill_table(params)
     queries_array = results = []
     # lets find all lines from all ebuilds that have EAPI string 0 position
     grep_command = "grep -h '^EAPI' #{params[:portage_home]}/*/*/*ebuild 2> /dev/null"
@@ -64,12 +64,12 @@ def fill_table(database, params)
         queries_array << "INSERT INTO eapis (eapi_version) VALUES ('#{eapi}');"
     }
 
-    database.execute_batch(queries_array.join("\n"))
+    params[:database].execute_batch(queries_array.join("\n"))
 end
 
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 fill_table_X(
     options[:db_filename],
     method(:fill_table),
     {:portage_home => portage_home}
 )
+

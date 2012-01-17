@@ -119,8 +119,7 @@ def fill_table_X(db_filename, fill_table, params)
 
     database = SQLite3::Database.new(db_filename)
     # TODO do we need an try/catch here?
-    # http://stackoverflow.com/questions/522720/passing-a-method-as-a-parameter-in-ruby
-    fill_table.call(database, params)
+    fill_table.call({:database => database}.merge!(params))
     database.close() if database.closed? == false
 
     return start.to_i - Time.now.to_i
@@ -135,11 +134,7 @@ def walk_through_categories(params)
         #TODO what to do with this?
         next if category.index('-') == nil
 
-        params[:block].call({
-            :database => params[:database],
-            :portage_home => params[:portage_home],
-            :category => category
-        })
+        params[:block].call({:category => category}.merge!(params))
     end
 end
 
@@ -149,12 +144,10 @@ def walk_through_packages(params)
         # skip system dirs
         next if ['.', '..'].index(package) != nil
         # skip files
-        next if File.file?(File.join(params[:portage_home], package))
+        next if File.file?(File.join(dir, package))
         #TODO what to do with this?
-        next if package.index('-') == nil
+        next if package.include?('-')
 
-        params[:block].call({
-            :package => package
-        }.merge!(params))
+        params[:block].call({:package => package}.merge!(params))
     end
 end
