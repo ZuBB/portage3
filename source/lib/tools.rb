@@ -39,33 +39,6 @@ def get_last_created_database(options)
     )).sort.last
 end
 
-def clean_ini_value(line)
-    # TODO: move it inside parent function
-    value = line
-    if !value.include?('=') && value.index('#') == 0
-        # TODO what is correct value to set here
-        value = '0_#'
-    elsif ((value.include?('=') && !value.include?('#')) ||
-           (value.index('=') < Integer(value.index('#'))))
-        # get rid of new line
-        value = value.chomp() if !value.empty?
-        # get rid of comments
-        value = value.gsub(/#.+$/, '')
-        # get actually value only
-        value = value.split('=')[1] if !value.empty?
-        # strip \s at the end
-        value = value.strip() if !value.empty?
-        # strip quotes at the begining
-        value = value.gsub(/^['"]/, '') if !value.empty?
-        # strip quotes at the end
-        value = value.gsub(/['"]$/, '') if !value.empty?
-    else
-        value = ''
-    end
-
-    return value
-end
-
 def get_value_from_cvs_header(ebuild_text, regexp)
     ebuild_text.each { |line|
         if line.include?('# $Header:') # TODO: or index == 0 ?
@@ -83,7 +56,29 @@ def get_single_line_ini_value(ebuild_text, keyword)
     values = []
     ebuild_text.each { |line|
         # '==' because of app-editors/nvi/nvi-1.81.6-r3.ebuild
-        values << clean_ini_value(line) if line.index(keyword) == 0
+        if line.index(keyword) == 0
+            value = line
+            if !value.include?('=') && value.index('#') == 0
+                # TODO what is correct value to set here
+                value = '0_#'
+            elsif ((value.include?('=') && !value.include?('#')) ||
+                   (value.index('=') < Integer(value.index('#'))))
+                # get rid of new line
+                value = value.chomp() if !value.empty?
+                # get rid of comments
+                value = value.gsub(/#.+$/, '') if !value.empty?
+                # get actually value only
+                value = value.split('=')[1] if !value.empty?
+                # strip \s at the end
+                value = value.strip() if !value.empty?
+                # strip quotes
+                value = value.gsub(/['"]/, '') if !value.empty?
+            else
+                value = ''
+            end
+
+            values << value
+        end
     }
 
     if (values.compact!.uniq! rescue []).size > 1
@@ -93,6 +88,13 @@ def get_single_line_ini_value(ebuild_text, keyword)
 
     # TODO return values.join(',') rescue nil
     return values[0] rescue nil
+end
+
+def get_category_id(database, category)
+    database.get_first_value(
+        "SELECT id FROM categories WHERE category_name=?;",
+        category
+    )
 end
 
 def get_package_id(database, category, package)
@@ -105,19 +107,11 @@ WHERE
     packages.category_id = categories.id
 SQL
 
-    # get category_id
-    database.execute(sql_query, category, package)[0][0]
-end
-
-def get_category_id(database, category)
-    database.get_first_value(
-        "SELECT id FROM categories WHERE category_name=?;",
-        category
-    )
+    database.get_first_value(sql_query, category, package)
 end
 
 def get_last_inserted_id(database)
-    return database.execute("SELECT last_insert_rowid();").flatten[0]
+    return database.get_first_value("SELECT last_insert_rowid();")
 end
 
 def fill_table_X(db_filename, fill_table, params)
