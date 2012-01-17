@@ -19,6 +19,10 @@ OPTIONS = {
     },
 }
 
+def get_timestamp()
+    return Time.now.strftime(TIMESTAMP)
+end
+
 def get_full_tree_path(options)
     File.join(
         options[:storage][:root],
@@ -27,12 +31,12 @@ def get_full_tree_path(options)
     )
 end
 
-def get_timestamp()
-    return Time.now.strftime(TIMESTAMP)
-end
-
-def get_last_inserted_id(database)
-    return database.execute("SELECT last_insert_rowid();").flatten[0]
+def get_last_created_database(options)
+    return Dir.glob(File.join(
+        options[:storage][:root],
+        options[:storage][:home_folder],
+        '/*.sqlite'
+    )).sort.last
 end
 
 def clean_ini_value(line)
@@ -91,14 +95,6 @@ def get_single_line_ini_value(ebuild_text, keyword)
     return values[0] rescue nil
 end
 
-def get_last_created_database(options)
-    return Dir.glob(File.join(
-        options[:storage][:root],
-        options[:storage][:home_folder],
-        '/*.sqlite'
-    )).sort.last
-end
-
 def get_package_id(database, category, package)
     sql_query = <<SQL
 SELECT packages.id
@@ -111,6 +107,17 @@ SQL
 
     # get category_id
     database.execute(sql_query, category, package)[0][0]
+end
+
+def get_category_id(database, category)
+    database.get_first_value(
+        "SELECT id FROM categories WHERE category_name=?;",
+        category
+    )
+end
+
+def get_last_inserted_id(database)
+    return database.execute("SELECT last_insert_rowid();").flatten[0]
 end
 
 def fill_table_X(db_filename, fill_table, params)
@@ -134,10 +141,26 @@ def walk_through_categories(params)
         #TODO what to do with this?
         next if category.index('-') == nil
 
-        params[:block].call(
-            params[:database],
-            params[:portage_home],
-            category
-        )
+        params[:block].call({
+            :database => params[:database],
+            :portage_home => params[:portage_home],
+            :category => category
+        })
+    end
+end
+
+def walk_through_packages(params)
+    dir = File.join(params[:portage_home], params[:category])
+    Dir.new(dir).sort.each do |package|
+        # skip system dirs
+        next if ['.', '..'].index(package) != nil
+        # skip files
+        next if File.file?(File.join(params[:portage_home], package))
+        #TODO what to do with this?
+        next if package.index('-') == nil
+
+        params[:block].call({
+            :package => package
+        }.merge!(params))
     end
 end

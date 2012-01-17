@@ -61,11 +61,11 @@ def get_description(portage_home, category)
     return description
 end
 
-def insert_category(database, portage_home, category)
-    database.execute(
+def insert_category(params)
+    params[:database].execute(
         "INSERT INTO categories (category_name, description) VALUES (?, ?);",
-        category,
-        get_description(portage_home, category)
+        params[:category],
+        get_description(params[:portage_home], params[:category])
     )
 end
 
