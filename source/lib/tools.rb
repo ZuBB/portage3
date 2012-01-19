@@ -134,20 +134,23 @@ def walk_through_categories(params)
         #TODO what to do with this?
         next if category.index('-') == nil
 
-        params[:block].call({:category => category}.merge!(params))
+        params[:block1].call({:category => category}.merge!(params))
     end
 end
 
 def walk_through_packages(params)
     dir = File.join(params[:portage_home], params[:category])
     Dir.new(dir).sort.each do |package|
+        # lets get full path for this item
+        item_path = File.join(dir, package)
         # skip system dirs
         next if ['.', '..'].index(package) != nil
         # skip files
-        next if File.file?(File.join(dir, package))
-        #TODO what to do with this?
-        next if package.include?('-')
+        next if File.file?(item_path)
 
-        params[:block].call({:package => package}.merge!(params))
+        params[:block2].call({
+            :package => package,
+            :item_path => item_path
+        }.merge!(params))
     end
 end
