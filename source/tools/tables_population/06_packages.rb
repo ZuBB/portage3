@@ -48,52 +48,43 @@ if options[:db_filename].nil?
 end
 
 def get_ebuild_description(ebuild_text)
-    return get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
+    get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
 end
 
 def get_ebuild_homepage(ebuild_text)
-    return get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
+    get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
 end
 
 def category_block(params)
-    category_id = get_category_id(params[:database], params[:category])
-
     walk_through_packages({
-        :portage_home => params[:portage_home],
-        :database => params[:database],
-        :category => params[:category],
-        :category_id => category_id,
-        :block => method(:packages_block),
-    })
+        :category_id => get_category_id(params[:database], params[:category]),
+        :block2 => method(:packages_block)
+    }.merge!(params))
 end
 
 def packages_block(params)
-    # lets get full path for this item
-    item_path = File.join(params[:portage_home], params[:category], params[:package])
-    # skip if it is a ..
-    next if ['.', '..'].include?(params[:package])
-    # skip if it is a ..
-    next if File.file?(item_path)
-
     # get content of the last ebuild for this package
-    ebuild_filename_pattern = File.join(item_path, '*.ebuild')
+    ebuild_filename_pattern = File.join(params[:item_path], '*.ebuild')
     ebuild_filename = Dir.glob(ebuild_filename_pattern).sort.last
-    ebuild_text = IO.read(ebuild_filename).to_a
-
-    description = get_ebuild_description(ebuild_text)
-    homepage = get_ebuild_homepage(ebuild_text)
+    ebuild_text = IO.read(ebuild_filename).to_a rescue []
 
     sql_query = <<SQL
     INSERT INTO packages
     (category_id, package_name, description, homepage)
     VALUES (?, ?, ?, ?);
 SQL
-    params[:database].execute(sql_query, params[:category_id], params[:package], description, homepage)
+    params[:database].execute(
+        sql_query,
+        params[:category_id],
+        params[:package],
+        get_ebuild_description(ebuild_text),
+        get_ebuild_homepage(ebuild_text)
+    )
 end
 
 def fill_table(params)
     walk_through_categories(
-        {:block => method(:category_block)}.merge!(params)
+        {:block1 => method(:category_block)}.merge!(params)
     )
 end
 

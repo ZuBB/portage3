@@ -71,7 +71,7 @@ end
 
 def fill_table(params)
     walk_through_categories(
-        {:block => method(:insert_category)}.merge!(params)
+        {:block1 => method(:insert_category)}.merge!(params)
     )
 end
 
