@@ -132,7 +132,7 @@ def walk_through_categories(params)
         # skip files
         next if File.file?(File.join(params[:portage_home], category))
         #TODO what to do with this?
-        next if category.index('-') == nil
+        next if !category.include?('-') && category != 'virtuals'
 
         params[:block1].call({:category => category}.merge!(params))
     end
