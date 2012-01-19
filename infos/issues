@@ -4,6 +4,9 @@ http://znurt.org
 stuff from app-dicts/aspell-* does not have description
 stuff from app-dicts/aspell-* does not have homepage
 
+https://bugs.gentoo.org/show_bug.cgi?id=333531
+http://blog.flameeyes.eu/2009/09/28/the-size-of-the-gentoo-tree
+
 package description: metadata vs ebuild
 
 versionator.eclass
