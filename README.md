@@ -10,7 +10,7 @@ Possibly there are other things that I do not like in portage, but..
 
 I am in process of learning how databases/sql works. To make this process more interesting I am trying to put portage tree (all of it) and related info into database.
 
-For now its a pet project but if it will look solid and fast would be nice to have it as default PM in Gentoo
+For now its a pet project but if it will look solid and fast would be nice to have it as new PM in Gentoo
 
 
 Installation
