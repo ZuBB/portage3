@@ -14,6 +14,7 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
+FLAG_STATES = ['disabled', 'enabled', 'masked', 'forced']
 
 OptionParser.new do |opts|
     # help header
@@ -50,7 +51,7 @@ def fill_table(params)
     # array of all inserts
     queries_array = []
     # array of all keywords
-    ['disabled', 'enabled', 'masked'].each { |state|
+    FLAG_STATES.each { |state|
         # create query for keyword and add it into array
         sql_query = "INSERT INTO use_flags_states (flag_state) VALUES ('#{state}');"
         queries_array << sql_query
