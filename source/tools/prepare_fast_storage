@@ -17,13 +17,13 @@ options = {
     :recreate_tree => false,
     :snapshots_home => '../../snapshots',
     :snapshot_name => 'portage-latest.tar.bz2',
-    :storage => {},
-    :clean => false,
-    :quiet => false
+    :clean => false
 }
 
 # lets merge stuff from tools lib
-options[:storage].merge!(STORAGE)
+options.merge!(OPTIONS)
+# set real default
+options[:quiet] = false
 
 OptionParser.new do |opts|
     # help header
@@ -32,6 +32,7 @@ OptionParser.new do |opts|
     opts.separator " Usually its a shared memory (tmpfs). As a rule its mounted at /dev/shm"
     opts.separator "\n Command line options"
 
+    # TODO batch mode
     opts.on("-c", "--clean-after", "Clean previous snapshot if new one has been downloaded") do |value|
         options[:clean] = true
     end
@@ -62,7 +63,7 @@ OptionParser.new do |opts|
         end
     end
 
-    opts.on("-q", "--[no]-quiet", "Quiet mode") do |value|
+    opts.on("-q", "--[no-]quiet", "Quiet mode") do |value|
         options[:quiet] = value
     end
 
@@ -122,7 +123,9 @@ soft_link = File.join(
 )
 
 if options[:download_snapshot]
-    puts "Starting download latest portage snapshot.."
+    print "Starting download portage snapshot.. "
+    puts message if !options[:quiet]
+    STDOUT.flush
 
     # get correct filename
     filename = File.join(
@@ -141,6 +144,7 @@ if options[:download_snapshot]
 
     # download new snapshot
     %x[#{wget_command}]
+    puts 'Done' if options[:quiet]
     # remove outdated one
     if options[:clean] 
         File.delete(File.join(
@@ -156,7 +160,8 @@ end
 if options[:recreate_tree] || (!File.exist?(full_path) rescue true)
     FileUtils.rm_r(full_path) if File.exist?(full_path)
     Dir.mkdir(home_path) if !File.exist?(home_path)
-    print "Starting to exctact portage snapshots.. "
+    print "Starting exctact portage snapshot.. "
+    STDOUT.flush
     `tar xjf #{soft_link} -C #{home_path}`
     puts "Done"
 elsif File.exist?(full_path)

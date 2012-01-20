@@ -86,10 +86,11 @@ create table eapis (
     PRIMARY KEY (id)
 );
 
-create table use_flags (
-    id INTEGER PRIMARY KEY,
-    flag_name text NOT NULL,
-    flag_description text NOT NULL
+create table all_use_flags (
+    id INTEGER,
+    flag_name text UNIQUE NOT NULL,
+    flag_description text UNIQUE NOT NULL,
+    PRIMARY KEY (id)
 );
 
 create table use_flags2ebuilds (

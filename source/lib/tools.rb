@@ -7,46 +7,36 @@
 require 'time' unless Object.const_defined?(:Time)
 
 TIMESTAMP = "%Y%m%d-%H%M%S"
-STORAGE = {
-    :home_folder => 'portage3_data',
-    :portage_home => 'portage',
-    :required_space => 700,
-    :root => '/dev/shm'
+OPTIONS = {
+    :quiet => true,
+    :db_filename => nil,
+    :storage => {
+        :root => '/dev/shm',
+        :home_folder => 'portage3_data',
+        :portage_home => 'portage',
+        :full_tree_path => nil,
+        :required_space => 700
+    },
 }
 
 def get_timestamp()
     return Time.now.strftime(TIMESTAMP)
 end
 
-def get_last_inserted_id(database)
-    return database.execute("SELECT last_insert_rowid();").flatten[0]
+def get_full_tree_path(options)
+    File.join(
+        options[:storage][:root],
+        options[:storage][:home_folder],
+        options[:storage][:portage_home]
+    )
 end
 
-def clean_ini_value(line)
-    # TODO: move it inside parent function
-    value = line
-    if !value.include?('=') && value.index('#') == 0
-        # TODO what is correct value to set here
-        value = '0_#'
-    elsif ((value.include?('=') && !value.include?('#')) ||
-           (value.index('=') < Integer(value.index('#'))))
-        # get rid of new line
-        value = value.chomp() if !value.empty?
-        # get rid of comments
-        value = value.gsub(/#.+$/, '')
-        # get actually value only
-        value = value.split('=')[1] if !value.empty?
-        # strip \s at the end
-        value = value.strip() if !value.empty?
-        # strip quotes at the begining
-        value = value.gsub(/^['"]/, '') if !value.empty?
-        # strip quotes at the end
-        value = value.gsub(/['"]$/, '') if !value.empty?
-    else
-        value = ''
-    end
-
-    return value
+def get_last_created_database(options)
+    return Dir.glob(File.join(
+        options[:storage][:root],
+        options[:storage][:home_folder],
+        '/*.sqlite'
+    )).sort.last
 end
 
 def get_value_from_cvs_header(ebuild_text, regexp)
@@ -66,7 +56,29 @@ def get_single_line_ini_value(ebuild_text, keyword)
     values = []
     ebuild_text.each { |line|
         # '==' because of app-editors/nvi/nvi-1.81.6-r3.ebuild
-        values << clean_ini_value(line) if line.index(keyword) == 0
+        if line.index(keyword) == 0
+            value = line
+            if !value.include?('=') && value.index('#') == 0
+                # TODO what is correct value to set here
+                value = '0_#'
+            elsif ((value.include?('=') && !value.include?('#')) ||
+                   (value.index('=') < Integer(value.index('#'))))
+                # get rid of new line
+                value = value.chomp() if !value.empty?
+                # get rid of comments
+                value = value.gsub(/#.+$/, '') if !value.empty?
+                # get actually value only
+                value = value.split('=')[1] if !value.empty?
+                # strip \s at the end
+                value = value.strip() if !value.empty?
+                # strip quotes
+                value = value.gsub(/['"]/, '') if !value.empty?
+            else
+                value = ''
+            end
+
+            values << value
+        end
     }
 
     if (values.compact!.uniq! rescue []).size > 1
@@ -78,9 +90,11 @@ def get_single_line_ini_value(ebuild_text, keyword)
     return values[0] rescue nil
 end
 
-def get_last_created_database(root_path, home_folder)
-    # get last test database
-    return Dir.glob(File.join(root_path, home_folder) + '/*.sqlite').sort.last
+def get_category_id(database, category)
+    database.get_first_value(
+        "SELECT id FROM categories WHERE category_name=?;",
+        category
+    )
 end
 
 def get_package_id(database, category, package)
@@ -93,6 +107,50 @@ WHERE
     packages.category_id = categories.id
 SQL
 
-    # get category_id
-    database.execute(sql_query, category, package)[0][0]
+    database.get_first_value(sql_query, category, package)
+end
+
+def get_last_inserted_id(database)
+    return database.get_first_value("SELECT last_insert_rowid();")
+end
+
+def fill_table_X(db_filename, fill_table, params)
+    start = Time.now
+
+    database = SQLite3::Database.new(db_filename)
+    # TODO do we need an try/catch here?
+    fill_table.call({:database => database}.merge!(params))
+    database.close() if database.closed? == false
+
+    return start.to_i - Time.now.to_i
+end
+
+def walk_through_categories(params)
+    Dir.new(params[:portage_home]).sort.each do |category|
+        # skip system dirs
+        next if ['.', '..'].index(category) != nil
+        # skip files
+        next if File.file?(File.join(params[:portage_home], category))
+        #TODO what to do with this?
+        next if !category.include?('-') && category != 'virtuals'
+
+        params[:block1].call({:category => category}.merge!(params))
+    end
+end
+
+def walk_through_packages(params)
+    dir = File.join(params[:portage_home], params[:category])
+    Dir.new(dir).sort.each do |package|
+        # lets get full path for this item
+        item_path = File.join(dir, package)
+        # skip system dirs
+        next if ['.', '..'].index(package) != nil
+        # skip files
+        next if File.file?(item_path)
+
+        params[:block2].call({
+            :package => package,
+            :item_path => item_path
+        }.merge!(params))
+    end
 end
