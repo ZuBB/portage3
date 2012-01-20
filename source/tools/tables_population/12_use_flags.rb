@@ -50,7 +50,7 @@ def fill_table(params)
     filename = File.join(params[:portage_home], "profiles", "use.desc")
     use_flags_file_content = IO.read(filename).to_a rescue []
     sql_query =<<SQL
-INSERT INTO use_flags
+INSERT INTO all_use_flags
 (flag_name, flag_description)
 VALUES (?, ?);
 SQL
