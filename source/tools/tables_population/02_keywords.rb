@@ -14,6 +14,7 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
+KEYWORDS = ['stable', 'unstable', 'hardmasked']
 
 OptionParser.new do |opts|
     # help header
@@ -50,7 +51,7 @@ def fill_table(params)
     # array of all inserts
     queries_array = []
     # array of all keywords
-    ['stable', 'unstable', 'hardmasked'].each { |keyword|
+    KEYWORDS.each { |keyword|
         # create query for keyword and add it into array
         sql_query = "INSERT INTO keywords (keyword) VALUES ('#{keyword}');"
         queries_array << sql_query
