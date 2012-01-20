@@ -1,5 +1,22 @@
 BEGIN TRANSACTION;
 
+create table profiles (
+    id INTEGER,
+    profile_name VARCHAR NOT NULL,
+    architecture_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    FOREIGN KEY (architecture_id) REFERENCES architectures(id),
+    FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
+    CONSTRAINT idx1_unq UNIQUE (profile_name, architecture_id, status_id),
+    PRIMARY KEY (id)
+);
+
+create table profile_statuses (
+    id INTEGER,
+    profile_status VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
 create table categories (
     id INTEGER,
     category_name VARCHAR UNIQUE NOT NULL,
