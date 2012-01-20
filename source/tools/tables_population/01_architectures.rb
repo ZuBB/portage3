@@ -62,6 +62,13 @@ def fill_table(params)
         # lets trim newlines and insert
         params[:database].execute(sql_query, line.chomp())
     end
+
+    # ********************* TODO *********************
+    # ********************* TODO *********************
+    params[:database].execute(sql_query, "x64")
+    params[:database].execute(sql_query, "sparc64")
+    # ********************* TODO *********************
+    # ********************* TODO *********************
 end
 
 # TODO: check if all dependant tables are filled
