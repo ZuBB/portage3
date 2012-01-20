@@ -47,20 +47,21 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    # array of all inserts
-    queries_array = []
-    arches_home = File.join(params[:portage_home], "profiles/arch")
-    # walk through all items in architectures dir
-    Dir.new(arches_home).sort.each do |arch|
-        # skip system dirs
-        next if ['.', '..'].index(arch) != nil
-        # create query for current arch
-        query = "INSERT INTO architectures (architecture) VALUES ('#{arch}');"
-        # add query into array
-        queries_array << query
-    end
+    filename = File.join(params[:portage_home], "profiles", "arch.list")
+    file_content = IO.read(filename).to_a rescue []
+    sql_query = "INSERT INTO architectures (architecture) VALUES (?);"
 
-    params[:database].execute_batch(queries_array.join("\n"))
+    # walk through all use lines in that file
+    file_content.each do |line|
+        break if line.include?("# Prefix keywords")
+        # skip comments
+        next if line.index('#') == 0
+        # skip empty lines
+        next if line.empty?
+
+        # lets trim newlines and insert
+        params[:database].execute(sql_query, line.chomp())
+    end
 end
 
 # TODO: check if all dependant tables are filled
