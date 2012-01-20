@@ -1,5 +1,11 @@
 BEGIN TRANSACTION;
 
+create table platforms (
+    id INTEGER,
+    platform_name VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
 create table profiles (
     id INTEGER,
     profile_name VARCHAR NOT NULL,
@@ -8,6 +14,19 @@ create table profiles (
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
     FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
     CONSTRAINT idx1_unq UNIQUE (profile_name, architecture_id, status_id),
+    PRIMARY KEY (id)
+);
+
+create table prefix_profiles (
+    id INTEGER,
+    profile_name VARCHAR NOT NULL,
+    architecture_id INTEGER NOT NULL,
+    platform_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    FOREIGN KEY (architecture_id) REFERENCES architectures(id),
+    FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
+    FOREIGN KEY (platform_id) REFERENCES platforms(id),
+    CONSTRAINT idx1_unq UNIQUE (profile_name, architecture_id, platform_id, status_id),
     PRIMARY KEY (id)
 );
 
@@ -161,8 +180,9 @@ create table users_use_flags2ebuilds (
 );
 
 create table architectures (
-    id INTEGER PRIMARY KEY,
-    architecture VARCHAR UNIQUE NOT NULL
+    id INTEGER,
+    architecture VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
     -- smth else?
 );
 
