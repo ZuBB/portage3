@@ -56,7 +56,7 @@ plugins_dir = File.join(File.dirname(__FILE__), "tables_population")
 
 if options[:run_all]
     Dir.glob(File.join(plugins_dir, "/*")).sort.each do |script|
-		if (script.match(/\d\d_[a-z]+\.rb$/))
+		if (script.match(/\d\d_[a-z_\-]+\.rb$/))
 			# TODO: output, error_output, exit status, timeouts
 			`./#{script} -f #{options[:db_filename]}`
 		end
