@@ -1,16 +1,17 @@
 Portage
 =======
 
+
 Portage ([1](http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=2&chap=1), [2](http://en.wikipedia.org/wiki/Portage_(software))) is a package management software for Gentoo Linux. It stores all data in plain txt files (I know about sqlite cache)
 
 * I do not like when it takes minutes to do 'emerge -pvte world'
-* Also there are dozen places where files that imply portage work are stored. I would like to see that number reduced
+* Also there are dozens of places where files that imply portage work are stored. I would like to see that number reduced
 
 Possibly there are other things that I do not like in portage, but..
 
-I am in process of learning how databases/sql works. To make this process more interesting I am trying to put portage tree (all of it) and related info into database.
+I am in the process of learning how databases/sql works. To make this process more interesting I am trying to put portage tree (all of it) and related info into database.
 
-For now its a pet project but if it will look solid and fast would be nice to have it as new PM in Gentoo
+For now its a pet project but if it will look solid and fast, it would be nice to have it as new PM in Gentoo
 
 
 Installation
@@ -31,7 +32,7 @@ Requirements
 Testing
 -------
 
-Nothing really to test as for now
+Nothing really to test for now
 
 
 Contributing
