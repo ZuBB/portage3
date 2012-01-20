@@ -2,17 +2,17 @@ BEGIN TRANSACTION;
 
 create table categories (
     id INTEGER,
-    category_name text UNIQUE NOT NULL,
-    description text NOT NULL,
+    category_name VARCHAR UNIQUE NOT NULL,
+    description VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
 create table packages (
     id INTEGER,
     category_id INTEGER NOT NULL,
-    package_name text NOT NULL,
-    description text NOT NULL,
-    homepage text NOT NULL,
+    package_name VARCHAR NOT NULL,
+    description VARCHAR NOT NULL,
+    homepage VARCHAR NOT NULL,
     CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
     PRIMARY KEY (id)
@@ -20,16 +20,16 @@ create table packages (
 
 create table persons (
     id INTEGER,
-    name text,
-    email text UNIQUE NOT NULL,
-    nickname text UNIQUE,
+    name VARCHAR,
+    email VARCHAR UNIQUE NOT NULL,
+    nickname VARCHAR UNIQUE,
     CONSTRAINT idx1_unq UNIQUE (name, email, nickname),
     PRIMARY KEY (id)
 );
 
 create table roles (
     id INTEGER,
-    role text UNIQUE NOT NULL,
+    role VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -56,16 +56,16 @@ create table person_roles2packages (
 create table ebuilds (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    version text NOT NULL,
-    license text NOT NULL,
-    mtime text NOT NULL,
-    mauthor text NOT NULL,
+    version VARCHAR NOT NULL,
+    license VARCHAR NOT NULL,
+    mtime VARCHAR NOT NULL,
+    mauthor VARCHAR NOT NULL,
     eapi_id INTEGER NOT NULL,
-    slot text NOT NULL,
+    slot VARCHAR NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
-    -- keyword_id text NOT NULL,
-    -- architecture text NOT NULL,
+    -- keyword_id VARCHAR NOT NULL,
+    -- architecture VARCHAR NOT NULL,
     -- flags?
     -- enabled flags?
     -- depend
@@ -88,14 +88,14 @@ create table eapis (
 
 create table all_use_flags (
     id INTEGER,
-    flag_name text UNIQUE NOT NULL,
-    flag_description text UNIQUE NOT NULL,
+    flag_name VARCHAR UNIQUE NOT NULL,
+    flag_description VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (id)
 );
 
 create table use_flags_states (
     id INTEGER,
-    flag_state text UNIQUE NOT NULL,
+    flag_state VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -145,7 +145,7 @@ create table users_use_flags2ebuilds (
 
 create table architectures (
     id INTEGER PRIMARY KEY,
-    architecture text UNIQUE NOT NULL
+    architecture VARCHAR UNIQUE NOT NULL
     -- smth else?
 );
 
@@ -157,8 +157,8 @@ create table ebuilds2architectures (
 
 create table keywords (
     id INTEGER PRIMARY KEY,
-    keyword text UNIQUE NOT NULL/*,
-    keyword_description text NOT NULL*/
+    keyword VARCHAR UNIQUE NOT NULL/*,
+    keyword_description VARCHAR NOT NULL*/
 );
 
 create table keywords2architectures (
@@ -169,8 +169,8 @@ create table keywords2architectures (
 
 create table licences (
     id INTEGER PRIMARY KEY,
-    license_name text NOT NULL
-    -- url text ?,
+    license_name VARCHAR NOT NULL
+    -- url VARCHAR ?,
     -- content blob /*zipped data*/ ?
 );
 
@@ -188,13 +188,13 @@ create table licences2ebuilds (
 
 create table sets (
     id INTEGER PRIMARY KEY,
-    set_name text NOT NULL
+    set_name VARCHAR NOT NULL
 );
 
 create table sets_content (
     id INTEGER PRIMARY KEY,
-    set_id text INTEGER NOT NULL,
-    package_id text INTEGER NOT NULL
+    set_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL
 );
 
 COMMIT;
