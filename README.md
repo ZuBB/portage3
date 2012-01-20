@@ -16,17 +16,16 @@ For now its a pet project but if it will look solid and fast would be nice to ha
 Installation
 -----------
 
---
-
+git clone at this moment
 
 
 Requirements
 -----
 
     Ruby 1.8 (compatibility with 1.9 has not been checked)
-    [rubygems package](http://rubygems.org/)
-    require 'github/markup'
-    GitHub::Markup.render('README.markdown', "* One\n* Two")
+    http://rubygems.org/
+    http://sqlite-ruby.rubyforge.org/
+    http://nokogiri.org/
 
 
 Testing
@@ -46,4 +45,3 @@ Want to contribute? Great!
 4. Push to the branch (`git push origin my_markup`)
 5. Create an [Issue][1] with a link to your branch
 6. Enjoy a refreshing Diet Coke and wait
-
