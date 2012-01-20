@@ -47,20 +47,17 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    queries_array = results = []
-    sql_query = "INSERT INTO profile_statuses (profile_status) VALUES ('?');"
-    path = "#{params[:portage_home]}/profiles/profiles.desc"
+    sql_query = "INSERT INTO profile_statuses (profile_status) VALUES (?);"
+    path = File.join(params[:portage_home], "profiles", "profiles.desc")
     return if !File.readable?(path)
     # lets find all lines from profiles.desc file
-    results = %x[grep -oP '\t[a-z]*$' #{path}].to_a
+    results = %x[grep -oP '\t[a-z]*$' #{path}].to_a rescue []
     # drop first item since its a header
     results.shift()
 
     results.uniq.compact.each { |status|
-        queries_array << sql_query.sub('?', status.strip!());
+        params[:database].execute(sql_query, status.strip!())
     }
-
-    params[:database].execute_batch(queries_array.join("\n"))
 end
 
 fill_table_X(
