@@ -93,10 +93,54 @@ create table all_use_flags (
     PRIMARY KEY (id)
 );
 
-create table use_flags2ebuilds (
-    id INTEGER PRIMARY KEY,
-    flag_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL
+create table use_flags_states (
+    id INTEGER,
+    flag_state text UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table profile_use_flags (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
+    PRIMARY KEY (id)
+);
+
+create table system_use_flags (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
+    PRIMARY KEY (id)
+);
+
+create table users_use_flags2packages (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, package_id),
+    PRIMARY KEY (id)
+);
+
+create table users_use_flags2ebuilds (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, ebuild_id),
+    PRIMARY KEY (id)
 );
 
 create table architectures (
