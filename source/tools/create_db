@@ -15,7 +15,7 @@ require 'tools'
 options = {
     :sql_src_home => '../sql',
     :sql_src => 'portage.sqlite.sql',
-    :sql_extra_src => 'portage.notes.sqlite.sql',
+    :sql_extra_src => 'notes.sqlite.sql',
     :db_path => nil,
     :batch_mode => false,
     :verbose => false,
