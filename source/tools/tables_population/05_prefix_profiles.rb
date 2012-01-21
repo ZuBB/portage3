@@ -52,7 +52,7 @@ def fill_table(params)
     prefixes_go = false
     sql_query =<<SQL
 INSERT INTO prefix_profiles
-(profile_name, architecture_id, platform_id, status_id)
+(prefix_profile, architecture_id, platform_id, status_id)
 VALUES (
     ?,
     (SELECT id FROM architectures WHERE architecture=?),

@@ -26,14 +26,14 @@ create table profiles (
 
 create table prefix_profiles (
     id INTEGER,
-    profile_name VARCHAR NOT NULL,
+    prefix_profile VARCHAR NOT NULL,
     architecture_id INTEGER NOT NULL,
     platform_id INTEGER NOT NULL,
     status_id INTEGER NOT NULL,
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
     FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
     FOREIGN KEY (platform_id) REFERENCES platforms(id),
-    CONSTRAINT idx1_unq UNIQUE (profile_name, architecture_id, platform_id, status_id),
+    CONSTRAINT idx1_unq UNIQUE (prefix_profile, architecture_id, platform_id, status_id),
     PRIMARY KEY (id)
 );
 
