@@ -1,5 +1,12 @@
 BEGIN TRANSACTION;
 
+create table architectures (
+    id INTEGER,
+    architecture VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+    -- smth else?
+);
+
 create table platforms (
     id INTEGER,
     platform_name VARCHAR UNIQUE NOT NULL,
@@ -36,6 +43,12 @@ create table profile_statuses (
     PRIMARY KEY (id)
 );
 
+create table keywords (
+    id INTEGER PRIMARY KEY,
+    keyword VARCHAR UNIQUE NOT NULL/*,
+    keyword_description VARCHAR NOT NULL*/
+);
+
 create table categories (
     id INTEGER,
     category_name VARCHAR UNIQUE NOT NULL,
@@ -51,6 +64,70 @@ create table packages (
     homepage VARCHAR NOT NULL,
     CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
+    PRIMARY KEY (id)
+);
+
+create table eapis (
+    id INTEGER,
+    eapi_version INTEGER UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table all_use_flags (
+    id INTEGER,
+    flag_name VARCHAR UNIQUE NOT NULL,
+    flag_description VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table use_flags_states (
+    id INTEGER,
+    flag_state VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table profile_use_flags (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 1,
+    -- todo profile_id
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
+    PRIMARY KEY (id)
+);
+
+create table system_use_flags (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
+    PRIMARY KEY (id)
+);
+
+create table users_use_flags2packages (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, package_id),
+    PRIMARY KEY (id)
+);
+
+create table users_use_flags2ebuilds (
+    id INTEGER,
+    use_flag_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    flag_state_id INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
+    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
+    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, ebuild_id),
     PRIMARY KEY (id)
 );
 
@@ -100,108 +177,37 @@ create table ebuilds (
     slot VARCHAR NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
-    -- keyword_id VARCHAR NOT NULL,
-    -- architecture VARCHAR NOT NULL,
     -- flags?
     -- enabled flags?
     -- depend
     -- rdepend
     -- overlay?
     -- inherit
+    CONSTRAINT idx1_unq UNIQUE (package_id, version),
     PRIMARY KEY (id)
     -- sha1/md5 INTEGER NOT NULL
     -- size of dwonloads?
     -- data blob /*NOT NULL*/,
 );
-CREATE UNIQUE INDEX idx1_unq
-ON ebuilds(package_id, version);
-
-create table eapis (
-    id INTEGER,
-    eapi_version INTEGER UNIQUE NOT NULL,
-    PRIMARY KEY (id)
-);
-
-create table all_use_flags (
-    id INTEGER,
-    flag_name VARCHAR UNIQUE NOT NULL,
-    flag_description VARCHAR UNIQUE NOT NULL,
-    PRIMARY KEY (id)
-);
-
-create table use_flags_states (
-    id INTEGER,
-    flag_state VARCHAR UNIQUE NOT NULL,
-    PRIMARY KEY (id)
-);
-
-create table profile_use_flags (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
-    PRIMARY KEY (id)
-);
-
-create table system_use_flags (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
-    PRIMARY KEY (id)
-);
-
-create table users_use_flags2packages (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, package_id),
-    PRIMARY KEY (id)
-);
-
-create table users_use_flags2ebuilds (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, ebuild_id),
-    PRIMARY KEY (id)
-);
-
-create table architectures (
-    id INTEGER,
-    architecture VARCHAR UNIQUE NOT NULL,
-    PRIMARY KEY (id)
-    -- smth else?
-);
 
 create table ebuilds2architectures (
-    id INTEGER PRIMARY KEY,
+    id INTEGER,
     ebuild_id INTEGER NOT NULL,
-    architecture_id INTEGER NOT NULL
+    architecture_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (architecture_id) REFERENCES architectures(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, architecture_id),
+    PRIMARY KEY (id)
 );
 
-create table keywords (
-    id INTEGER PRIMARY KEY,
-    keyword VARCHAR UNIQUE NOT NULL/*,
-    keyword_description VARCHAR NOT NULL*/
-);
-
-create table keywords2architectures (
-    id INTEGER PRIMARY KEY,
-    ebuild_architecture_id INTEGER NOT NULL,
-    keyword_id INTEGER NOT NULL
+create table ebuild_arch2keywords (
+    id INTEGER,
+    ebuild_arch_id INTEGER NOT NULL,
+    keyword_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_arch_id) REFERENCES ebuilds2architectures(id),
+    FOREIGN KEY (keyword_id) REFERENCES keywords(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_arch_id, keyword_id),
+    PRIMARY KEY (id)
 );
 
 create table licences (
