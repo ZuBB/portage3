@@ -165,9 +165,9 @@ if options[:recreate_tree] || (!File.exist?(full_path) rescue true)
     `tar xjf #{soft_link} -C #{home_path}`
     puts "Done"
 elsif File.exist?(full_path)
-	puts "Portage dir already present"
-	puts "Its size equals to #{portage_size / 1024} Mb"
-	puts "It has #{Dir.glob(full_path + '/*/').size} subdirectories inside"
-	puts "SUGGESTION: you can append '-r' option, that will cause tree to be recreated"
+    puts "Portage dir already present"
+    puts "Its size equals to #{portage_size / 1024} Mb"
+    puts "It has #{Dir.glob(full_path + '/*/').size} subdirectories inside"
+    puts "SUGGESTION: you can append '-r' option, that will cause tree to be recreated"
 end
 
