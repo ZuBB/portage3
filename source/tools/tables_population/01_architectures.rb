@@ -56,11 +56,12 @@ def fill_table(params)
         break if line.include?("# Prefix keywords")
         # skip comments
         next if line.index('#') == 0
+        line.chomp!()
         # skip empty lines
         next if line.empty?
 
         # lets trim newlines and insert
-        params[:database].execute(sql_query, line.chomp())
+        params[:database].execute(sql_query, line)
     end
 
     # ********************* TODO *********************
