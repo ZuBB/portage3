@@ -193,9 +193,11 @@ create table ebuilds (
 create table ebuilds2architectures (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
-    architecture_id INTEGER NOT NULL,
+    architecture_id INTEGER DEFAULT NULL,
+    prefix_profile_id INTEGER DEFAULT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
+    FOREIGN KEY (prefix_profile_id) REFERENCES prefix_profiles(id),
     CONSTRAINT idx1_unq UNIQUE (ebuild_id, architecture_id),
     PRIMARY KEY (id)
 );

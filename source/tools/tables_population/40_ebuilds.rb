@@ -70,6 +70,10 @@ def get_ebuild_description(ebuild_text)
     get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
 end
 
+def get_ebuild_keywords(ebuild_text)
+    get_single_line_ini_value(ebuild_text, 'KEYWORDS') || '0_KEYWORDS_NF'
+end
+
 def get_ebuild_homepage(ebuild_text)
     get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
 end
@@ -111,6 +115,65 @@ def store_real_eapi(database, ebuild_obj)
     database.execute(sql_query, ebuild_obj['ebuild_id'])
 end
 
+def store_ebuild_keywords(database, ebuild_obj)
+    sql_query1 = <<SQL
+INSERT INTO ebuilds2architectures
+(ebuild_id, architecture_id, prefix_profile_id)
+VALUES (
+    ?,
+    (SELECT id FROM architectures WHERE architecture=?),
+    (SELECT id FROM prefix_profiles WHERE prefix_profile=?)
+);
+SQL
+
+    sql_query2 = <<SQL
+INSERT INTO ebuild_arch2keywords
+(ebuild_arch_id, keyword_id)
+VALUES (?, (
+    SELECT id
+    FROM keywords
+    WHERE keyword=?
+));
+SQL
+
+    if ebuild_obj["keywords"] == '0_KEYWORDS_NF' || ebuild_obj["keywords"].include?("*")
+        sign = '-' if ebuild_obj["keywords"].include?("-*")
+        if ebuild_obj["keywords"].include?("0_KEYWORDS_NF")
+            sign = '?'
+            ebuild_obj["keywords_real"] = '0_KEYWORDS_NF'
+        end
+        sql_query = "SELECT architecture FROM architectures;"
+        arches = database.execute(sql_query).flatten
+        arches.map! { |arch| arch.insert(0, sign)} if !sign.nil?
+        if ebuild_obj["keywords"].include?("0_KEYWORDS_NF")
+            ebuild_obj["keywords"] = arches.join(' ')
+        else
+            old_arches = ebuild_obj["keywords"].split()
+            old_arches.shift()
+            old_arches.each { |arch|
+                arches.each { |archn|
+                    if archn.sub(/^[~\-\?]/, '') == arch.sub(/^[~\-\?]/, '')
+                        arches.delete_at(arches.index(archn))
+                    end
+                }
+            }
+            ebuild_obj["keywords"] = (old_arches + arches).join(' ')
+        end
+    end
+
+    ebuild_obj["keywords"].split.each { |keyword|
+        status, arch = 'stable', keyword
+        status = 'unstable' if keyword.index('~') == 0
+        status = 'not work' if keyword.index('-') == 0
+        status = 'not known' if keyword.index('?') == 0
+        arch = keyword.sub(/^./, '') if status != 'stable'
+
+        database.execute(sql_query1, ebuild_obj['ebuild_id'], arch, arch)
+        ebuild_arch_id = get_last_inserted_id(database)
+        database.execute(sql_query2, ebuild_arch_id, status)
+    }
+end
+
 def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj = {"package_id" => package_id}
     ebuild_text = IO.read(ebuild_filename).to_a rescue []
@@ -121,6 +184,7 @@ def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj["slot"] = get_slot(ebuild_text)
     ebuild_obj["license"] = get_license(ebuild_text)
     ebuild_obj["version"] = get_ebuild_version(ebuild_text)
+    ebuild_obj["keywords"] = get_ebuild_keywords(ebuild_text)
 
     ebuild_obj = get_eapi_id(database, ebuild_obj)
     #ebuild_obj = get_license_id(database, ebuild_obj)
@@ -132,7 +196,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 SQL
 
     database.execute(
-        sql_query, 
+        sql_query,
         ebuild_obj["package_id"],
         ebuild_obj["version"],
         ebuild_obj["mtime"],
@@ -142,7 +206,8 @@ SQL
         ebuild_obj["license"]
     )
 
-    #ebuild_obj['ebuild_id'] = get_last_inserted_id(database)
+    ebuild_obj['ebuild_id'] = get_last_inserted_id(database)
+    store_ebuild_keywords(database, ebuild_obj)
     #store_real_eapi(database, ebuild_obj)
 end
 
