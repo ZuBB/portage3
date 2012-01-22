@@ -242,4 +242,11 @@ create table sets_content (
     package_id INTEGER NOT NULL
 );
 
+create table installed_apps (
+    id INTEGER,
+    package_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    PRIMARY KEY (id)
+);
+
 COMMIT;
