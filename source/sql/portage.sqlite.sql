@@ -212,6 +212,28 @@ create table ebuild_arch2keywords (
     PRIMARY KEY (id)
 );
 
+create table profile_levels (
+    id INTEGER,
+    profile_level VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table profile_keyworded_packages (
+    id INTEGER,
+    profile_level_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    package_version VARCHAR NOT NULL,
+    version_restriction VARCHAR NULL,
+    keyword_status_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (profile_level_id) REFERENCES profile_levels(id),
+    FOREIGN KEY (keyword_status_id) REFERENCES keywords(id),
+    CONSTRAINT idx1_unq UNIQUE (
+        profile_level_id, package_id, package_version, keyword_status_id
+    ),
+    PRIMARY KEY (id)
+);
+
 create table licences (
     id INTEGER PRIMARY KEY,
     license_name VARCHAR NOT NULL
