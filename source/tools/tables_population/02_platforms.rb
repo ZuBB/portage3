@@ -55,6 +55,7 @@ def fill_table(params)
 
     # walk through all use lines in that file
     file_content.each do |line|
+		# whats the point of skipping. need to break
         prefixes_go = true if line.include?("# Prefix keywords")
         # skip clean profiles
         next if !prefixes_go

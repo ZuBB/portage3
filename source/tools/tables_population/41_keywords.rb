@@ -14,6 +14,7 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
+# TODO symbols
 KEYWORDS = ['stable', 'unstable', 'not known', 'hardmasked', 'not work']
 
 OptionParser.new do |opts|
