@@ -124,7 +124,7 @@ soft_link = File.join(
 
 if options[:download_snapshot]
     print "Starting download portage snapshot.. "
-    puts message if !options[:quiet]
+    puts if !options[:quiet]
     STDOUT.flush
 
     # get correct filename
