@@ -13,27 +13,36 @@ create table platforms (
     PRIMARY KEY (id)
 );
 
-create table profiles (
+create table arches (
+	-- here will be all items from profiles/arch.list file
     id INTEGER,
-    profile_name VARCHAR NOT NULL,
+    arch VARCHAR UNIQUE NOT NULL,
     architecture_id INTEGER NOT NULL,
-    status_id INTEGER NOT NULL,
+    platform_id INTEGER NOT NULL,
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
-    FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
-    CONSTRAINT idx1_unq UNIQUE (profile_name, architecture_id, status_id),
+    FOREIGN KEY (platform_id) REFERENCES platforms(id),
+    CONSTRAINT idx1_unq UNIQUE (arch, architecture_id, platform_id),
     PRIMARY KEY (id)
 );
 
-create table prefix_profiles (
+create table keywords (
     id INTEGER,
-    prefix_profile VARCHAR NOT NULL,
-    architecture_id INTEGER NOT NULL,
-    platform_id INTEGER NOT NULL,
-    status_id INTEGER NOT NULL,
-    FOREIGN KEY (architecture_id) REFERENCES architectures(id),
-    FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
-    FOREIGN KEY (platform_id) REFERENCES platforms(id),
-    CONSTRAINT idx1_unq UNIQUE (prefix_profile, architecture_id, platform_id, status_id),
+    keyword VARCHAR UNIQUE NOT NULL,
+    symbol VARCHAR UNIQUE NOT NULL, -- really not null?
+    PRIMARY KEY (id)
+);
+
+create table profiles (
+	-- profile is any dir from 'base' basedir that has 'eapi' file inside
+    id INTEGER,
+    profile_name VARCHAR NOT NULL,
+    arch_id INTEGER NOT NULL,
+    profile_status_id INTEGER NOT NULL,
+    FOREIGN KEY (arch_id) REFERENCES arches(id),
+    FOREIGN KEY (profile_status_id) REFERENCES profile_statuses(id),
+    CONSTRAINT idx1_unq UNIQUE (
+		profile_name, arch_id, platform_id, profile_status_id
+	),
     PRIMARY KEY (id)
 );
 
@@ -41,12 +50,6 @@ create table profile_statuses (
     id INTEGER,
     profile_status VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (id)
-);
-
-create table keywords (
-    id INTEGER PRIMARY KEY,
-    keyword VARCHAR UNIQUE NOT NULL/*,
-    keyword_description VARCHAR NOT NULL*/
 );
 
 create table categories (
@@ -73,7 +76,7 @@ create table eapis (
     PRIMARY KEY (id)
 );
 
-create table all_use_flags (
+create table use_flags (
     id INTEGER,
     flag_name VARCHAR UNIQUE NOT NULL,
     flag_description VARCHAR UNIQUE NOT NULL,
@@ -190,23 +193,25 @@ create table ebuilds (
     -- data blob /*NOT NULL*/,
 );
 
-create table ebuilds2architectures (
+create table ebuilds2arches (
+	-- todo possibly this table and profile_keyworded_packages
+	-- 	should be merged. check it
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
-    architecture_id INTEGER DEFAULT NULL,
-    prefix_profile_id INTEGER DEFAULT NULL,
+    arch_id INTEGER DEFAULT NOT NULL,
+	-- TODO arch_source
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (architecture_id) REFERENCES architectures(id),
-    FOREIGN KEY (prefix_profile_id) REFERENCES prefix_profiles(id),
-    CONSTRAINT idx1_unq UNIQUE (ebuild_id, architecture_id),
+    FOREIGN KEY (arch_id) REFERENCES arches(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, arch_id),
     PRIMARY KEY (id)
 );
 
-create table ebuild_arch2keywords (
+create table ebuild_arches2keywords (
     id INTEGER,
     ebuild_arch_id INTEGER NOT NULL,
     keyword_id INTEGER NOT NULL,
-    FOREIGN KEY (ebuild_arch_id) REFERENCES ebuilds2architectures(id),
+	-- TODO keyword_source
+    FOREIGN KEY (ebuild_arch_id) REFERENCES ebuilds2arches(id),
     FOREIGN KEY (keyword_id) REFERENCES keywords(id),
     CONSTRAINT idx1_unq UNIQUE (ebuild_arch_id, keyword_id),
     PRIMARY KEY (id)
