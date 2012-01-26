@@ -11,6 +11,8 @@ package description: metadata vs ebuild
 
 ./a/e/emacspeak-9999.ebuild double keywords definition
 
+SELECT count(*) FROM ebuilds2architectures where architecture_id is null and prefix_profile_id is null
+
 overhead in keywords
 ./app-accessibility/espeak/espeak-1.45.03.ebuild
 KEYWORDS="~alpha ~amd64 ~hppa ~ia64 ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux"
