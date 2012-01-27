@@ -50,19 +50,18 @@ def fill_table(params)
     filename = File.join(params[:portage_home], "profiles", "arch.list")
     file_content = IO.read(filename).to_a rescue []
     sql_query = "INSERT INTO platforms (platform_name) VALUES (?);"
-    prefixes_go = false
     platforms = []
 
     # walk through all use lines in that file
     file_content.each do |line|
-		# whats the point of skipping. need to break
-        prefixes_go = true if line.include?("# Prefix keywords")
-        # skip clean profiles
-        next if !prefixes_go
         # skip comments
         next if line.index('#') == 0
+        # trim '\n'
+        line.chomp!()
         # skip empty lines
-        next if line.empty?
+        next if line.empty?()
+        # skip architectures
+        next unless line.include?('-')
 
         # remember
         platforms << line.split('-')[1]
