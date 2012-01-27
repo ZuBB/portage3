@@ -51,10 +51,10 @@ def fill_table(params)
     profiles_file_content = IO.read(filename).to_a rescue []
     sql_query =<<SQL
 INSERT INTO profiles
-(profile_name, architecture_id, status_id)
+(profile_name, arch_id, profile_status_id)
 VALUES (
     ?,
-    (SELECT id FROM architectures WHERE architecture=?),
+    (SELECT id FROM arches WHERE arch_name=?),
     (SELECT id FROM profile_statuses WHERE profile_status=?)
 );
 SQL
