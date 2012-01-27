@@ -16,12 +16,12 @@ create table platforms (
 create table arches (
     -- here will be all items from profiles/arch.list file
     id INTEGER,
-    arch VARCHAR UNIQUE NOT NULL,
+    arch_name VARCHAR UNIQUE NOT NULL,
     architecture_id INTEGER NOT NULL,
     platform_id INTEGER NOT NULL,
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
     FOREIGN KEY (platform_id) REFERENCES platforms(id),
-    CONSTRAINT idx1_unq UNIQUE (arch, architecture_id, platform_id),
+    CONSTRAINT idx1_unq UNIQUE (arch_name, architecture_id, platform_id),
     PRIMARY KEY (id)
 );
 
