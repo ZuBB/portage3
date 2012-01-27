@@ -47,25 +47,12 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    filename = File.join(params[:portage_home], "profiles", "profiles.desc")
-    profiles_file_content = IO.read(filename).to_a rescue []
-    prefixes_go = false
-    sql_query =<<SQL
-INSERT INTO prefix_profiles
-(prefix_profile, architecture_id, platform_id, status_id)
-VALUES (
-    ?,
-    (SELECT id FROM architectures WHERE architecture=?),
-    (SELECT id FROM platforms WHERE platform_name=?),
-    (SELECT id FROM profile_statuses WHERE profile_status=?)
-);
-SQL
+    filename = File.join(params[:portage_home], "profiles_v2", "base")
+    sql_query = "INSERT INTO sources (source) VALUES (?);"
+	sources = ['ebuilds']
 
     # walk through all use flags in that file
     profiles_file_content.each do |line|
-        prefixes_go = true if line.include?("Gentoo Prefix profiles")
-        # skip clean profiles
-        next if !prefixes_go
         # skip comments
         next if line.index('#') == 0
         # lets trim newlines
@@ -75,15 +62,11 @@ SQL
 
         # lets split flag and its description
         profile_stuff = line.split()
-
-        params[:database].execute(
-            sql_query,
-            profile_stuff[1],
-            profile_stuff[0].split('-')[0],
-            profile_stuff[0].split('-')[1],
-            profile_stuff[2]
-        )
     end
+
+	sources.each { |item|
+		params[:database].execute(sql_query, item)
+	}
 end
 
 fill_table_X(
