@@ -47,43 +47,24 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    filename = File.join(params[:portage_home], "profiles", "profiles.desc")
-    profiles_file_content = IO.read(filename).to_a rescue []
-    prefixes_go = false
-    sql_query =<<SQL
-INSERT INTO prefix_profiles
-(prefix_profile, architecture_id, platform_id, status_id)
-VALUES (
-    ?,
-    (SELECT id FROM architectures WHERE architecture=?),
-    (SELECT id FROM platforms WHERE platform_name=?),
-    (SELECT id FROM profile_statuses WHERE profile_status=?)
-);
-SQL
+    queries_array = results = []
+    # lets find all lines from all ebuilds that have EAPI string 0 position
+    grep_command = "grep -h '^EAPI' #{params[:portage_home]}/*/*/*ebuild 2> /dev/null"
 
-    # walk through all use flags in that file
-    profiles_file_content.each do |line|
-        prefixes_go = true if line.include?("Gentoo Prefix profiles")
-        # skip clean profiles
-        next if !prefixes_go
-        # skip comments
-        next if line.index('#') == 0
-        # lets trim newlines
-        line.chomp!()
-        # skip empty lines
-        next if line.empty?
-
-        # lets split flag and its description
-        profile_stuff = line.split()
-
-        params[:database].execute(
-            sql_query,
-            profile_stuff[1],
-            profile_stuff[0].split('-')[0],
-            profile_stuff[0].split('-')[1],
-            profile_stuff[2]
-        )
+    for letter in 'a'..'z':
+        results += %x[#{grep_command.sub(/\*/, "#{letter}*")}].split("\n")
     end
+
+    results.map! { |line|
+        line.sub(/#.*$/, '').gsub(/['" EAPI=]/, '')
+    }
+
+    results.uniq.compact.each { |eapi|
+        # create query for eapi and add it into array
+        queries_array << "INSERT INTO eapis (eapi_version) VALUES ('#{eapi}');"
+    }
+
+    params[:database].execute_batch(queries_array.join("\n"))
 end
 
 fill_table_X(
@@ -91,4 +72,3 @@ fill_table_X(
     method(:fill_table),
     {:portage_home => portage_home}
 )
-
