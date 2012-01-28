@@ -14,8 +14,6 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
-# TODO symbols
-KEYWORDS = ['not work', 'not known', 'hardmasked', 'unstable', 'stable']
 
 OptionParser.new do |opts|
     # help header
@@ -49,21 +47,21 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    # array of all inserts
-    queries_array = []
-    # array of all keywords
-    KEYWORDS.each { |keyword|
-        # create query for keyword and add it into array
-        sql_query = "INSERT INTO keywords (keyword) VALUES ('#{keyword}');"
-        queries_array << sql_query
-    }
+    sql_query = "INSERT INTO profile_statuses (profile_status) VALUES (?);"
+    path = File.join(params[:portage_home], "profiles", "profiles.desc")
+    return if !File.readable?(path)
+    # lets find all lines from profiles.desc file
+    results = %x[grep -oP '\t[a-z]*$' #{path}].to_a rescue []
+    # drop first item since its a header
+    results.shift()
 
-    params[:database].execute_batch(queries_array.join("\n"))
+    results.uniq.compact.each { |status|
+        params[:database].execute(sql_query, status.strip!())
+    }
 end
 
 fill_table_X(
     options[:db_filename],
     method(:fill_table),
-    {}
+    {:portage_home => portage_home}
 )
-
