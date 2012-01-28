@@ -90,4 +90,3 @@ fill_table_X(
     method(:fill_table),
     {:portage_home => portage_home}
 )
-
