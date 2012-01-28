@@ -16,11 +16,33 @@ require 'time'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
-# hash with options
+# sql
 SQL_QUERY = <<SQL
-INSERT INTO ebuilds
-(package_id, version, mtime, mauthor, eapi_id, slot, license)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO ebuilds2arches
+(
+    package_id, -- INTEGER NOT NULL
+    sversion, -- VARCHAR DEFAULT NULL
+    version, -- VARCHAR DEFAULT NULL
+    restriction_id, --INTEGER DEFAULT NULL
+    arch_id, -- INTEGER NOT NULL
+    source_id -- INTEGER NOT NULL
+)
+VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    (
+        SELECT id
+        FROM arches
+        WHERE arch_name=?
+    ),
+    (
+        SELECT id
+        FROM sources
+        WHERE source='ebuilds'
+    )
+)
 SQL
 
 OptionParser.new do |opts|
@@ -104,44 +126,54 @@ def get_license(ebuild_text)
     get_single_line_ini_value(ebuild_text, 'LICENSE') || '0_LICENSE_NF'
 end
 
-def get_eapi_id(database, ebuild_obj)
-    eapi = ebuild_obj["eapi"] == '0_EAPI_NF' ? 0 : ebuild_obj["eapi"]
-    database.get_first_value("SELECT id FROM eapis WHERE eapi_version=?", eapi)
-end
+def store_ebuild_keywords(database, ebuild_obj)
+    keywords, ebuild_obj["keywords"] = ebuild_obj["keywords"], []
+    if keywords == "0_KEYWORDS_NF"
+        ebuild_obj["keywords_real"] = '0_KEYWORDS_NF'
+        ebuild_obj["keywords"] << { "arch" => '*', "sign" => '?' }
+        keywords = ""
+    elsif keywords.include?("-*") && keywords.size > 2
+        keywords.sub!('-*', '')
+        ebuild_obj["keywords"] << { "arch" => '*', "sign" => '-' }
+    end
 
-def store_real_eapi(database, ebuild_obj)
-    sql_query = "INSERT INTO _note_eapi_0_NF (eapi_version) VALUES ?;"
-    database.execute(sql_query, ebuild_obj['ebuild_id'])
+    keywords.split().each { |keyword|
+        ebuild_obj["keywords"] << {
+            "sign" => (keyword.match(/^[~\-\?]/).to_s rescue ''),
+            "arch" => keyword.sub(/^[~\-\?]/, '')
+        }
+    }
+
+    ebuild_obj["keywords"].each do |keyword|
+        status, arch = 'stable', keyword["arch"]
+        status = 'unstable' if keyword["sign"] == '~'
+        status = 'not work' if keyword["sign"] == '-'
+        status = 'not known' if keyword["sign"] == '?'
+
+        database.execute(
+            SQL_QUERY,
+            ebuild_obj['package_id'],
+            ebuild_obj['ebuild_id'],
+            nil,
+            nil,
+            arch
+        )
+    end
 end
 
 def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj = {"package_id" => package_id}
     ebuild_text = IO.read(ebuild_filename).to_a rescue []
 
-    ebuild_obj["eapi"] = get_eapi(ebuild_text)
-    ebuild_obj["slot"] = get_slot(ebuild_text)
-    ebuild_obj["mtime"] = get_ebuild_mtime(ebuild_text)
-    ebuild_obj["author"] = get_ebuild_author(ebuild_text)
-    ebuild_obj["license"] = get_license(ebuild_text)
     ebuild_obj["version"] = get_ebuild_version(ebuild_text)
-
-    ebuild_obj["real_eapi"] = get_eapi_id(database, ebuild_obj)
-    ebuild_obj["eapi_id"], ebuild_obj["real_eapi"] =
-        ebuild_obj["real_eapi"], ebuild_obj["eapi_id"]
-
-    database.execute(
-        SQL_QUERY,
+    ebuild_obj["keywords"] = get_ebuild_keywords(ebuild_text)
+    ebuild_obj['ebuild_id'] = database.get_first_value(
+        "SELECT id FROM ebuilds WHERE package_id=? AND version=?",
         ebuild_obj["package_id"],
-        ebuild_obj["version"],
-        ebuild_obj["mtime"],
-        ebuild_obj["author"],
-        ebuild_obj["eapi_id"],
-        ebuild_obj["slot"],
-        ebuild_obj["license"]
+        ebuild_obj["version"]
     )
 
-    ebuild_obj['ebuild_id'] = get_last_inserted_id(database)
-    #store_real_eapi(database, ebuild_obj)
+    return ebuild_obj
 end
 
 def category_block(params)
@@ -150,7 +182,7 @@ end
 
 def packages_block(params)
     Dir.glob(File.join(params[:item_path], '*.ebuild')).sort.each do |ebuild|
-        parse_ebuild(
+        ebuild_obj = parse_ebuild(
             params[:database],
             get_package_id(
                 params[:database],
@@ -159,6 +191,7 @@ def packages_block(params)
             ),
             ebuild
         )
+        store_ebuild_keywords(params[:database], ebuild_obj)
     end
 end
 
@@ -173,4 +206,3 @@ fill_table_X(
     method(:fill_table),
     {:portage_home => portage_home}
 )
-
