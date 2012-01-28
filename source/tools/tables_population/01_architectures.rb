@@ -50,6 +50,13 @@ def fill_table(params)
     filename = File.join(params[:portage_home], "profiles", "arch.list")
     file_content = IO.read(filename).to_a rescue []
     sql_query = "INSERT INTO architectures (architecture) VALUES (?);"
+    architectures = ['*']
+    # ********************* TODO *********************
+    # ********************* TODO *********************
+    architectures << ['x64']
+    architectures << ['sparc64']
+    # ********************* TODO *********************
+    # ********************* TODO *********************
 
     # walk through all use lines in that file
     file_content.each do |line|
@@ -58,18 +65,12 @@ def fill_table(params)
         next if line.index('#') == 0
         line.chomp!()
         # skip empty lines
-        next if line.empty?
-
-        # lets trim newlines and insert
-        params[:database].execute(sql_query, line)
+        architectures << line unless line.empty?
     end
 
-    # ********************* TODO *********************
-    # ********************* TODO *********************
-    params[:database].execute(sql_query, "x64")
-    params[:database].execute(sql_query, "sparc64")
-    # ********************* TODO *********************
-    # ********************* TODO *********************
+    architectures.each { |arch|
+        params[:database].execute(sql_query, arch)
+    }
 end
 
 # TODO: check if all dependant tables are filled
