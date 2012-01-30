@@ -62,7 +62,7 @@ create table eapis (
     PRIMARY KEY (id)
 );
 
-create table version_restrictions (
+create table restriction_types (
     id INTEGER,
     restriction VARCHAR UNIQUE NOT NULL,
     -- sql_query VARCHAR UNIQUE NOT NULL,
@@ -88,7 +88,7 @@ create table packages (
     PRIMARY KEY (id)
 );
 
-create table use_flags (
+/* create table use_flags (
     id INTEGER,
     flag_name VARCHAR UNIQUE NOT NULL,
     flag_description VARCHAR UNIQUE NOT NULL,
@@ -179,7 +179,7 @@ create table person_roles2packages (
     FOREIGN KEY (package_id) REFERENCES packages(id),
     CONSTRAINT idx1_unq UNIQUE (package_id, persons_role_id),
     PRIMARY KEY (id)
-);
+);*/
 
 create table ebuilds (
     id INTEGER,
@@ -192,41 +192,23 @@ create table ebuilds (
     slot VARCHAR NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
-    -- flags?
-    -- enabled flags?
-    -- depend
-    -- rdepend
-    -- overlay?
-    -- inherit
     CONSTRAINT idx1_unq UNIQUE (package_id, version),
     PRIMARY KEY (id)
-    -- sha1/md5 INTEGER NOT NULL
-    -- size of dwonloads?
+    -- flags/enabled flags/depend/rdepend/overlay/inherit/manifest
     -- data blob /*NOT NULL*/,
 );
 
 create table ebuilds2arches (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    -- strict package version.
-    sversion VARCHAR DEFAULT NULL,
-    -- package version where * might be used
-    version VARCHAR DEFAULT NULL,
-    -- id of the version restriction
-    restriction_id INTEGER DEFAULT NULL,
+    version INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
-    -- id of the source where definition of arch for ebuilds specified
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (sversion) REFERENCES ebuilds(id),
-    FOREIGN KEY (source_id) REFERENCES sources(id),
-    FOREIGN KEY (restriction_id) REFERENCES version_restrictions(id),
+    FOREIGN KEY (version) REFERENCES ebuilds(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
-    CONSTRAINT chk_versions CHECK (sversion NOT NULL OR version NOT NULL),
-    CONSTRAINT chk_version CHECK (version like '%*'),
-    CONSTRAINT idx1_unq UNIQUE (
-        package_id, sversion, version, restriction_id, arch_id
-    ),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    CONSTRAINT idx1_unq UNIQUE (package_id, version, arch_id, source_id),
     PRIMARY KEY (id)
 );
 
@@ -242,11 +224,30 @@ create table ebuild_arches2keywords (
     PRIMARY KEY (id)
 );
 
-create table licences (
+create table masked_packages (
+    id INTEGER,
+    package_id INTEGER NOT NULL,
+    version VARCHAR NOT NULL,
+    arch_id INTEGER NOT NULL,
+    restriction_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (restriction_id) REFERENCES version_restrictions(id),
+    FOREIGN KEY (arch_id) REFERENCES arches(id),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    -- CONSTRAINT chk_versions CHECK (sversion NOT NULL OR version NOT NULL),
+    -- CONSTRAINT chk_version CHECK (version like '%*'),
+    CONSTRAINT idx1_unq UNIQUE (
+        package_id, version, restriction_id, arch_id
+    ),
+    PRIMARY KEY (id)
+);
+
+/*create table licences (
     id INTEGER PRIMARY KEY,
     license_name VARCHAR NOT NULL
     -- url VARCHAR ?,
-    -- content blob /*zipped data*/ ?
+    -- content blob zipped data
 );
 
 create table licences2packages (
@@ -270,7 +271,7 @@ create table sets_content (
     id INTEGER PRIMARY KEY,
     set_id INTEGER NOT NULL,
     package_id INTEGER NOT NULL
-);
+);*/
 
 create table installed_apps (
     id INTEGER,
