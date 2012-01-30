@@ -17,25 +17,43 @@ require 'time'
 # hash with options
 options = Hash.new.merge!(OPTIONS)
 # sql
-SQL_QUERY = <<SQL
+SQL_QUERY1 = <<SQL
 INSERT INTO ebuilds2arches
 (
     package_id, -- INTEGER NOT NULL
-    sversion, -- VARCHAR DEFAULT NULL
     version, -- VARCHAR DEFAULT NULL
-    restriction_id, --INTEGER DEFAULT NULL
     arch_id, -- INTEGER NOT NULL
     source_id -- INTEGER NOT NULL
 )
 VALUES (
     ?,
     ?,
-    ?,
-    ?,
     (
         SELECT id
         FROM arches
         WHERE arch_name=?
+    ),
+    (
+        SELECT id
+        FROM sources
+        WHERE source='ebuilds'
+    )
+)
+SQL
+
+SQL_QUERY2 = <<SQL
+INSERT INTO ebuild_arches2keywords
+(
+    ebuild_arch_id,
+    keyword_id,
+    source_id
+)
+VALUES (
+    ?,
+    (
+        SELECT id
+        FROM keywords
+        WHERE keyword=?
     ),
     (
         SELECT id
@@ -151,13 +169,13 @@ def store_ebuild_keywords(database, ebuild_obj)
         status = 'not known' if keyword["sign"] == '?'
 
         database.execute(
-            SQL_QUERY,
+            SQL_QUERY1,
             ebuild_obj['package_id'],
             ebuild_obj['ebuild_id'],
-            nil,
-            nil,
             arch
         )
+
+        database.execute(SQL_QUERY2, get_last_inserted_id(database), status)
     end
 end
 
