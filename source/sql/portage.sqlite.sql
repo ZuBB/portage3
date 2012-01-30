@@ -28,7 +28,7 @@ create table arches (
 create table keywords (
     id INTEGER,
     keyword VARCHAR UNIQUE NOT NULL,
-    symbol VARCHAR UNIQUE NOT NULL, -- really not null?
+    -- symbol VARCHAR UNIQUE NOT NULL, /*really not null?*/
     PRIMARY KEY (id)
 );
 
@@ -52,14 +52,21 @@ create table profile_statuses (
 
 create table sources (
     id INTEGER,
-    -- ebuild
-    -- profiles
-    -- ...
-    -- profiles
-    -- make.conf --- ???
-    -- /etc/portage
-    -- cli install
     source VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table eapis (
+    id INTEGER,
+    eapi_version INTEGER UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table version_restrictions (
+    id INTEGER,
+    restriction VARCHAR UNIQUE NOT NULL,
+    -- sql_query VARCHAR UNIQUE NOT NULL,
+    -- CONSTRAINT idx1_unq UNIQUE (restriction, sql_query),
     PRIMARY KEY (id)
 );
 
@@ -78,12 +85,6 @@ create table packages (
     homepage VARCHAR NOT NULL,
     CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
-    PRIMARY KEY (id)
-);
-
-create table eapis (
-    id INTEGER,
-    eapi_version INTEGER UNIQUE NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -177,15 +178,6 @@ create table person_roles2packages (
     FOREIGN KEY (persons_role_id) REFERENCES persons2roles(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
     CONSTRAINT idx1_unq UNIQUE (package_id, persons_role_id),
-    PRIMARY KEY (id)
-);
-
-
-create table version_restrictions (
-    id INTEGER,
-    restriction VARCHAR UNIQUE NOT NULL,
-    -- sql_query VARCHAR UNIQUE NOT NULL,
-    -- CONSTRAINT idx1_unq UNIQUE (restriction, sql_query),
     PRIMARY KEY (id)
 );
 
