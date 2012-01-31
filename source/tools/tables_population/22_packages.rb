@@ -47,31 +47,44 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def get_description(portage_home, category)
-    metadata_path = File.join(portage_home, category, "metadata.xml")
-    description = '0_DESC_NF'
-
-    if File.exists?(metadata_path) && File.readable?(metadata_path)
-        xml_doc = Nokogiri::XML(IO.read(metadata_path))
-        # TODO hardcoded 'en'
-        description_node = xml_doc.xpath('//longdescription[@lang="en"]')
-        description = description_node.inner_text.gsub(/\s+/, ' ')
-    end
-
-    return description
+def get_ebuild_description(ebuild_text)
+    get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
 end
 
-def insert_category(params)
+def get_ebuild_homepage(ebuild_text)
+    get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
+end
+
+def category_block(params)
+    walk_through_packages({
+        :category_id => get_category_id(params[:database], params[:category]),
+        :block2 => method(:packages_block)
+    }.merge!(params))
+end
+
+def packages_block(params)
+    # get content of the last ebuild for this package
+    ebuild_filename_pattern = File.join(params[:item_path], '*.ebuild')
+    ebuild_filename = Dir.glob(ebuild_filename_pattern).sort.last
+    ebuild_text = IO.read(ebuild_filename).to_a rescue []
+
+    sql_query = <<SQL
+    INSERT INTO packages
+    (category_id, package_name, description, homepage)
+    VALUES (?, ?, ?, ?);
+SQL
     params[:database].execute(
-        "INSERT INTO categories (category_name, description) VALUES (?, ?);",
-        params[:category],
-        get_description(params[:portage_home], params[:category])
+        sql_query,
+        params[:category_id],
+        params[:package],
+        get_ebuild_description(ebuild_text),
+        get_ebuild_homepage(ebuild_text)
     )
 end
 
 def fill_table(params)
     walk_through_categories(
-        {:block1 => method(:insert_category)}.merge!(params)
+        {:block1 => method(:category_block)}.merge!(params)
     )
 end
 
@@ -80,4 +93,3 @@ fill_table_X(
     method(:fill_table),
     {:portage_home => portage_home}
 )
-
