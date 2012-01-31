@@ -3,13 +3,12 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/04/12
-# Latest Modification: Vasyl Zuzyak, 01/06/12
+# Initial Author: Vasyl Zuzyak, 01/11/12
+# Latest Modification: Vasyl Zuzyak, 01/11/12
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
-require 'nokogiri'
 require 'sqlite3'
 require 'tools'
 
@@ -47,50 +46,36 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def get_ebuild_description(ebuild_text)
-    get_single_line_ini_value(ebuild_text, 'DESCRIPTION') || '0_DESC_NF'
-end
-
-def get_ebuild_homepage(ebuild_text)
-    get_single_line_ini_value(ebuild_text, 'HOMEPAGE') || '0_WWWPAGE_NF'
-end
-
-def category_block(params)
-    walk_through_packages({
-        :category_id => get_category_id(params[:database], params[:category]),
-        :block2 => method(:packages_block)
-    }.merge!(params))
-end
-
-def packages_block(params)
-    # get content of the last ebuild for this package
-    ebuild_filename_pattern = File.join(params[:item_path], '*.ebuild')
-    ebuild_filename = Dir.glob(ebuild_filename_pattern).sort.last
-    ebuild_text = IO.read(ebuild_filename).to_a rescue []
-
-    sql_query = <<SQL
-    INSERT INTO packages
-    (category_id, package_name, description, homepage)
-    VALUES (?, ?, ?, ?);
-SQL
-    params[:database].execute(
-        sql_query,
-        params[:category_id],
-        params[:package],
-        get_ebuild_description(ebuild_text),
-        get_ebuild_homepage(ebuild_text)
-    )
-end
-
 def fill_table(params)
-    walk_through_categories(
-        {:block1 => method(:category_block)}.merge!(params)
-    )
+    filename = File.join(params[:portage_home], "profiles", "use.desc")
+    use_flags_file_content = IO.read(filename).to_a rescue []
+    sql_query =<<SQL
+INSERT INTO all_use_flags
+(flag_name, flag_description)
+VALUES (?, ?);
+SQL
+
+    # walk through all use flags in that file
+    use_flags_file_content.sort.each do |use_flag|
+        # skip comments
+        next if use_flag.index('#') == 0
+        # lets trim newlines
+        use_flag.chomp!()
+        # skip empty lines
+        next if use_flag.empty?
+
+        # lets split flag and its description
+        flag_stuff = use_flag.split(' - ')
+
+        params[:database].execute(sql_query, flag_stuff[0], flag_stuff[1])
+    end
 end
+
+# TODO: check if all dependant tables are filled
+#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
 
 fill_table_X(
     options[:db_filename],
     method(:fill_table),
     {:portage_home => portage_home}
 )
-

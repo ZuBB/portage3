@@ -3,12 +3,13 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/11/12
-# Latest Modification: Vasyl Zuzyak, 01/11/12
+# Initial Author: Vasyl Zuzyak, 01/04/12
+# Latest Modification: Vasyl Zuzyak, 01/06/12
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
+require 'nokogiri'
 require 'sqlite3'
 require 'tools'
 
@@ -46,37 +47,36 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def fill_table(params)
-    filename = File.join(params[:portage_home], "profiles", "use.desc")
-    use_flags_file_content = IO.read(filename).to_a rescue []
-    sql_query =<<SQL
-INSERT INTO all_use_flags
-(flag_name, flag_description)
-VALUES (?, ?);
-SQL
+def get_description(portage_home, category)
+    metadata_path = File.join(portage_home, category, "metadata.xml")
+    description = '0_DESC_NF'
 
-    # walk through all use flags in that file
-    use_flags_file_content.sort.each do |use_flag|
-        # skip comments
-        next if use_flag.index('#') == 0
-        # lets trim newlines
-        use_flag.chomp!()
-        # skip empty lines
-        next if use_flag.empty?
-
-        # lets split flag and its description
-        flag_stuff = use_flag.split(' - ')
-
-        params[:database].execute(sql_query, flag_stuff[0], flag_stuff[1])
+    if File.exists?(metadata_path) && File.readable?(metadata_path)
+        xml_doc = Nokogiri::XML(IO.read(metadata_path))
+        # TODO hardcoded 'en'
+        description_node = xml_doc.xpath('//longdescription[@lang="en"]')
+        description = description_node.inner_text.gsub(/\s+/, ' ')
     end
+
+    return description
 end
 
-# TODO: check if all dependant tables are filled
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
+def insert_category(params)
+    params[:database].execute(
+        "INSERT INTO categories (category_name, description) VALUES (?, ?);",
+        params[:category],
+        get_description(params[:portage_home], params[:category])
+    )
+end
+
+def fill_table(params)
+    walk_through_categories(
+        {:block1 => method(:insert_category)}.merge!(params)
+    )
+end
 
 fill_table_X(
     options[:db_filename],
     method(:fill_table),
     {:portage_home => portage_home}
 )
-

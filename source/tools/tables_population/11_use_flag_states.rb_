@@ -65,4 +65,3 @@ fill_table_X(
     method(:fill_table),
     {}
 )
-
