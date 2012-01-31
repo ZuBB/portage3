@@ -16,33 +16,19 @@ require 'tools'
 # hash with options
 options = Hash.new.merge!(OPTIONS)
 # atom prefix matcher
-VERSION_RESTRICTION = Regexp.new('^[><=~]+')
-# regexp to check if version is present
-#VERSION_SPLITTER = Regexp.new('-|:(\\d.*)$')
-# regexp to match whole version
-VERSION = Regexp.new('-|:(\\d.*)$')
-# regexp to check sversion
-SVERSION = Regexp.new('[\*:]')
+RESTRICTION = Regexp.new("^[^\\w]+")
+# regexp to match version
+VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
-INSERT INTO ebuilds2arches
-(
-    package_id, -- INTEGER NOT NULL
-    sversion, -- VARCHAR DEFAULT NULL
-    version, -- VARCHAR DEFAULT NULL
-    restriction_id, --INTEGER DEFAULT NULL
-    arch_id -- INTEGER NOT NULL
-)
+INSERT INTO packages2masks
+(package_id, version, mask_state_id, restriction_id, source_id)
 VALUES (
     ?,
     ?,
-    ?,
-    ?,
-    (
-        SELECT id
-        FROM arches
-        WHERE arch_name=?
-    )
+    (SELECT id FROM mask_states WHERE mask_state=?),
+    (SELECT id FROM restriction_types WHERE restriction=?),
+    ?
 )
 SQL
 
@@ -79,82 +65,57 @@ end
 
 def parse_line(line)
     result = {}
-    changed_line = line
+
+    # take care about leading '-'
+    # it means this atom/package should treated as unmasked
+    result["mask_state"] = line.index('-') == 0 ? 'unmasked' : 'masked'
 
     # take care about leading ~
-    # means match any revision of the base version specified.
-    # So in the above example, we would match versions
-    # '1.0.2a', '1.0.2a-r1', '1.0.2a-r2', etc
-    # man 5 ebuild
-    changed_line.sub!('~', '') += '*' if changed_line.index('~') == 0
+    # it means match any subrevision of the specified base version.
+    if line.index('~') == 0
+        line.sub!(/^~/, '')
+
+        if line.include?(':')
+            line.sub!(":", "*:") unless line.include?('*:')
+        else
+            line << '*' unless line.end_with?('*')
+        end
+    end
 
     # version restrictions
-    match = changed_line.match(VERSION_RESTRICTION)
-    unless match.nil?
-        result["version_restrictions"] = match.to_s
-        changed_line.sub(VERSION_RESTRICTION, '')
+    unless line.match(RESTRICTION).nil?
+        result["version_restrictions"] = line.match(RESTRICTION).to_s
+        line.sub!(RESTRICTION, '')
     end
 
     # deal with versions
-    version_match = changed_line.match(VERSION)
+    version_match = line.match(VERSION)
+    version_match = version_match.to_a.compact unless version_match.nil?
+    version_match = nil if version_match.size == 1 && version_match.to_s.empty?
+
     unless version_match.nil?
-        # store it
-        if version_match[0] == ':'
-            result["version"] = version_match[1] + '*'
-        else
-            # if second part still have * or :
-            unless version_match[1].match(SVERSION).nil?
-                # its not strict version
-                result["version"] = version_match[1]
-            else
-                # otherwise strict
-                result["sversion"] = version_match[1]
-            end
+        result["version"] = version_match.last
+        result["version"] << '*' if version_match.size == 2
 
-            # final check for complex version string
-            if !result["version"].nil? && result["version"].include?(':')
-                version_parts = result["version"].split(':')
-
-                version_parts[0] += '*' unless version_parts[0].include?('*')
-                result["version"] = version_parts[1]
-                # TODO version that left may stil do not match requested slot
-            end
+        if result["version_restrictions"].nil?
+            result["version_restrictions"] = '='
         end
 
-        changed_line.sub!(VERSION, '')
+        line.sub!(VERSION, '')
     else
         result["version"] = '*'
+        result["version_restrictions"] = '='
     end
 
-    match = changed_line.split('/')
+    match = line.split('/')
     result['category'] = match[0]
     result['package'] = match[1]
 
     return result
 end
 
-def get_arch_id(dir, database)
-    sql_query = <<SQL
-SELECT id
-FROM arches
-WHERE
-    arch_name=? AND
-    architecture_id=(
-    ) AND
-    platform_id=(
-    )
-SQL
-    arch_name, platform, architecture = dir, nil, nil
-    if arch_name == 'base/'
-        architecture = platform = '*'
-    else
-        arch_name.sub!('base/', '')
-        arch_parts = arch_name.split('/')
-        architecture = arch_parts[0]
-        platform = arch_parts[1] || 'linux'
-    end
-
-    database.get_first_value(sql_query, arch_name, architecture, platform)
+def get_source_id(database, dir)
+    database.get_first_value("SELECT id FROM sources WHERE source=?", dir)
 end
 
 def fill_table(params)
@@ -164,8 +125,8 @@ def fill_table(params)
     # walk through all use flags in that file
     Dir['**/*/'].each do |dir|
         # skip dirs that not in base
-        next unless dir.include?('base')
-        # skip dirs that not in base
+        next unless dir.index('base') == 0
+        # skip dirs that has 'deprecated' file in it
         next if File.exist?(File.join(filepath, dir, 'deprecated'))
         # lets get filename
         filename = File.join(filepath, dir, 'package.mask')
@@ -180,22 +141,15 @@ def fill_table(params)
                 next if line.chomp!().empty?
 
                 result = parse_line(line)
-                result['package_id'] = get_package_id(
-                    params[:database], result['category'], result['package']
-                )
-                result['sversion'] = params[:database].get_first_value(
-                    "SELECT id from ebuilds WHERE package_id=? AND version=?",
-                    params["package_id"],
-                    params["sversion"]
-                ) unless params["sversion"].nil?
-
                 params[:database].execute(
                     SQL_QUERY,
-                    params["package_id"],
-                    params["sversion"] || nil,
-                    params["version"] || nil,
-                    params["version_restrictions"],
-                    get_arch_id(dir, params[:database])
+                    get_package_id(
+                        params[:database], result['category'], result['package']
+                    ),
+                    result["version"],
+                    result["mask_state"],
+                    result["version_restrictions"],
+                    get_source_id(params[:database], dir)
                 )
             end
         end
