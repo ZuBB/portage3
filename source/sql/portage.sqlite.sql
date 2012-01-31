@@ -70,6 +70,12 @@ create table restriction_types (
     PRIMARY KEY (id)
 );
 
+create table mask_states (
+    id INTEGER,
+    mask_state VARCHAR UNIQUE NOT NULL,
+    PRIMARY KEY (id)
+);
+
 create table categories (
     id INTEGER,
     category_name VARCHAR UNIQUE NOT NULL,
@@ -224,21 +230,19 @@ create table ebuild_arches2keywords (
     PRIMARY KEY (id)
 );
 
-create table masked_packages (
+create table packages2masks (
     id INTEGER,
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
-    arch_id INTEGER NOT NULL,
+    mask_state_id INTEGER NOT NULL,
     restriction_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (restriction_id) REFERENCES version_restrictions(id),
-    FOREIGN KEY (arch_id) REFERENCES arches(id),
+    FOREIGN KEY (mask_state_id) REFERENCES mask_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    -- CONSTRAINT chk_versions CHECK (sversion NOT NULL OR version NOT NULL),
-    -- CONSTRAINT chk_version CHECK (version like '%*'),
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, restriction_id, arch_id
+        package_id, version, restriction_id, source_id
     ),
     PRIMARY KEY (id)
 );
