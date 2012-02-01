@@ -10,6 +10,7 @@ TIMESTAMP = "%Y%m%d-%H%M%S"
 OPTIONS = {
     :quiet => true,
     :db_filename => nil,
+    :system_home => '/etc/portage/',
     :storage => {
         :root => '/dev/shm',
         :home_folder => 'portage3_data',
