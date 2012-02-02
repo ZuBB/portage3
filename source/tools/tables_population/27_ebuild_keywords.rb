@@ -9,57 +9,21 @@
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
-require 'nokogiri'
 require 'sqlite3'
 require 'tools'
-require 'time'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
 # sql
-SQL_QUERY1 = <<SQL
-INSERT INTO ebuilds2arches
-(
-    package_id, -- INTEGER NOT NULL
-    version, -- VARCHAR DEFAULT NULL
-    arch_id, -- INTEGER NOT NULL
-    source_id -- INTEGER NOT NULL
-)
+SQL_QUERY = <<SQL
+INSERT INTO package_keywords
+(package_id, version, keyword_id, arch_id, source_id)
 VALUES (
     ?,
     ?,
-    (
-        SELECT id
-        FROM arches
-        WHERE arch_name=?
-    ),
-    (
-        SELECT id
-        FROM sources
-        WHERE source='ebuilds'
-    )
-)
-SQL
-
-SQL_QUERY2 = <<SQL
-INSERT INTO ebuild_arches2keywords
-(
-    ebuild_arch_id,
-    keyword_id,
-    source_id
-)
-VALUES (
     ?,
-    (
-        SELECT id
-        FROM keywords
-        WHERE keyword=?
-    ),
-    (
-        SELECT id
-        FROM sources
-        WHERE source='ebuilds'
-    )
+    (SELECT id FROM arches WHERE arch_name=?),
+    (SELECT id FROM sources WHERE source='ebuilds')
 )
 SQL
 
@@ -169,13 +133,12 @@ def store_ebuild_keywords(database, ebuild_obj)
         status = 'not known' if keyword["sign"] == '?'
 
         database.execute(
-            SQL_QUERY1,
+            SQL_QUERY,
             ebuild_obj['package_id'],
             ebuild_obj['ebuild_id'],
+            status,
             arch
         )
-
-        database.execute(SQL_QUERY2, get_last_inserted_id(database), status)
     end
 end
 
