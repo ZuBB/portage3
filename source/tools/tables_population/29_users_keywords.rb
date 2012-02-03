@@ -21,12 +21,10 @@ VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
 INSERT INTO package_keywords
-(package_id, version, fversion, restriction_id, keyword_id, arch_id, source_id)
+(package_id, version, keyword_id, arch_id, source_id)
 VALUES (
     ?,
     ?,
-    ?,
-    (SELECT id FROM restriction_types WHERE restriction=?),
     (SELECT id FROM keywords WHERE keyword=?),
     (SELECT id FROM arches WHERE arch_name=?),
     (SELECT id FROM sources WHERE source='/etc/portage/')
@@ -79,7 +77,7 @@ def parse_line(line)
     end
 
     # take care about leading ~
-    # it means match any subrevision of the specified base version.
+    # it means match any subversion of the specified base version.
     if atom.index('~') == 0
         atom.sub!(/^~/, '')
 
@@ -102,7 +100,6 @@ def parse_line(line)
     version_match = nil if version_match.size == 1 && version_match.to_s.empty?
 
     unless version_match.nil?
-        #p version_match
         version = version_match.last
         version << '*' if version_match.size == 2 && !atom.end_with?('*')
 
@@ -110,15 +107,11 @@ def parse_line(line)
             result["version_restrictions"] = '='
         end
 
-        key = result["version_restrictions"] == '=' ? 'version' : 'fversion'
-        key = 'fversion' if atom.end_with?('*')
-        #p key
-        #p version
-        result[key] =  version
+        result['version'] =  version
 
         atom.sub!(VERSION, '')
     else
-        result["fversion"] = '*'
+        result["version"] = '*'
         result["version_restrictions"] = '='
     end
 
@@ -133,16 +126,11 @@ def parse_line(line)
     return result
 end
 
-def get_source_id(database, dir)
-    database.get_first_value("SELECT id FROM sources WHERE source=?", dir)
-end
-
 def fill_table(params)
     filename = File.join(params[:system_home], "package.keywords")
     file_content = IO.read(filename).to_a rescue []
 
     file_content.each { |line|
-#p '-'*30
         # skip comments
         next if line.index('#') == 0
         # trim '\n'
@@ -155,31 +143,32 @@ def fill_table(params)
             params[:database], result['category'], result['package']
         )
 
-        #p result
-        if !result['version'].nil? && result['version_restrictions'] == '='
-            ebuild_version = params[:database].get_first_value(
-                'SELECT id FROM ebuilds WHERe package_id=? AND version=?',
-                result['package_id'],
-                result['version']
-            )
+        result_set = nil
 
-            if ebuild_version.nil?
-                next
-            else
-                result['version'] = ebuild_version
-            end
+        if result["version"] == '*'
+            local_query = "SELECT id FROM ebuilds WHERE package_id=?"
+            result_set = params[:database].execute(local_query, result["package_id"]).flatten
+        elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
+            version_like = result["version"].sub('*', '')
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+            result_set = params[:database].execute(local_query, result["package_id"]).flatten
+        else
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
+            result_set = params[:database].execute(local_query, result["package_id"], result["version"]).flatten
         end
 
-                #p result
-        params[:database].execute(
-            SQL_QUERY,
-            result['package_id'],
-            result["version"] || nil,
-            result["fversion"] || nil,
-            result["version_restrictions"],
-            result["keyword"],
-            result["arch"]
-        )
+        # p result_set.size # sometimes this is 0
+        # means =category/atom-version that
+        # already does not exist in portage
+        result_set.each { |version|
+            params[:database].execute(
+                SQL_QUERY,
+                result['package_id'],
+                version,
+                result["keyword"],
+                result["arch"]
+            )
+        }
     }
 end
 
