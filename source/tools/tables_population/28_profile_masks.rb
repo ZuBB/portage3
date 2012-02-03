@@ -22,13 +22,13 @@ VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
 INSERT INTO packages2masks
-(package_id, version, mask_state_id, restriction_id, source_id)
+(package_id, version, arch_id, mask_state_id, source_id)
 VALUES (
     ?,
     ?,
+    (SELECT id FROM arches WHERE arch_name=?),
     (SELECT id FROM mask_states WHERE mask_state=?),
-    (SELECT id FROM restriction_types WHERE restriction=?),
-    ?
+    (SELECT id FROM sources WHERE source=?)
 )
 SQL
 
