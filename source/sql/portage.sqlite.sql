@@ -207,22 +207,17 @@ create table ebuilds (
 create table package_keywords (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    version INTEGER DEFAULT NULL,
-    fversion VARCHAR DEFAULT NULL,
-    restriction_id INTEGER DEFAULT NULL,
+    version INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
     keyword_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (version) REFERENCES ebuilds(id),
-    FOREIGN KEY (restriction_id) REFERENCES version_restrictions(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (keyword_id) REFERENCES keywords(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    CONSTRAINT chk_versions CHECK (version NOT NULL OR fversion NOT NULL),
-    -- TODO recheck this constraint
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, fversion, restriction_id, arch_id, keyword_id, source_id
+        package_id, version, arch_id, keyword_id, source_id
     ),
     PRIMARY KEY (id)
 );
