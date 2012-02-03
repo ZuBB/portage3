@@ -37,10 +37,14 @@ OptionParser.new do |opts|
         options[:db_filename] = value
     end
 
-    # TODO run custom set of scripts
     # parsing 'quite' option if present
     opts.on("-q", "--quiet", "Quiet mode") do |value|
         options[:quiet] = true
+    end
+
+    # parsing 'untill' option if present
+    opts.on("-u", "--run-untill STRING", "Run all scripts untill script with specified index") do |value|
+        options[:until] = value
     end
 
     # parsing 'help' option if present
@@ -56,9 +60,11 @@ plugins_dir = File.join(File.dirname(__FILE__), "tables_population")
 
 if options[:run_all]
     Dir.glob(File.join(plugins_dir, "/*")).sort.each do |script|
-		if (script.match(/\d\d_[a-z_\-]+\.rb$/))
-			# TODO: output, error_output, exit status, timeouts
-			`./#{script} -f #{options[:db_filename]}`
-		end
-	end
+        break if options[:until] && script.include?(options[:until])
+
+        if (script.match(/\d\d_[a-z_\-]+\.rb$/))
+            # TODO: output, error_output, exit status, timeouts
+            `./#{script} -f #{options[:db_filename]}`
+        end
+    end
 end
