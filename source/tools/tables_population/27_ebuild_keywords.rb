@@ -21,7 +21,7 @@ INSERT INTO package_keywords
 VALUES (
     ?,
     ?,
-    ?,
+    (SELECT id FROM keywords WHERE keyword=?),
     (SELECT id FROM arches WHERE arch_name=?),
     (SELECT id FROM sources WHERE source='ebuilds')
 )
