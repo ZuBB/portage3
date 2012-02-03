@@ -226,15 +226,16 @@ create table package_masks (
     id INTEGER,
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
+    arch_id INTEGER NOT NULL,
     mask_state_id INTEGER NOT NULL,
-    restriction_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (restriction_id) REFERENCES version_restrictions(id),
+    FOREIGN KEY (version) REFERENCES ebuilds(id),
+    FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (mask_state_id) REFERENCES mask_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, restriction_id, source_id
+        package_id, version, arch_id, mask_state_id, source_id
     ),
     PRIMARY KEY (id)
 );
