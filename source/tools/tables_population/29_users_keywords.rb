@@ -62,7 +62,7 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def parse_line(line)
+def arse_line(line)
     result = {}
 
     if line.include?(' ')
@@ -157,18 +157,21 @@ def fill_table(params)
             result_set = params[:database].execute(local_query, result["package_id"], result["version"]).flatten
         end
 
-        # p result_set.size # sometimes this is 0
-        # means =category/atom-version that
-        # already does not exist in portage
-        result_set.each { |version|
-            params[:database].execute(
-                SQL_QUERY,
-                result['package_id'],
-                version,
-                result["keyword"],
-                result["arch"]
-            )
-        }
+        if result_set.size() > 0
+            result_set.each { |version|
+                params[:database].execute(
+                    SQL_QUERY,
+                    result['package_id'],
+                    version,
+                    result["keyword"],
+                    result["arch"]
+                )
+            }
+        else
+            # means =category/atom-version that
+            # already does not exist in portage
+            # TODO handles this
+        end
     }
 end
 
