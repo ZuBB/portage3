@@ -110,27 +110,51 @@ end
 
 def store_ebuild_keywords(database, ebuild_obj)
     keywords, ebuild_obj["keywords"] = ebuild_obj["keywords"], []
-    if keywords == "0_KEYWORDS_NF"
-        ebuild_obj["keywords_real"] = '0_KEYWORDS_NF'
-        ebuild_obj["keywords"] << { "arch" => '*', "sign" => '?' }
-        keywords = ""
-    elsif keywords.include?("-*") && keywords.size > 2
-        keywords.sub!('-*', '')
-        ebuild_obj["keywords"] << { "arch" => '*', "sign" => '-' }
+    if keywords == '0_KEYWORDS_NF' || keywords.include?("*")
+        sign = '-' if keywords.include?("-*")
+        if keywords.include?("-*")
+            ebuild_obj["keyword_minus_all"] = true
+        end
+
+        if keywords.include?("0_KEYWORDS_NF")
+            sign = '?'
+            ebuild_obj["keywords_real"] = '0_KEYWORDS_NF'
+        end
+
+        sql_query = "SELECT arch_name FROM arches;"
+        arches = database.execute(sql_query).flatten
+
+        unless sign.nil?
+            arches.map! { |arch| arch.insert(0, sign)}
+        else
+            # TODO handle this
+        end
+
+        if keywords.include?("0_KEYWORDS_NF")
+            ebuild_obj["keywords"] = arches
+            keywords.sub!("0_KEYWORDS_NF", '')
+        else
+            keywords.sub!('-*', '')
+            old_arches = keywords.split()
+            old_arches.each { |arch|
+                arches.each { |archn|
+                    if archn.sub(/^[~\-\?]/, '') == arch.sub(/^[~\-\?]/, '')
+                        arches.delete_at(arches.index(archn))
+                    end
+                }
+            }
+            ebuild_obj["keywords"] = arches
+        end
     end
 
-    keywords.split().each { |keyword|
-        ebuild_obj["keywords"] << {
-            "sign" => (keyword.match(/^[~\-\?]/).to_s rescue ''),
-            "arch" => keyword.sub(/^[~\-\?]/, '')
-        }
-    }
+    keywords.split.each { |keyword| ebuild_obj["keywords"] << keyword }
 
     ebuild_obj["keywords"].each do |keyword|
-        status, arch = 'stable', keyword["arch"]
-        status = 'unstable' if keyword["sign"] == '~'
-        status = 'not work' if keyword["sign"] == '-'
-        status = 'not known' if keyword["sign"] == '?'
+        status, arch = 'stable', keyword
+        status = 'unstable' if keyword.index('~') == 0
+        status = 'not work' if keyword.index('-') == 0
+        status = 'not known' if keyword.index('?') == 0
+        arch = keyword.sub(/^./, '') if status != 'stable'
 
         database.execute(
             SQL_QUERY,
