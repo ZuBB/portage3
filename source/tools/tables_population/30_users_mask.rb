@@ -17,16 +17,16 @@ options = Hash.new.merge!(OPTIONS)
 # atom prefix matcher
 RESTRICTION = Regexp.new("^[^\\w]+")
 # regexp to match version
-ATOM_SUFFIX = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
+VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
-INSERT INTO packages2masks
-(package_id, version, mask_state_id, restriction_id, source_id)
+INSERT INTO package_masks
+(package_id, version, arch_id, mask_state_id, source_id)
 VALUES (
     ?,
     ?,
+    ?,
     (SELECT id FROM mask_states WHERE mask_state=?),
-    (SELECT id FROM restriction_types WHERE restriction=?),
     ?
 )
 SQL
@@ -84,7 +84,7 @@ def parse_line(line)
     end
 
     # deal with versions
-    version_match = line.match(ATOM_SUFFIX)
+    version_match = line.match(VERSION)
     version_match = version_match.to_a.compact unless version_match.nil?
     version_match = nil if version_match.size == 1 && version_match.to_s.empty?
 
@@ -96,7 +96,7 @@ def parse_line(line)
             result["version_restrictions"] = '='
         end
 
-        line.sub!(ATOM_SUFFIX, '')
+        line.sub!(VERSION, '')
     else
         result["version"] = '*'
         result["version_restrictions"] = '='
@@ -109,30 +109,64 @@ def parse_line(line)
     return result
 end
 
-def get_source_id(database, dir)
-    database.get_first_value("SELECT id FROM sources WHERE source=?", dir)
+def get_arch_id()
+    # TODO
+    return 'x86'
 end
 
 def parse_file(params, file_content, mask_state)
     file_content.each { |line|
         # skip comments
         next if line.index('#') == 0
-        # trim '\n'
-        line.chomp!()
         # skip empty lines
-        next if line.empty?()
+        next if line.chomp!().empty?
 
         result = parse_line(line)
-        params[:database].execute(
-            SQL_QUERY,
-            get_package_id(
-                params[:database], result['category'], result['package']
-            ),
-            result["version"],
-            mask_state,
-            result["version_restrictions"],
-            get_source_id(params[:database], '/etc/portage/')
+
+        result['package_id'] = get_package_id(
+            params[:database], result['category'], result['package']
         )
+
+        result_set = nil
+
+        if result["version"] == '*'
+            local_query = "SELECT id FROM ebuilds WHERE package_id=?"
+            result_set = params[:database].execute(local_query, result["package_id"]).flatten
+        elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
+            version_like = result["version"].sub('*', '')
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+            result_set = params[:database].execute(local_query, result["package_id"]).flatten
+        else
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
+            result_set = params[:database].execute(local_query, result["package_id"], result["version"]).flatten
+        end
+
+        result["arch"] = get_arch_id()
+        p '-'*20
+        p result
+
+        if result_set.size() > 0
+            result_set.each { |version|
+        p version
+                result['arch'].each { |arch|
+                    params[:database].execute(
+                        SQL_QUERY,
+                        result['package_id'],
+                        version,
+                        arch,
+                        mask_state,
+                        params[:database].get_first_value(
+                            "SELECT id FROM sources WHERE source=?",
+                            '/etc/portage/'
+                        )
+                    )
+                }
+            }
+        else
+            # means =category/atom-version that
+            # already does not exist in portage
+            # TODO handles this
+        end
     }
 end
 
