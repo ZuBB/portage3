@@ -149,7 +149,9 @@ def store_ebuild_keywords(database, ebuild_obj)
 
     keywords.split.each { |keyword| ebuild_obj["keywords"] << keyword }
 
-    ebuild_obj["keywords"].each do |keyword|
+    # TODO adding uniq prevents bugs like
+    # https://bugs.gentoo.org/show_bug.cgi?id=399575
+    ebuild_obj["keywords"].uniq.each do |keyword|
         status, arch = 'stable', keyword
         status = 'unstable' if keyword.index('~') == 0
         status = 'not work' if keyword.index('-') == 0
