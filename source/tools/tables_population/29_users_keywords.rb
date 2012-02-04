@@ -62,14 +62,14 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-def arse_line(line)
+def parse_line(line, database)
     result = {}
 
     if line.include?(' ')
         atom = line.split()[0]
         arch = line.split()[1]
         if arch == '**'
-            result["arch"] = '*'
+            result["arch"] = database.execute("SELECT arch_name FROM arches;").flatten
             atom << '*' unless atom.end_with?('*')
         end
     else
@@ -119,7 +119,7 @@ def arse_line(line)
     result['category'] = match[0]
     result['package'] = match[1]
     # TODO
-    result["arch"] = 'x86' if result["arch"].nil?
+    result["arch"] = ['x86'] if result["arch"].nil?
     result["keyword"] = 'stable'
     # TODO
 
@@ -138,7 +138,7 @@ def fill_table(params)
         # skip empty lines
         next if line.empty?()
 
-        result = parse_line(line)
+        result = parse_line(line, params[:database])
         result['package_id'] = get_package_id(
             params[:database], result['category'], result['package']
         )
@@ -159,13 +159,15 @@ def fill_table(params)
 
         if result_set.size() > 0
             result_set.each { |version|
-                params[:database].execute(
-                    SQL_QUERY,
-                    result['package_id'],
-                    version,
-                    result["keyword"],
-                    result["arch"]
-                )
+                result['arch'].each { |arch|
+                    params[:database].execute(
+                        SQL_QUERY,
+                        result['package_id'],
+                        version,
+                        result["keyword"],
+                        arch
+                    )
+                }
             }
         else
             # means =category/atom-version that
