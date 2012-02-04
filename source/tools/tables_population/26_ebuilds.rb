@@ -149,7 +149,8 @@ def category_block(params)
 end
 
 def packages_block(params)
-    Dir.glob(File.join(params[:item_path], '*.ebuild')).sort.each do |ebuild|
+    `ls -1 #{File.join(params[:item_path], '*.ebuild')}`.to_a.each do |ebuild|
+    #Dir.glob(File.join(params[:item_path], '*.ebuild')).sort.each do |ebuild|
         parse_ebuild(
             params[:database],
             get_package_id(
@@ -157,7 +158,8 @@ def packages_block(params)
                 params[:category],
                 params[:package]
             ),
-            ebuild
+            ebuild.chomp!()
+            #ebuild
         )
     end
 end
