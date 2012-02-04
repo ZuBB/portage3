@@ -22,13 +22,7 @@ VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 SQL_QUERY = <<SQL
 INSERT INTO package_masks
 (package_id, version, arch_id, mask_state_id, source_id)
-VALUES (
-    ?,
-    ?,
-    ?,
-    (SELECT id FROM mask_states WHERE mask_state=?),
-    ?
-)
+VALUES (?, ?, ?, ?, ?)
 SQL
 
 OptionParser.new do |opts|
@@ -109,9 +103,12 @@ def parse_line(line)
     return result
 end
 
-def get_arch_id()
+def get_arch_id(database)
     # TODO
-    return 'x86'
+    return database.get_first_value(
+        "SELECT id FROM arches WHERE arch_name=?",
+        'x86'
+    )
 end
 
 def parse_file(params, file_content, mask_state)
@@ -141,26 +138,21 @@ def parse_file(params, file_content, mask_state)
             result_set = params[:database].execute(local_query, result["package_id"], result["version"]).flatten
         end
 
-        result["arch"] = get_arch_id()
-        p '-'*20
-        p result
+        result["arch"] = get_arch_id(params[:database])
 
         if result_set.size() > 0
             result_set.each { |version|
-        p version
-                result['arch'].each { |arch|
-                    params[:database].execute(
-                        SQL_QUERY,
-                        result['package_id'],
-                        version,
-                        arch,
-                        mask_state,
-                        params[:database].get_first_value(
-                            "SELECT id FROM sources WHERE source=?",
-                            '/etc/portage/'
-                        )
+                params[:database].execute(
+                    SQL_QUERY,
+                    result['package_id'],
+                    version,
+                    result["arch"],
+                    mask_state,
+                    params[:database].get_first_value(
+                        "SELECT id FROM sources WHERE source=?",
+                        '/etc/portage/'
                     )
-                }
+                )
             }
         else
             # means =category/atom-version that
@@ -172,10 +164,22 @@ end
 
 def fill_table(params)
     filename = File.join(params[:system_home], "package.mask")
-    parse_file(params, (IO.read(filename).to_a rescue []), 'masked')
+    parse_file(
+        params,
+        (IO.read(filename).to_a rescue []),
+        params[:database].get_first_value(
+            "SELECT id FROM mask_states WHERE mask_state='masked'"
+        )
+    )
 
     filename = File.join(params[:system_home], "package.unmask")
-    parse_file(params, (IO.read(filename).to_a rescue []), 'unmasked')
+    parse_file(
+        params,
+        (IO.read(filename).to_a rescue []),
+        params[:database].get_first_value(
+            "SELECT id FROM mask_states WHERE mask_state='unmasked'"
+        )
+    )
 end
 
 fill_table_X(
