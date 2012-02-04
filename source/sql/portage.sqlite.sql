@@ -217,7 +217,7 @@ create table package_keywords (
     FOREIGN KEY (keyword_id) REFERENCES keywords(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, arch_id, keyword_id
+        package_id, version, arch_id, keyword_id, source_id
     ),
     PRIMARY KEY (id)
 );
