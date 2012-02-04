@@ -78,9 +78,6 @@ SQL
             arch_stuff[1] || 'linux'
         )
     end
-
-    # add meta arch
-    params[:database].execute(sql_query, '*', '*', '*')
 end
 
 # TODO: check if all dependant tables are filled
