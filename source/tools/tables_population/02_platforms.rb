@@ -50,7 +50,7 @@ def fill_table(params)
     filename = File.join(params[:portage_home], "profiles", "arch.list")
     file_content = IO.read(filename).to_a rescue []
     sql_query = "INSERT INTO platforms (platform_name) VALUES (?);"
-    platforms = ['*']
+    platforms = []
 
     # walk through all use lines in that file
     file_content.each do |line|
