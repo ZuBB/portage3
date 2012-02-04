@@ -17,6 +17,9 @@ overhead in keywords
 ./app-accessibility/espeak/espeak-1.45.03.ebuild
 KEYWORDS="~alpha ~amd64 ~hppa ~ia64 ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux"
 
+http://stackoverflow.com/questions/6164498/string-greater-than-or-less-than
+http://stackoverflow.com/questions/528830/how-can-i-use-sql-to-order-by-for-version-numbers-strings
+
 versionator.eclass
 
 lrwxrwxrwx 1 root root      40 гру 29 22:27 make.globals -> ../usr/share/portage/config/make.globals
