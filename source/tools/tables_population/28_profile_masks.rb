@@ -21,14 +21,14 @@ RESTRICTION = Regexp.new("^[^\\w]+")
 VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
-INSERT INTO packages2masks
+INSERT INTO package_masks
 (package_id, version, arch_id, mask_state_id, source_id)
 VALUES (
     ?,
     ?,
-    (SELECT id FROM arches WHERE arch_name=?),
+    ?,
     (SELECT id FROM mask_states WHERE mask_state=?),
-    (SELECT id FROM sources WHERE source=?)
+    ?
 )
 SQL
 
@@ -114,8 +114,36 @@ def parse_line(line)
     return result
 end
 
-def get_source_id(database, dir)
-    database.get_first_value("SELECT id FROM sources WHERE source=?", dir)
+def get_source_id(database, file)
+    database.get_first_value(
+        "SELECT id FROM sources WHERE source=?",
+        File.dirname(file) + '/'
+    )
+end
+
+def get_arch_id(database, file)
+    dir = File.dirname(file) + '/'
+
+    if dir == 'base/'
+        database.execute("SELECT id FROM arches").flatten
+    elsif dir.count('/') == 2
+        query = <<SQL
+SELECT id
+FROM arches
+WHERE architecture_id=
+    (SELECT id from architectures where architecture=?)
+SQL
+        database.execute(query, dir.split('/')[1])
+    else
+        query = <<SQL
+SELECT id
+FROM arches
+WHERE
+    architecture_id=(SELECT id FROM architectures WHERe architecture=?) AND
+    platform_id=(SELECT id FROM platforms WHERe platform_name=?)
+SQL
+        database.get_first_value(query, dir.split('/')[1], dir.split('/')[2])
+    end
 end
 
 def fill_table(params)
@@ -123,15 +151,13 @@ def fill_table(params)
     FileUtils.cd(filepath)
 
     # walk through all use flags in that file
-    Dir['**/*/'].each do |dir|
-        # skip dirs that not in base
-        next unless dir.index('base') == 0
+    Dir['**/package.mask'].each do |filename|
         # skip dirs that has 'deprecated' file in it
-        next if File.exist?(File.join(filepath, dir, 'deprecated'))
-        # lets get filename
-        filename = File.join(filepath, dir, 'package.mask')
-        # skip dirs that does not have package.mask
-        next unless File.exist?(filename)
+        next if File.exist?(File.join(
+            params[:portage_home],
+            "profiles_v2",
+            filename.sub('package.mask', 'deprecated')
+        ))
 
         File.open(filename, "r") do |infile|
             while (line = infile.gets)
@@ -141,16 +167,45 @@ def fill_table(params)
                 next if line.chomp!().empty?
 
                 result = parse_line(line)
-                params[:database].execute(
-                    SQL_QUERY,
-                    get_package_id(
-                        params[:database], result['category'], result['package']
-                    ),
-                    result["version"],
-                    result["mask_state"],
-                    result["version_restrictions"],
-                    get_source_id(params[:database], dir)
+
+                result['package_id'] = get_package_id(
+                    params[:database], result['category'], result['package']
                 )
+
+                result_set = nil
+
+                if result["version"] == '*'
+                    local_query = "SELECT id FROM ebuilds WHERE package_id=?"
+                    result_set = params[:database].execute(local_query, result["package_id"]).flatten
+                elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
+                    version_like = result["version"].sub('*', '')
+                    local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+                    result_set = params[:database].execute(local_query, result["package_id"]).flatten
+                else
+                    local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
+                    result_set = params[:database].execute(local_query, result["package_id"], result["version"]).flatten
+                end
+
+                result["arch"] = get_arch_id(params[:database], filename)
+
+                if result_set.size() > 0
+                    result_set.each { |version|
+                        result['arch'].each { |arch|
+                            params[:database].execute(
+                                SQL_QUERY,
+                                result['package_id'],
+                                version,
+                                arch,
+                                result["mask_state"],
+                                get_source_id(params[:database], filename)
+                            )
+                        }
+                    }
+                else
+                    # means =category/atom-version that
+                    # already does not exist in portage
+                    # TODO handles this
+                end
             end
         end
     end
