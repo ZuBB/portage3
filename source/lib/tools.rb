@@ -55,15 +55,17 @@ end
 
 def get_single_line_ini_value(ebuild_text, keyword)
     values = []
+    pattern1 = Regexp.new("^#{keyword}")
+    pattern2 = Regexp.new("(?:\s+)#{keyword}")
     ebuild_text.each { |line|
         # '==' because of app-editors/nvi/nvi-1.81.6-r3.ebuild
-        if line.index(keyword) == 0
+        if pattern1.match(line) || pattern2.match(line)
             value = line
             if !value.include?('=') && value.index('#') == 0
                 # TODO what is correct value to set here
                 value = '0_#'
             elsif ((value.include?('=') && !value.include?('#')) ||
-                   (value.index('=') < Integer(value.index('#'))))
+                   (value.include?('=') && value.index('=') < Integer(value.index('#'))))
                 # get rid of new line
                 value = value.chomp() if !value.empty?
                 # get rid of comments
