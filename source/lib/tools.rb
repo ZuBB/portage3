@@ -53,35 +53,55 @@ def get_value_from_cvs_header(ebuild_text, regexp)
     return nil
 end
 
+def get_value1(line)
+    # get rid of new line
+    line = line.chomp() if !line.empty?
+    # get rid of comments
+    line = line.gsub(/#.+$/, '') if !line.empty?
+    # get actually line only
+    line = line.split('=')[1] if !line.empty?
+    # strip \s at the end
+    line = line.strip() if !line.empty?
+    # strip quotes
+    line = line.gsub(/['"]/, '') if !line.empty?
+end
+
 def get_single_line_ini_value(ebuild_text, keyword)
     values = []
     pattern1 = Regexp.new("^#{keyword}")
     pattern2 = Regexp.new("(?:\s+)#{keyword}")
     ebuild_text.each { |line|
-        # '==' because of app-editors/nvi/nvi-1.81.6-r3.ebuild
-        if pattern1.match(line) || pattern2.match(line)
-            value = line
-            if !value.include?('=') && value.index('#') == 0
-                # TODO what is correct value to set here
-                value = '0_#'
-            elsif ((value.include?('=') && !value.include?('#')) ||
-                   (value.include?('=') && value.index('=') < Integer(value.index('#'))))
-                # get rid of new line
-                value = value.chomp() if !value.empty?
-                # get rid of comments
-                value = value.gsub(/#.+$/, '') if !value.empty?
-                # get actually value only
-                value = value.split('=')[1] if !value.empty?
-                # strip \s at the end
-                value = value.strip() if !value.empty?
-                # strip quotes
-                value = value.gsub(/['"]/, '') if !value.empty?
-            else
-                value = ''
-            end
+        # if line does not have keyword, go next
+        next unless line.include?(keyword)
 
-            values << value
+        # if line does not have '=', go next
+        next unless line.include?('=')
+
+        # if '=' is before keyword, go next
+        next if line.index(keyword) > line.index('=')
+
+        # if this is commented line, go next
+        next if line.index('#') == 0
+
+        # keyword at 1st position; '#' not present
+        if line.index(keyword) == 0 && !line.include?('#')
+            values << get_value1(line)
+            next
         end
+
+        # '#' is present but after '='
+        if line.include?('#') && (line.index('=') + 1 < line.index('#'))
+            values << get_value1(line)
+            next
+        end
+
+        # case when there is a space chars before keyword
+        if line[0, line.index(keyword)].match(/^\s+$/)
+            values << get_value1(line)
+            next
+        end
+
+        values << ''
     }
 
     if (values.compact!.uniq! rescue []).size > 1
