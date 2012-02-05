@@ -16,6 +16,7 @@ require 'time'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
+VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # hash with options
 SQL_QUERY = <<SQL
 INSERT INTO ebuilds
@@ -150,8 +151,32 @@ def category_block(params)
 end
 
 def packages_block(params)
-    `ls -1 #{File.join(params[:item_path], '*.ebuild')}`.to_a.each do |ebuild|
-    #Dir.glob(File.join(params[:item_path], '*.ebuild')).sort.each do |ebuild|
+    ebuilds = Dir.glob(File.join(params[:item_path], '*.ebuild')).to_a
+    ebuilds.sort! do |ebuild_a, ebuild_b|
+        version_a = ebuild_a.match(VERSION).to_a.compact.last
+        version_b = ebuild_b.match(VERSION).to_a.compact.last
+
+        version_parts_a = version_a.split('.')
+        version_parts_b = version_b.split('.')
+
+        version_parts_a.pop()
+        version_parts_b.pop()
+
+        comparison_result = nil
+
+        version_parts_a.each_index { |index|
+            some_version_part_a = version_parts_a[index].to_i
+            some_version_part_b = version_parts_b[index].to_i
+
+            next if some_version_part_a == some_version_part_b
+            comparison_result = some_version_part_a > some_version_part_b ? 1 : -1
+            break
+        }
+
+        comparison_result
+    end
+
+    ebuilds.each do |ebuild|
         parse_ebuild(
             params[:database],
             get_package_id(
@@ -159,8 +184,7 @@ def packages_block(params)
                 params[:category],
                 params[:package]
             ),
-            ebuild.chomp!()
-            #ebuild
+            ebuild
         )
     end
 end
