@@ -63,4 +63,3 @@ FileUtils.cd(portage_home)
 `cp -r profiles/default/linux/x86/* profiles_v2/base/x86/linux/default/`
 # adding subprofiles for amd64
 `cp -r profiles/default/linux/amd64/* profiles_v2/base/amd64/linux/default/`
-

@@ -75,9 +75,9 @@ OptionParser.new do |opts|
             puts "ERROR: directory '#{base_dir}' is not writable!"
             exit(1)
         end
- 
+
         value << '.sqlite' if File.extname(value) != 'sqlite'
- 
+
         options[:db_filename] = value
         options[:list] = false
     end

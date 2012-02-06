@@ -146,7 +146,7 @@ if options[:download_snapshot]
     %x[#{wget_command}]
     puts 'Done' if options[:quiet]
     # remove outdated one
-    if options[:clean] 
+    if options[:clean]
         File.delete(File.join(
             File.dirname(__FILE__),
             options[:snapshots_home],
@@ -170,4 +170,3 @@ elsif File.exist?(full_path)
     puts "It has #{Dir.glob(full_path + '/*/').size} subdirectories inside"
     puts "SUGGESTION: you can append '-r' option, that will cause tree to be recreated"
 end
-

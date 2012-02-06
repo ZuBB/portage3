@@ -36,4 +36,3 @@ line_num = `grep -nh 'celt\-0\.10$' #{package_mask_file} | sed 's/:.*//'`
 %x[sed -i.bak "s/=app-pda\\/libopensync-plugin-python-9999/#=app-pda\\/libopensync-plugin-python-9999/" #{package_mask_file}]
 %x[sed -i.bak "s/=app-pda\\/libopensync-plugin-syncml-9999/#=app-pda\\/libopensync-plugin-syncml-9999/" #{package_mask_file}]
 %x[sed -i.bak "s/=app-pda\\/libopensync-plugin-vformat-9999/#=app-pda\\/libopensync-plugin-vformat-9999/" #{package_mask_file}]
-
