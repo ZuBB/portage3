@@ -142,7 +142,7 @@ WHERE
     architecture_id=(SELECT id FROM architectures WHERe architecture=?) AND
     platform_id=(SELECT id FROM platforms WHERe platform_name=?)
 SQL
-        database.get_first_value(query, dir.split('/')[1], dir.split('/')[2])
+        [database.get_first_value(query, dir.split('/')[1], dir.split('/')[2])]
     end
 end
 
@@ -171,6 +171,9 @@ def fill_table(params)
                 result['package_id'] = get_package_id(
                     params[:database], result['category'], result['package']
                 )
+
+                # TODO report this
+                next if result['package_id'].nil?
 
                 result_set = nil
 
