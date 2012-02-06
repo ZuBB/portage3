@@ -23,7 +23,6 @@ line_num = `grep -nh '^sys-libs/uclibc' #{package_mask_file} | sed 's/:.*//'`
 line_num = `grep -nh 'celt\-0\.10$' #{package_mask_file} | sed 's/:.*//'`
 `sed -i.bak -e '#{line_num.chomp!}d' #{package_mask_file}`
 %x[sed -i.bak "s/=media-libs\\/celt-0.8.1/>=media-libs\\/celt-0.8.1/" #{package_mask_file}]
-%x[sed -i.bak "s/=media-libs\\/celt-0.8.1/>=media-libs\\/celt-0.8.1/" #{package_mask_file}]
 %x[sed -i.bak "s/app-pda\\/libsyncml-9999/#=app-pda\\/libsyncml-9999/" #{package_mask_file}]
 %x[sed -i.bak "s/app-pda\\/libopensync-9999/#=app-pda\\/libopensync-9999/" #{package_mask_file}]
 %x[sed -i.bak "s/app-pda\\/osynctool-9999/#=app-pda\\/osynctool-9999/" #{package_mask_file}]
