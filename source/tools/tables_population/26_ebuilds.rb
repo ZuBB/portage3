@@ -153,25 +153,56 @@ end
 def packages_block(params)
     ebuilds = Dir.glob(File.join(params[:item_path], '*.ebuild')).to_a
     ebuilds.sort! do |ebuild_a, ebuild_b|
-        version_a = ebuild_a.match(VERSION).to_a.compact.last
-        version_b = ebuild_b.match(VERSION).to_a.compact.last
-
-        version_parts_a = version_a.split('.')
-        version_parts_b = version_b.split('.')
-
-        version_parts_a.pop()
-        version_parts_b.pop()
-
         comparison_result = nil
+        a_parts = ebuild_a.match(VERSION).to_a.compact.last.split(/[\.\-_]/)
+        b_parts = ebuild_b.match(VERSION).to_a.compact.last.split(/[\.\-_]/)
+        a_parts.each_index { |index|
+            a_part_raw = a_parts[index] rescue ''
+            b_part_raw = b_parts[index] rescue ''
 
-        version_parts_a.each_index { |index|
-            some_version_part_a = version_parts_a[index].to_i
-            some_version_part_b = version_parts_b[index].to_i
+            if a_part_raw && b_part_raw.nil?
+                comparison_result = 1
+                break
+            end
 
-            next if some_version_part_a == some_version_part_b
-            comparison_result = some_version_part_a > some_version_part_b ? 1 : -1
-            break
+            a_part = a_part_raw.to_i
+            b_part = b_part_raw.to_i
+
+            is_a_num = a_part.to_s == a_part_raw
+            is_b_num = b_part.to_s == b_part_raw
+
+            if a_part_raw == b_part_raw
+                next 
+            elsif is_a_num == is_b_num && is_b_num == true
+                comparison_result = a_part > b_part ? 1 : -1
+            elsif is_a_num == is_b_num && is_b_num == false && a_part_raw.size == b_part_raw.size
+                comparison_result = a_part_raw > b_part_raw ? 1 : -1
+            else
+                a_sub_part = a_part_raw.scan(/\d+|[a-z]+/)
+                b_sub_part = b_part_raw.scan(/\d+|[a-z]+/)
+
+                if a_sub_part[0] == b_sub_part[0]
+                    if a_sub_part[1] && b_sub_part[1].nil?
+                        comparison_result = 1
+                    elsif b_sub_part[1] && a_sub_part[1].nil?
+                        comparison_result = -1
+                    elsif a_sub_part[1].to_i > b_sub_part[1].to_i
+                        comparison_result = 1
+                    else
+                        comparison_result = -1
+                    end
+                else
+                    comparison_result = a_sub_part[0] > b_sub_part[0] ? 1 : -1
+                end
+            end
+
+            break unless comparison_result.nil?
         }
+
+        if comparison_result.nil?
+            comparison_result = 
+                a_parts.size > b_parts.size ? 1 : -1
+        end
 
         comparison_result
     end
