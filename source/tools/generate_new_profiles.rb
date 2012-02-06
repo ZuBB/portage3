@@ -28,9 +28,6 @@ FileUtils.cd(portage_home)
 `cat profiles_v2/package.mask >> profiles_v2/base/package.mask`
 # make one of them 'missed'
 `mv profiles_v2/package.mask profiles_v2/package.mas_k`
-# remove uclibc
-line_num = `grep -nh '^sys-libs/uclibc' profiles_v2/base/package.mask | sed 's/:.*//'`
-`sed -i.bak -e '#{line_num.chomp!}d' profiles_v2/base/package.mask`
 
 # adding x86 arch
 `cp -r profiles/arch/x86 profiles_v2/base`
