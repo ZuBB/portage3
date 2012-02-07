@@ -2,28 +2,28 @@ BEGIN TRANSACTION;
 
 create table system_settings (
     id INTEGER,
-    option VARCHAR UNIQUE NOT NULL,
+    option VARCHAR NOT NULL UNIQUE,
     value INTEGER NOT NULL,
     PRIMARY KEY (id)
 );
 
 create table architectures (
     id INTEGER,
-    architecture VARCHAR UNIQUE NOT NULL,
+    architecture VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
     -- smth else?
 );
 
 create table platforms (
     id INTEGER,
-    platform_name VARCHAR UNIQUE NOT NULL,
+    platform_name VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table arches (
     -- here will be all items from profiles/arch.list file
     id INTEGER,
-    arch_name VARCHAR UNIQUE NOT NULL,
+    arch_name VARCHAR NOT NULL UNIQUE,
     architecture_id INTEGER NOT NULL,
     platform_id INTEGER NOT NULL,
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
@@ -34,8 +34,8 @@ create table arches (
 
 create table keywords (
     id INTEGER,
-    keyword VARCHAR UNIQUE NOT NULL,
-    -- symbol VARCHAR UNIQUE NOT NULL, /*really not null?*/
+    keyword VARCHAR NOT NULL UNIQUE,
+    -- symbol VARCHAR NOT NULL UNIQUE, /*really not null?*/
     PRIMARY KEY (id)
 );
 
@@ -53,39 +53,39 @@ create table profiles (
 
 create table profile_statuses (
     id INTEGER,
-    profile_status VARCHAR UNIQUE NOT NULL,
+    profile_status VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table sources (
     id INTEGER,
-    source VARCHAR UNIQUE NOT NULL,
+    source VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table eapis (
     id INTEGER,
-    eapi_version INTEGER UNIQUE NOT NULL,
+    eapi_version INTEGER NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table restriction_types (
     id INTEGER,
-    restriction VARCHAR UNIQUE NOT NULL,
-    -- sql_query VARCHAR UNIQUE NOT NULL,
+    restriction VARCHAR NOT NULL UNIQUE,
+    -- sql_query VARCHAR NOT NULL UNIQUE,
     -- CONSTRAINT idx1_unq UNIQUE (restriction, sql_query),
     PRIMARY KEY (id)
 );
 
 create table mask_states (
     id INTEGER,
-    mask_state VARCHAR UNIQUE NOT NULL,
+    mask_state VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table categories (
     id INTEGER,
-    category_name VARCHAR UNIQUE NOT NULL,
+    category_name VARCHAR NOT NULL UNIQUE,
     description VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
@@ -103,14 +103,14 @@ create table packages (
 
 /* create table use_flags (
     id INTEGER,
-    flag_name VARCHAR UNIQUE NOT NULL,
-    flag_description VARCHAR UNIQUE NOT NULL,
+    flag_name VARCHAR NOT NULL UNIQUE,
+    flag_description VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table use_flags_states (
     id INTEGER,
-    flag_state VARCHAR UNIQUE NOT NULL,
+    flag_state VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -162,7 +162,7 @@ create table users_use_flags2ebuilds (
 create table persons (
     id INTEGER,
     name VARCHAR,
-    email VARCHAR UNIQUE NOT NULL,
+    email VARCHAR NOT NULL UNIQUE,
     nickname VARCHAR UNIQUE,
     CONSTRAINT idx1_unq UNIQUE (name, email, nickname),
     PRIMARY KEY (id)
@@ -170,7 +170,7 @@ create table persons (
 
 create table roles (
     id INTEGER,
-    role VARCHAR UNIQUE NOT NULL,
+    role VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
