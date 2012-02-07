@@ -200,8 +200,7 @@ def packages_block(params)
         }
 
         if comparison_result.nil?
-            comparison_result =
-                a_parts.size > b_parts.size ? 1 : -1
+            comparison_result = a_parts.size > b_parts.size ? 1 : -1
         end
 
         comparison_result
