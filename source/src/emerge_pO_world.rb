@@ -106,11 +106,10 @@ SQL
 found = nil
 database = SQLite3::Database.new(options[:db_filename])
 arch = database.get_first_value(sql_query01)
-keyword = database.get_first_value(sql_query01)
+keyword = database.get_first_value(sql_query02)
 database.execute(sql_query1) { |row_l1|
     database.execute(sql_query2, row_l1[0]) { |row_l2|
         found = false
-        # TODO hardcoded arch, keyword
         database.execute(sql_query3, row_l2[0], row_l2[1], arch, keyword) { |row_l3|
             res0 = database.execute(sql_query41, row_l3[0], row_l3[1], arch)
             if res0.size == 0
@@ -120,10 +119,10 @@ database.execute(sql_query1) { |row_l1|
             end
 
             res1 = database.get_first_value(
-                sql_query42, row_l3[0], row_l3[1], 'x86', 'unmasked'
+                sql_query42, row_l3[0], row_l3[1], arch, 'unmasked'
             ) || 0
             res2 = database.get_first_value(
-                sql_query42, row_l3[0], row_l3[1], 'x86', 'masked'
+                sql_query42, row_l3[0], row_l3[1], arch, 'masked'
             ) || 0
 
             if res1 > res2
