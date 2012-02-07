@@ -104,10 +104,8 @@ def parse_line(line)
 end
 
 def get_arch_id(database)
-    # TODO
     return database.get_first_value(
-        "SELECT id FROM arches WHERE arch_name=?",
-        'x86'
+        "SELECT value FROM system_settings WHERE option='arch';"
     )
 end
 
