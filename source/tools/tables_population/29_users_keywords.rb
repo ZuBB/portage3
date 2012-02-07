@@ -25,8 +25,8 @@ INSERT INTO package_keywords
 VALUES (
     ?,
     ?,
-    (SELECT id FROM keywords WHERE keyword=?),
-    (SELECT id FROM arches WHERE arch_name=?),
+    ?,
+    ?,
     (SELECT id FROM sources WHERE source='/etc/portage/')
 )
 SQL
@@ -118,10 +118,14 @@ def parse_line(line, database)
     match = atom.split('/')
     result['category'] = match[0]
     result['package'] = match[1]
-    # TODO
-    result["arch"] = ['x86'] if result["arch"].nil?
-    result["keyword"] = 'stable'
-    # TODO
+    if result["arch"].nil?
+        result["arch"] = database.execute(
+            "SELECT value FROM system_settings WHERE option='arch';"
+        )
+    end
+    result["keyword"] = database.get_first_value(
+        "SELECT value FROM system_settings WHERE option='keyword';"
+    )
 
     return result
 end
