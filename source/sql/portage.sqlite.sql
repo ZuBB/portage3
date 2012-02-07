@@ -1,5 +1,12 @@
 BEGIN TRANSACTION;
 
+create table system_settings (
+    id INTEGER,
+    option VARCHAR UNIQUE NOT NULL,
+    value INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
 create table architectures (
     id INTEGER,
     architecture VARCHAR UNIQUE NOT NULL,
