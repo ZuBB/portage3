@@ -46,6 +46,8 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
+sql_query01 = "SELECT value FROM system_settings WHERE option='arch';"
+sql_query02 = "SELECT value FROM system_settings WHERE option='keyword';"
 sql_query1 = "SELECT package_id FROM installed_apps"
 sql_query2 = <<SQL
 SELECT ebuilds.package_id, ebuilds.id, categories.category_name, packages.package_name, ebuilds.version
@@ -59,14 +61,12 @@ SQL
 
 sql_query3 = <<SQL
 SELECT package_keywords.package_id, package_keywords.version
-FROM arches, keywords, package_keywords
+FROM arches, package_keywords
 WHERE
     package_keywords.package_id=? AND
     package_keywords.version=? AND
-    package_keywords.arch_id =
-        (SELECT id FROM arches WHERE arch_name=?) AND
-    package_keywords.keyword_id =
-        (SELECT id FROM keywords WHERE keyword=?)
+    package_keywords.arch_id = ? AND
+    package_keywords.keyword_id = ?
 ORDER BY package_keywords.id DESC
 LIMIT 1
 SQL
@@ -74,46 +74,45 @@ SQL
 #SELECT COUNT(*)
 sql_query41 = <<SQL
 SELECT package_masks.package_id, package_masks.version
-FROM arches, mask_states, package_masks
+FROM mask_states, package_masks
 WHERE
     package_masks.package_id = ? and
     package_masks.version = ? and
-    package_masks.arch_id =
-        (SELECT id FROM arches WHERE arch_name=?)
+    package_masks.arch_id = ?
 SQL
 
 sql_query42 = <<SQL
 SELECT package_masks.source_id
-FROM arches, mask_states, package_masks
+FROM mask_states, package_masks
 WHERE
-    package_masks.package_id = ? and
-    package_masks.version = ? and
-    package_masks.arch_id =
-        (SELECT id FROM arches WHERE arch_name=?) and
+    package_masks.package_id = ? AND
+    package_masks.version = ? AND
+    package_masks.arch_id = ? AND
     package_masks.mask_state_id =
         (SELECT id FROM mask_states WHERE mask_state=?)
 SQL
 
 sql_query43 = <<SQL
 SELECT package_masks.source_id
-FROM arches, mask_states, package_masks
+FROM mask_states, package_masks
 WHERE
-    package_masks.package_id = ? and
-    package_masks.version = ? and
-    package_masks.arch_id =
-        (SELECT id FROM arches WHERE arch_name=?) and
+    package_masks.package_id = ? AND
+    package_masks.version = ? AND
+    package_masks.arch_id = ?  AND
     package_masks.mask_state_id =
         (SELECT id FROM mask_states WHERE mask_state=?)
 SQL
 
 found = nil
 database = SQLite3::Database.new(options[:db_filename])
+arch = database.get_first_value(sql_query01)
+keyword = database.get_first_value(sql_query01)
 database.execute(sql_query1) { |row_l1|
     database.execute(sql_query2, row_l1[0]) { |row_l2|
         found = false
         # TODO hardcoded arch, keyword
-        database.execute(sql_query3, row_l2[0], row_l2[1], 'x86', 'stable') { |row_l3|
-            res0 = database.execute(sql_query41, row_l3[0], row_l3[1], 'x86')
+        database.execute(sql_query3, row_l2[0], row_l2[1], arch, keyword) { |row_l3|
+            res0 = database.execute(sql_query41, row_l3[0], row_l3[1], arch)
             if res0.size == 0
                 puts "#{row_l2[2]}/#{row_l2[3]}-#{row_l2[4]}"
                 found = true
