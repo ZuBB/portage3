@@ -1,0 +1,7 @@
+Ruby 1.8 (compatibility with 1.9 has not been checked)
+
+http://rubygems.org/
+http://sqlite-ruby.rubyforge.org/
+http://nokogiri.org/
+
+explicit ACCEPT_KEYWORDS in /etc/make.conf
