@@ -50,7 +50,7 @@ sql_query01 = "SELECT value FROM system_settings WHERE option='arch';"
 sql_query02 = "SELECT value FROM system_settings WHERE option='keyword';"
 sql_query1 = "SELECT package_id FROM installed_apps"
 sql_query2 = <<SQL
-SELECT ebuilds.package_id, ebuilds.id, categories.category_name, packages.package_name, ebuilds.version
+SELECT ebuilds.package_id, categories.category_name, packages.package_name, ebuilds.version
 FROM categories, packages, ebuilds
 WHERE
     ebuilds.package_id=? AND
@@ -61,7 +61,7 @@ SQL
 
 sql_query3 = <<SQL
 SELECT package_keywords.package_id, package_keywords.version
-FROM arches, package_keywords
+FROM package_keywords
 WHERE
     package_keywords.package_id=? AND
     package_keywords.version=? AND
@@ -74,7 +74,7 @@ SQL
 #SELECT COUNT(*)
 sql_query41 = <<SQL
 SELECT package_masks.package_id, package_masks.version
-FROM mask_states, package_masks
+FROM package_masks
 WHERE
     package_masks.package_id = ? and
     package_masks.version = ? and
@@ -88,17 +88,6 @@ WHERE
     package_masks.package_id = ? AND
     package_masks.version = ? AND
     package_masks.arch_id = ? AND
-    package_masks.mask_state_id =
-        (SELECT id FROM mask_states WHERE mask_state=?)
-SQL
-
-sql_query43 = <<SQL
-SELECT package_masks.source_id
-FROM mask_states, package_masks
-WHERE
-    package_masks.package_id = ? AND
-    package_masks.version = ? AND
-    package_masks.arch_id = ?  AND
     package_masks.mask_state_id =
         (SELECT id FROM mask_states WHERE mask_state=?)
 SQL
