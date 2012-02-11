@@ -50,7 +50,7 @@ sql_query01 = "SELECT value FROM system_settings WHERE param='arch';"
 sql_query02 = "SELECT value FROM system_settings WHERE param='keyword';"
 sql_query1 = "SELECT package_id FROM installed_apps"
 sql_query2 = <<SQL
-SELECT ebuilds.package_id, categories.category_name, packages.package_name, ebuilds.version
+SELECT ebuilds.package_id, ebuilds.id, categories.category_name, packages.package_name, ebuilds.version
 FROM categories, packages, ebuilds
 WHERE
     ebuilds.package_id=? AND
