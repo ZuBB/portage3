@@ -211,6 +211,8 @@ create table ebuilds (
     -- data blob /*NOT NULL*/,
 );
 
+CREATE INDEX idx2 ON ebuilds (package_id);
+
 create table package_keywords (
     id INTEGER,
     package_id INTEGER NOT NULL,
@@ -227,6 +229,10 @@ create table package_keywords (
         package_id, version, arch_id, keyword_id, source_id
     ),
     PRIMARY KEY (id)
+);
+
+CREATE INDEX idx2 ON package_keywords (
+    package_id, version, arch_id, keyword_id
 );
 
 create table package_masks (
