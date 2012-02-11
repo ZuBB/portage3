@@ -9,14 +9,12 @@
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
-require 'nokogiri'
 require 'sqlite3'
 require 'tools'
 require 'time'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
-VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # hash with options
 SQL_QUERY = <<SQL
 INSERT INTO ebuilds

@@ -14,10 +14,6 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
-# atom prefix matcher
-RESTRICTION = Regexp.new("^[^\\w]+")
-# regexp to match version
-VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # sql
 SQL_QUERY = <<SQL
 INSERT INTO package_masks

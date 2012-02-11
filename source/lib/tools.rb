@@ -6,7 +6,13 @@
 #
 require 'time' unless Object.const_defined?(:Time)
 
+# pattern for db files
 TIMESTAMP = "%Y%m%d-%H%M%S"
+# atom prefix matcher
+RESTRICTION = Regexp.new("^[^\\w]+")
+# regexp to match version
+VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
+# options
 OPTIONS = {
     :quiet => true,
     :db_filename => nil,
