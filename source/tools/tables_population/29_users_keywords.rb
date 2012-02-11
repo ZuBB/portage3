@@ -120,11 +120,11 @@ def parse_line(line, database)
     result['package'] = match[1]
     if result["arch"].nil?
         result["arch"] = database.execute(
-            "SELECT value FROM system_settings WHERE option='arch';"
+            "SELECT value FROM system_settings WHERE param='arch';"
         )
     end
     result["keyword"] = database.get_first_value(
-        "SELECT value FROM system_settings WHERE option='keyword';"
+        "SELECT value FROM system_settings WHERE param='keyword';"
     )
 
     return result

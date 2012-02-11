@@ -2,7 +2,7 @@ BEGIN TRANSACTION;
 
 create table system_settings (
     id INTEGER,
-    option VARCHAR NOT NULL UNIQUE,
+    param VARCHAR NOT NULL UNIQUE,
     value INTEGER NOT NULL,
     PRIMARY KEY (id)
 );

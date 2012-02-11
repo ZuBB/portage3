@@ -105,7 +105,7 @@ end
 
 def get_arch_id(database)
     return database.get_first_value(
-        "SELECT value FROM system_settings WHERE option='arch';"
+        "SELECT value FROM system_settings WHERE param='arch';"
     )
 end
 

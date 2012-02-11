@@ -9,15 +9,13 @@
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'optparse'
 require 'rubygems'
-require 'nokogiri'
 require 'sqlite3'
 require 'tools'
-require 'time'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
 # hash with options
-SQL_QUERY = "INSERT INTO system_settings (option, value) VALUES (?, ?);"
+SQL_QUERY = "INSERT INTO system_settings (param, value) VALUES (?, ?);"
 
 OptionParser.new do |opts|
     # help header

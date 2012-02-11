@@ -46,8 +46,8 @@ if options[:db_filename].nil?
     options[:db_filename] = get_last_created_database(options)
 end
 
-sql_query01 = "SELECT value FROM system_settings WHERE option='arch';"
-sql_query02 = "SELECT value FROM system_settings WHERE option='keyword';"
+sql_query01 = "SELECT value FROM system_settings WHERE param='arch';"
+sql_query02 = "SELECT value FROM system_settings WHERE param='keyword';"
 sql_query1 = "SELECT package_id FROM installed_apps"
 sql_query2 = <<SQL
 SELECT ebuilds.package_id, categories.category_name, packages.package_name, ebuilds.version
