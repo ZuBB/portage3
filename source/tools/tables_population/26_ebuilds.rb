@@ -152,8 +152,8 @@ def packages_block(params)
     ebuilds = Dir.glob(File.join(params[:item_path], '*.ebuild')).to_a
     ebuilds.sort! do |ebuild_a, ebuild_b|
         comparison_result = nil
-        a_parts = ebuild_a.match(VERSION).to_a.compact.last.split(/[\.\-_]/)
-        b_parts = ebuild_b.match(VERSION).to_a.compact.last.split(/[\.\-_]/)
+        a_parts = ebuild_a.match(ATOM_VERSION).to_a.compact.last.split(/[\.\-_]/)
+        b_parts = ebuild_b.match(ATOM_VERSION).to_a.compact.last.split(/[\.\-_]/)
         a_parts.each_index { |index|
             a_part_raw = a_parts[index] rescue ''
             b_part_raw = b_parts[index] rescue ''

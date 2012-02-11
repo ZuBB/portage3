@@ -11,7 +11,7 @@ TIMESTAMP = "%Y%m%d-%H%M%S"
 # atom prefix matcher
 RESTRICTION = Regexp.new("^[^\\w]+")
 # regexp to match version
-VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
+ATOM_VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 # options
 OPTIONS = {
     :quiet => true,

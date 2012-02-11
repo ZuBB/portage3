@@ -91,7 +91,7 @@ def parse_line(line, database)
     end
 
     # deal with versions
-    version_match = atom.match(VERSION)
+    version_match = atom.match(ATOM_VERSION)
     version_match = version_match.to_a.compact unless version_match.nil?
     version_match = nil if version_match.size == 1 && version_match.to_s.empty?
 
@@ -105,7 +105,7 @@ def parse_line(line, database)
 
         result['version'] =  version
 
-        atom.sub!(VERSION, '')
+        atom.sub!(ATOM_VERSION, '')
     else
         result["version"] = '*'
         result["version_restrictions"] = '='
