@@ -65,7 +65,7 @@ def parse_line(line, database)
         atom = line.split()[0]
         arch = line.split()[1]
         if arch == '**'
-            result["arch"] = database.execute("SELECT arch_name FROM arches;").flatten
+            result["arch"] = database.execute("SELECT id FROM arches;").flatten
             atom << '*' unless atom.end_with?('*')
         end
     else
