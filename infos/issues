@@ -11,6 +11,8 @@ package description: metadata vs ebuild
 
 ./a/e/emacspeak-9999.ebuild double keywords definition
 
+app-admin/sagan-rules - version!!!
+
 SELECT count(*) FROM ebuilds2architectures where architecture_id is null and prefix_profile_id is null
 
 overhead in keywords

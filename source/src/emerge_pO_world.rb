@@ -56,7 +56,7 @@ WHERE
     ebuilds.package_id=? AND
     ebuilds.package_id = packages.id AND
     packages.category_id = categories.id
-ORDER BY ebuilds.id DESC
+ORDER BY ebuilds.version_order DESC
 SQL
 
 sql_query3 = <<SQL

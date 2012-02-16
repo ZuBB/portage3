@@ -18,8 +18,8 @@ options = Hash.new.merge!(OPTIONS)
 # hash with options
 SQL_QUERY = <<SQL
 INSERT INTO ebuilds
-(package_id, version, mtime, mauthor, eapi_id, slot, license)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+(package_id, version, version_order, mtime, mauthor, eapi_id, slot, license)
+VALUES (?, ?, 1, ?, ?, ?, ?, ?);
 SQL
 
 OptionParser.new do |opts|
@@ -149,71 +149,14 @@ def category_block(params)
 end
 
 def packages_block(params)
-    ebuilds = Dir.glob(File.join(params[:item_path], '*.ebuild')).to_a
-    ebuilds.sort! do |ebuild_a, ebuild_b|
-        comparison_result = nil
-        a_parts = ebuild_a.match(ATOM_VERSION).to_a.compact.last.split(/[\.\-_]/)
-        b_parts = ebuild_b.match(ATOM_VERSION).to_a.compact.last.split(/[\.\-_]/)
-        a_parts.each_index { |index|
-            a_part_raw = a_parts[index] rescue ''
-            b_part_raw = b_parts[index] rescue ''
+    package_id = get_package_id(
+        params[:database],
+        params[:category],
+        params[:package]
+    )
 
-            if a_part_raw && b_part_raw.nil?
-                comparison_result = 1
-                break
-            end
-
-            a_part = a_part_raw.to_i
-            b_part = b_part_raw.to_i
-
-            is_a_num = a_part.to_s == a_part_raw
-            is_b_num = b_part.to_s == b_part_raw
-
-            if a_part_raw == b_part_raw
-                next
-            elsif is_a_num == is_b_num && is_b_num == true
-                comparison_result = a_part > b_part ? 1 : -1
-            elsif is_a_num == is_b_num && is_b_num == false && a_part_raw.size == b_part_raw.size
-                comparison_result = a_part_raw > b_part_raw ? 1 : -1
-            else
-                a_sub_part = a_part_raw.scan(/\d+|[a-z]+/)
-                b_sub_part = b_part_raw.scan(/\d+|[a-z]+/)
-
-                if a_sub_part[0] == b_sub_part[0]
-                    if a_sub_part[1] && b_sub_part[1].nil?
-                        comparison_result = 1
-                    elsif b_sub_part[1] && a_sub_part[1].nil?
-                        comparison_result = -1
-                    elsif a_sub_part[1].to_i > b_sub_part[1].to_i
-                        comparison_result = 1
-                    else
-                        comparison_result = -1
-                    end
-                else
-                    comparison_result = a_sub_part[0] > b_sub_part[0] ? 1 : -1
-                end
-            end
-
-            break unless comparison_result.nil?
-        }
-
-        if comparison_result.nil?
-            comparison_result = a_parts.size > b_parts.size ? 1 : -1
-        end
-
-        comparison_result
-    end
-
-    ebuilds.each do |ebuild|
-        parse_ebuild(
-            params[:database],
-            get_package_id(
-                params[:database],
-                params[:category],
-                params[:package]
-            ),
-            ebuild
-        )
+    Dir.glob(File.join(params[:item_path], '*.ebuild')).to_a.each do |ebuild|
+        parse_ebuild(params[:database], package_id, ebuild)
     end
 end
 

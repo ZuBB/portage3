@@ -198,6 +198,7 @@ create table ebuilds (
     id INTEGER,
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
+    version_order INTEGER NOT NULL,
     license VARCHAR NOT NULL,
     mtime VARCHAR NOT NULL,
     mauthor VARCHAR NOT NULL,
