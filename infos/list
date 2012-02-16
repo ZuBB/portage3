@@ -1,4 +1,5 @@
 git://git.debian.org/users/jak/apt2.git
 svn://anonsvn.gentoo.org/portage/main/trunk
 git://yum.baseurl.org/yum.git
+git://git.etoilebsd.net/pkgng
 
