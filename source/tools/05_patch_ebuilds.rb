@@ -26,21 +26,10 @@ FileUtils.cd(portage_home)
 `sed -i.bak -e '182d' ./media-video/mplayer/mplayer-1.0_rc4_p20110322-r1.ebuild`
 `sed -i.bak -e '183,185d' ./media-video/mplayer/mplayer-1.0_rc4_p20110322-r1.ebuild`
 
-#`sed -i.bak -e '161d' ./media-video/mplayer/mplayer-1.0_rc4_p20120128.ebuild`
-#`sed -i.bak -e '162,164d' ./media-video/mplayer/mplayer-1.0_rc4_p20120128.ebuild`
+`sed -i.bak -e '161d' ./media-video/mplayer/mplayer-1.0_rc4_p20120213.ebuild`
+`sed -i.bak -e '162,164d' ./media-video/mplayer/mplayer-1.0_rc4_p20120213.ebuild`
 
 `sed -i.bak -e '161,163d' ./media-video/mplayer/mplayer-9999.ebuild`
 `sed -i.bak -e '162d' ./media-video/mplayer/mplayer-9999.ebuild`
 
 `sed -i.bak 's/=/XXX/' ./games-strategy/openxcom/openxcom-9999.ebuild`
-
-vv@vv-Latitude-E5520 ~/work/own/ruby/portage3/source/tools $ ./05_patch_ebuilds.rb
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20111215.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20111215.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120105.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120105.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120109.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120109.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120128.ebuild: No such file or directory
-sed: can't read ./media-video/mplayer/mplayer-1.0_rc4_p20120128.ebuild: No such file or directory
-vv@vv-Latitude-E5520 ~/work/own/ruby/portage3/source/tools $ ./vim 05_patch_ebuilds.rb
