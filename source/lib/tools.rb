@@ -143,13 +143,29 @@ def get_last_inserted_id(database)
     return database.get_first_value("SELECT last_insert_rowid();")
 end
 
+def db_insert(database, sql_query, values)
+    begin
+        database.execute(sql_query, *values)
+    rescue SQLite3::Exception => exception
+        puts "Error: #{exception.message}"
+        puts "Query: #{sql_query}"
+        puts "Data: #{values.join(', ')}"
+        unless database.closed?
+            database.rollback()
+            database.close()
+        end
+        raise "Error: Database error"
+    end
+end
+
 def fill_table_X(db_filename, fill_table, params)
     start = Time.now
 
     database = SQLite3::Database.new(db_filename)
-    # TODO do we need an try/catch here?
+    database.execute('BEGIN TRANSACTION;')
     fill_table.call({:database => database}.merge!(params))
-    database.close() if database.closed? == false
+    database.execute('COMMIT;')
+    database.close() unless database.closed?
 
     return start.to_i - Time.now.to_i
 end
