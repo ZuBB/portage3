@@ -53,8 +53,8 @@ def fill_table(params)
     architectures = []
     # ********************* TODO *********************
     # ********************* TODO *********************
-    architectures << ['x64']
-    architectures << ['sparc64']
+    architectures << 'x64'
+    architectures << 'sparc64'
     # ********************* TODO *********************
     # ********************* TODO *********************
 
