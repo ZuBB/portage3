@@ -15,6 +15,8 @@ require 'tools'
 
 # hash with options
 options = Hash.new.merge!(OPTIONS)
+# sql query
+SQL_QUERY = "INSERT INTO categories (category_name, description) VALUES (?, ?);"
 
 OptionParser.new do |opts|
     # help header
@@ -62,10 +64,13 @@ def get_description(portage_home, category)
 end
 
 def insert_category(params)
-    params[:database].execute(
-        "INSERT INTO categories (category_name, description) VALUES (?, ?);",
-        params[:category],
-        get_description(params[:portage_home], params[:category])
+    db_insert(
+        params[:database],
+        SQL_QUERY,
+        [
+            params[:category],
+            get_description(params[:portage_home], params[:category])
+        ]
     )
 end
 

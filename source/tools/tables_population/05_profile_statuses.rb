@@ -56,7 +56,7 @@ def fill_table(params)
     results.shift()
 
     results.uniq.compact.each { |status|
-        params[:database].execute(sql_query, status.strip!())
+        db_insert(params[:database], sql_query, [status.strip!()])
     }
 end
 

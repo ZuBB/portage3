@@ -67,7 +67,7 @@ SQL
         # lets split flag and its description
         flag_stuff = use_flag.split(' - ')
 
-        params[:database].execute(sql_query, flag_stuff[0], flag_stuff[1])
+        db_insert(params[:database], sql_query, [flag_stuff[0], flag_stuff[1]])
     end
 end
 

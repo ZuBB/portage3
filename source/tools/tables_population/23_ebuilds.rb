@@ -128,16 +128,19 @@ def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj["eapi_id"], ebuild_obj["real_eapi"] =
         ebuild_obj["real_eapi"], ebuild_obj["eapi_id"]
 
-    database.execute(
+    db_insert(
+        database,
         SQL_QUERY,
-        ebuild_obj["package_id"],
-        ebuild_obj["version"],
-        ebuild_obj["mtime"],
-        ebuild_obj["author"],
-        ebuild_obj["eapi_id"],
-        # TODO
-        0, #ebuild_obj["slot"],
-        ebuild_obj["license"]
+        [
+            ebuild_obj["package_id"],
+            ebuild_obj["version"],
+            ebuild_obj["mtime"],
+            ebuild_obj["author"],
+            ebuild_obj["eapi_id"],
+            # TODO
+            0, #ebuild_obj["slot"],
+            ebuild_obj["license"]
+        ]
     )
 
     ebuild_obj['ebuild_id'] = get_last_inserted_id(database)

@@ -68,7 +68,7 @@ SQL
         line.chomp!()
         category_name = line.split('/')[0]
         package_name = line.split('/')[1]
-        params[:database].execute(sql_query, category_name, package_name)
+        db_insert(params[:database], sql_query, [category_name, package_name])
     end
 end
 

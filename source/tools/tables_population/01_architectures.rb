@@ -69,7 +69,7 @@ def fill_table(params)
     end
 
     architectures.each { |arch|
-        params[:database].execute(sql_query, arch)
+        db_insert(params[:database], sql_query, [arch])
     }
 end
 

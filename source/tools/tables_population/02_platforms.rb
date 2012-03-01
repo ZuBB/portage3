@@ -69,7 +69,7 @@ def fill_table(params)
 
     platforms.uniq.each { |platform| 
         # lets trim newlines and insert
-        params[:database].execute(sql_query, platform.chomp())
+        db_insert(params[:database], sql_query, [platform.chomp()])
     }
 end
 

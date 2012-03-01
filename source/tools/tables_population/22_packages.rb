@@ -73,12 +73,16 @@ def packages_block(params)
     (category_id, package_name, description, homepage)
     VALUES (?, ?, ?, ?);
 SQL
-    params[:database].execute(
+
+    db_insert(
+        params[:database],
         sql_query,
-        params[:category_id],
-        params[:package],
-        get_ebuild_description(ebuild_text),
-        get_ebuild_homepage(ebuild_text)
+        [
+            params[:category_id],
+            params[:package],
+            get_ebuild_description(ebuild_text),
+            get_ebuild_homepage(ebuild_text)
+        ]
     )
 end
 

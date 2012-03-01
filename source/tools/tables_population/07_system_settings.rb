@@ -58,22 +58,28 @@ def fill_table(params)
     keyword_name = accept_keywords.index('~') == 0 ? 'unstable' : 'stable'
     arch_name = accept_keywords.sub(/^~/, '')
 
-    params[:database].execute(
+    db_insert(
+        params[:database],
         SQL_QUERY,
-        'arch',
-        params[:database].get_first_value(
-            "SELECT id FROM arches WHERE arch_name=?",
-            arch_name
-        )
+        [
+            'arch',
+            params[:database].get_first_value(
+                "SELECT id FROM arches WHERE arch_name=?",
+                arch_name
+            )
+        ]
     )
 
-    params[:database].execute(
+    db_insert(
+        params[:database],
         SQL_QUERY,
-        'keyword',
-        params[:database].get_first_value(
-            "SELECT id FROM keywords WHERE keyword=?",
-            keyword_name
-        )
+        [
+            'keyword',
+            params[:database].get_first_value(
+                "SELECT id FROM keywords WHERE keyword=?",
+                keyword_name
+            )
+        ]
     )
 end
 

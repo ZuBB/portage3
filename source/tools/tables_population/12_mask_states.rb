@@ -49,16 +49,11 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    # array of all inserts
-    queries_array = []
-    # array of all keywords
+    sql_query = "INSERT INTO mask_states (mask_state) VALUES (?);"
+    # insertions
     MASK_STATES.each { |keyword|
-        # create query for keyword and add it into array
-        sql_query = "INSERT INTO mask_states (mask_state) VALUES ('#{keyword}');"
-        queries_array << sql_query
+        db_insert(params[:database], sql_query, [keyword])
     }
-
-    params[:database].execute_batch(queries_array.join("\n"))
 end
 
 fill_table_X(

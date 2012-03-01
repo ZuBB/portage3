@@ -127,10 +127,13 @@ def fill_table(params)
         }
         # and store sort order
         sorted_versions.each_index do |ii|
-            params[:database].execute(
+            db_insert(
+                params[:database],
                 sql_query2,
-                ii + 1,
-                rows[versions.index(sorted_versions[ii])][0]
+                [
+                    ii + 1,
+                    rows[versions.index(sorted_versions[ii])][0]
+                ]
             )
         end
     end

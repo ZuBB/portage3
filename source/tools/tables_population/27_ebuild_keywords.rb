@@ -158,12 +158,15 @@ def store_ebuild_keywords(database, ebuild_obj)
         status = 'not known' if keyword.index('?') == 0
         arch = keyword.sub(/^./, '') if status != 'stable'
 
-        database.execute(
+        db_insert(
+            database,
             SQL_QUERY,
-            ebuild_obj['package_id'],
-            ebuild_obj['ebuild_id'],
-            status,
-            arch
+            [
+                ebuild_obj['package_id'],
+                ebuild_obj['ebuild_id'],
+                status,
+                arch
+            ]
         )
     end
 end

@@ -73,11 +73,14 @@ SQL
         # lets split flag and its description
         profile_stuff = line.sub("#", '').split()
 
-        params[:database].execute(
+        db_insert(
+            params[:database],
             sql_query,
-            profile_stuff[1],
-            profile_stuff[0],
-            profile_stuff[2]
+            [
+                profile_stuff[1],
+                profile_stuff[0],
+                profile_stuff[2]
+            ]
         )
     end
 end

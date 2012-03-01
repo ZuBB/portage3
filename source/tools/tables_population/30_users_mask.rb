@@ -136,16 +136,19 @@ def parse_file(params, file_content, mask_state)
 
         if result_set.size() > 0
             result_set.each { |version|
-                params[:database].execute(
+                db_insert(
+                    params[:database],
                     SQL_QUERY,
-                    result['package_id'],
-                    version,
-                    result["arch"],
-                    mask_state,
-                    params[:database].get_first_value(
-                        "SELECT id FROM sources WHERE source=?",
-                        '/etc/portage/'
-                    )
+                    [
+                        result['package_id'],
+                        version,
+                        result["arch"],
+                        mask_state,
+                        params[:database].get_first_value(
+                            "SELECT id FROM sources WHERE source=?",
+                            '/etc/portage/'
+                        )
+                    ]
                 )
             }
         else

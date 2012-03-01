@@ -47,7 +47,8 @@ if options[:db_filename].nil?
 end
 
 def fill_table(params)
-    queries_array = results = []
+    results = []
+    sql_query = "INSERT INTO eapis (eapi_version) VALUES (?);"
     # lets find all lines from all ebuilds that have EAPI string 0 position
     grep_command = "grep -h '^EAPI' #{params[:portage_home]}/*/*/*ebuild 2> /dev/null"
 
@@ -60,11 +61,8 @@ def fill_table(params)
     }
 
     results.uniq.compact.each { |eapi|
-        # create query for eapi and add it into array
-        queries_array << "INSERT INTO eapis (eapi_version) VALUES ('#{eapi}');"
+        db_insert(params[:database], sql_query, [eapi])
     }
-
-    params[:database].execute_batch(queries_array.join("\n"))
 end
 
 fill_table_X(

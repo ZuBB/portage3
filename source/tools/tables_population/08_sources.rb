@@ -68,7 +68,7 @@ def fill_table(params)
 	sources << '/etc/portage/'
 	sources << 'ACCEPT_KEYWORDS'
 	sources.each { |item|
-		params[:database].execute(sql_query, item)
+        db_insert(params[:database], sql_query, [item])
 	}
 end
 

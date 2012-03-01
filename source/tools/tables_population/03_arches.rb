@@ -71,11 +71,14 @@ SQL
         # lets split flag and its description
         arch_stuff = line.split('-')
         # insert
-        params[:database].execute(
+        db_insert(
+            params[:database],
             sql_query,
-            line,
-            arch_stuff[0],
-            arch_stuff[1] || 'linux'
+            [
+                line,
+                arch_stuff[0],
+                arch_stuff[1] || 'linux'
+            ]
         )
     end
 end

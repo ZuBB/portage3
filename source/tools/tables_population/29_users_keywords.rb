@@ -160,12 +160,15 @@ def fill_table(params)
         if result_set.size() > 0
             result_set.each { |version|
                 result['arch'].each { |arch|
-                    params[:database].execute(
+                    db_insert(
+                        params[:database],
                         SQL_QUERY,
-                        result['package_id'],
-                        version,
-                        result["keyword"],
-                        arch
+                        [
+                            result['package_id'],
+                            version,
+                            result["keyword"],
+                            arch
+                        ]
                     )
                 }
             }
