@@ -32,4 +32,5 @@ FileUtils.cd(portage_home)
 `sed -i.bak -e '161,163d' ./media-video/mplayer/mplayer-9999.ebuild`
 `sed -i.bak -e '162d' ./media-video/mplayer/mplayer-9999.ebuild`
 
-`sed -i.bak 's/=/XXX/' ./games-strategy/openxcom/openxcom-9999.ebuild`
+`sed -i.bak 's/\[\[ \${PV} = 9999 \]\] \&\& //' ./games-strategy/openxcom/openxcom-9999.ebuild`
+`sed -i.bak 's/\[\[ \${PV} = 9999 \]\] || //' ./games-strategy/openxcom/openxcom-9999.ebuild`
