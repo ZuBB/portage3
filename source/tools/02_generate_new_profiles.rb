@@ -19,7 +19,7 @@ FileUtils.cd(portage_home)
 `mkdir -p profiles_v2`
 
 # content of the new profiles folder
-`cp profiles/* profiles_v2`
+`cp profiles/* profiles_v2 2> /dev/null`
 
 # base folder
 `cp -r profiles/base profiles_v2/`
@@ -37,17 +37,17 @@ FileUtils.cd(portage_home)
 # adding amd64 arch
 `mkdir -p profiles_v2/base/amd64`
 # adding files for amd64 arch
-`cp profiles/arch/amd64/* profiles_v2/base/amd64`
+`cp profiles/arch/amd64/* profiles_v2/base/amd64 2> /dev/null`
 
 # adding linux platform for x86
 `mkdir -p profiles_v2/base/x86/linux`
 # adding linux platform for x86
-`cp profiles/default/linux/* profiles_v2/base/x86/linux`
+`cp profiles/default/linux/* profiles_v2/base/x86/linux 2> /dev/null`
 
 # adding linux platform for x86
 `mkdir -p profiles_v2/base/amd64/linux`
 # adding linux platform for amd64
-`cp profiles/default/linux/* profiles_v2/base/amd64/linux`
+`cp profiles/default/linux/* profiles_v2/base/amd64/linux 2> /dev/null`
 
 # adding default feature
 `mkdir -p profiles_v2/base/x86/linux/default`
@@ -60,6 +60,6 @@ FileUtils.cd(portage_home)
 `echo 'sys-libs/uclibc' > profiles_v2/base/amd64/linux/default/package.mask`
 
 # adding subprofiles for x86
-`cp -r profiles/default/linux/x86/* profiles_v2/base/x86/linux/default/`
+`cp -r profiles/default/linux/x86/* profiles_v2/base/x86/linux/default/ 2> /dev/null`
 # adding subprofiles for amd64
-`cp -r profiles/default/linux/amd64/* profiles_v2/base/amd64/linux/default/`
+`cp -r profiles/default/linux/amd64/* profiles_v2/base/amd64/linux/default/ 2> /dev/null`
