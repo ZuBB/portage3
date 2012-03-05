@@ -17,13 +17,12 @@ options = {
     :recreate_tree => false,
     :snapshots_home => '../../snapshots',
     :snapshot_name => 'portage-latest.tar.bz2',
-    :clean => false
+    :clean => false,
+    :quiet => false
 }
 
 # lets merge stuff from tools lib
 options.merge!(OPTIONS)
-# set real default
-options[:quiet] = false
 
 OptionParser.new do |opts|
     # help header
@@ -33,7 +32,7 @@ OptionParser.new do |opts|
     opts.separator "\n Command line options"
 
     # TODO batch mode
-    opts.on("-c", "--clean-after", "Clean previous snapshot if new one has been downloaded") do |value|
+    opts.on("-c", "--clean-previous", "Clean previous snapshot after new one has been downloaded") do |value|
         options[:clean] = true
     end
 
@@ -73,46 +72,47 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-home_path = File.join(options[:storage][:root], options[:storage][:home_folder])
+root_path = options[:storage][:root]
+home_path = File.join(root_path, options[:storage][:home_folder])
 full_path = File.join(home_path, options[:storage][:portage_home])
 
-print "Checking if '#{options[:storage][:root]}' path is present on target system.. "
-if File.exist?(options[:storage][:root])
+print "Checking if '#{root_path}' path is present on target system.. "
+if File.exist?(root_path)
     puts "OK"
 else
-    puts "\nERROR: '#{options[:storage][:root]}' location can not be found on target system"
+    puts "\nERROR: '#{root_path}' location can not be found on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage][:root]}' is a directory on target system.. "
-if File.directory?(options[:storage][:root])
+print "Checking if '#{root_path}' is a directory on target system.. "
+if File.directory?(root_path)
     puts "OK"
 else
-    puts "\nERROR: '#{options[:storage][:root]}' is not a directory on target system"
+    puts "\nERROR: '#{root_path}' is not a directory on target system"
     exit(1)
 end
 
-print "Checking if '#{options[:storage][:root]}' is writable on target system.. "
-if File.writable?(options[:storage][:root])
+print "Checking if '#{root_path}' is writable on target system.. "
+if File.writable?(root_path)
     puts "OK"
 else
-    puts "\nERROR: '#{options[:storage][:root]}' is not writable on target system"
+    puts "\nERROR: '#{root_path}' is not writable on target system"
     exit(1)
 end
 
-space_line = `df -kP #{options[:storage][:root]}`.split("\n")[1]
-
-print "Checking if '#{options[:storage][:root]}' has enough space on target system.. "
+print "Checking if '#{root_path}' has enough space on target system.. "
+space_line = `df -kP #{root_path}`.split("\n")[1]
 total_space = space_line.split(" ")[1].to_i
 space_available = space_line.split(" ")[3].to_i
 portage_size = `du -s #{full_path}`.split(' ')[0].to_i if File.exist?(full_path)
+required_space = options[:storage][:required_space] * 1024
 
-if space_available > options[:storage][:required_space] * 1024
+if space_available > required_space
     puts "OK"
-elsif File.exist?(full_path) && portage_size + space_available > options[:storage][:required_space] * 1024
+elsif File.exist?(full_path) && portage_size + space_available > required_space
     puts "OK"
 else
-    puts "\nERROR: '#{options[:storage][:root]}' does not have enough space"
+    puts "\nERROR: '#{root_path}' does not have enough space"
     exit(1)
 end
 
@@ -153,6 +153,7 @@ if options[:download_snapshot]
             File.readlink(soft_link)
         ))
     end
+
     # update softlink
     `ln -fs #{File.basename(filename)} #{soft_link}`
 end
@@ -168,5 +169,5 @@ elsif File.exist?(full_path)
     puts "Portage dir already present"
     puts "Its size equals to #{portage_size / 1024} Mb"
     puts "It has #{Dir.glob(full_path + '/*/').size} subdirectories inside"
-    puts "SUGGESTION: you can append '-r' option, that will cause tree to be recreated"
+    puts "HINT: use '-r' option to recreate tree"
 end
