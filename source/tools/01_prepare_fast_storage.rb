@@ -102,7 +102,6 @@ end
 
 print "Checking if '#{root_path}' has enough space on target system.. "
 space_line = `df -kP #{root_path}`.split("\n")[1]
-total_space = space_line.split(" ")[1].to_i
 space_available = space_line.split(" ")[3].to_i
 portage_size = `du -s #{full_path}`.split(' ')[0].to_i if File.exist?(full_path)
 required_space = options[:storage][:required_space] * 1024
