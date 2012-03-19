@@ -212,6 +212,8 @@ create table ebuilds (
     -- data blob /*NOT NULL*/,
 );
 
+CREATE INDEX ebuilds_idx2 on ebuilds (package_id);
+
 create table package_keywords (
     id INTEGER,
     package_id INTEGER NOT NULL,
