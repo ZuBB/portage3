@@ -28,18 +28,16 @@ OptionParser.new do |opts|
     # help header
     opts.banner = " Usage: prepare_fast_storage [options]"
     opts.separator "\n A script that puts portage tree to own directory in the fast storage"
-    opts.separator " Usually its a shared memory (tmpfs). As a rule its mounted at /dev/shm"
+    opts.separator " Default is a shared memory (tmpfs), mounted at /dev/shm"
     opts.separator "\n Command line options"
 
-    # TODO batch mode
     opts.on("-c", "--clean-previous", "Clean previous snapshot after new one has been downloaded") do |value|
         options[:clean] = true
     end
 
     opts.on("-d", "--download-snapshot", "Redownload latest snapshot") do |value|
-        options[:download_snapshot] = true
         # if we dowloading new snapshot, we need to recreate tree
-        options[:recreate_tree] = true
+        options[:download_snapshot] = options[:recreate_tree] = true
     end
 
     opts.on("-f", "--root-folder STRING", "Dir where portage tree will be extracted") do |value|
