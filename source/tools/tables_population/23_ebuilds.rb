@@ -128,7 +128,7 @@ def parse_ebuild(database, package_id, ebuild_filename)
     ebuild_obj["eapi_id"], ebuild_obj["real_eapi"] =
         ebuild_obj["real_eapi"], ebuild_obj["eapi_id"]
 
-    db_insert(
+    ebuild_obj['ebuild_id'] = db_insert(
         database,
         SQL_QUERY,
         [
@@ -140,10 +140,10 @@ def parse_ebuild(database, package_id, ebuild_filename)
             # TODO
             0, #ebuild_obj["slot"],
             ebuild_obj["license"]
-        ]
+        ],
+        true
     )
 
-    ebuild_obj['ebuild_id'] = get_last_inserted_id(database)
     #store_real_eapi(database, ebuild_obj)
 end
 
