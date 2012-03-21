@@ -143,7 +143,7 @@ def get_last_inserted_id(database)
     return database.get_first_value("SELECT last_insert_rowid();")
 end
 
-def db_insert(database, sql_query, values)
+def db_insert(database, sql_query, values, return_id = false)
     begin
         database.execute(sql_query, *values)
     rescue SQLite3::Exception => exception
@@ -156,6 +156,8 @@ def db_insert(database, sql_query, values)
         end
         raise "Error: Database error"
     end
+
+    return get_last_inserted_id(database) if return_id
 end
 
 def fill_table_X(db_filename, fill_table, params)
