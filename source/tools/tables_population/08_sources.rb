@@ -66,7 +66,7 @@ def fill_table(params)
 
 	sources << '/etc/make.conf'
 	sources << '/etc/portage/'
-	sources << 'ACCEPT_KEYWORDS'
+	sources << 'CLI'
 	sources.each { |item|
         db_insert(params[:database], sql_query, [item])
 	}
