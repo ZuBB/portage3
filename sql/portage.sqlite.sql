@@ -11,7 +11,6 @@ create table architectures (
     id INTEGER,
     architecture VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
-    -- smth else?
 );
 
 create table platforms (
@@ -21,7 +20,6 @@ create table platforms (
 );
 
 create table arches (
-    -- here will be all items from profiles/arch.list file
     id INTEGER,
     arch_name VARCHAR NOT NULL UNIQUE,
     architecture_id INTEGER NOT NULL,
@@ -101,10 +99,11 @@ create table packages (
     PRIMARY KEY (id)
 );
 
-/* create table use_flags (
+create table use_flags_types (
     id INTEGER,
-    flag_name VARCHAR NOT NULL UNIQUE,
-    flag_description VARCHAR NOT NULL UNIQUE,
+    flag_type VARCHAR NOT NULL UNIQUE,
+    description VARCHAR NOT NULL UNIQUE,
+    source VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -114,52 +113,16 @@ create table use_flags_states (
     PRIMARY KEY (id)
 );
 
-create table profile_use_flags (
+create table use_flags (
     id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    -- todo profile_id
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
+    flag_name VARCHAR NOT NULL UNIQUE,
+    flag_description VARCHAR,
+    flag_type_id INTEGER NOT NULL,
+    FOREIGN KEY (flag_type_id) REFERENCES use_flags_types(id),
     PRIMARY KEY (id)
 );
 
-create table system_use_flags (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id),
-    PRIMARY KEY (id)
-);
-
-create table users_use_flags2packages (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, package_id),
-    PRIMARY KEY (id)
-);
-
-create table users_use_flags2ebuilds (
-    id INTEGER,
-    use_flag_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL,
-    flag_state_id INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (use_flag_id) REFERENCES all_use_flags(id),
-    FOREIGN KEY (flag_state_id) REFERENCES use_flags_states(id),
-    CONSTRAINT idx1_unq UNIQUE (use_flag_id, flag_state_id, ebuild_id),
-    PRIMARY KEY (id)
-);
-
-create table persons (
+/* create table persons (
     id INTEGER,
     name VARCHAR,
     email VARCHAR NOT NULL UNIQUE,
@@ -250,17 +213,26 @@ create table package_masks (
     PRIMARY KEY (id)
 );
 
+create table use_flags2ebuilds (
+    id INTEGER,
+    -- do we need package_id here
+    package_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    use_flag_id INTEGER NOT NULL,
+    flag_state INTEGER NOT NULL DEFAULT 0,
+    source_id INTEGER NOT NULL,
+    FOREIGN KEY (use_flag_id) REFERENCES use_flags(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, use_flag_id, flag_state),
+    PRIMARY KEY (id)
+);
+
 /*create table licences (
     id INTEGER PRIMARY KEY,
     license_name VARCHAR NOT NULL
     -- url VARCHAR ?,
     -- content blob zipped data
-);
-
-create table licences2packages (
-    id INTEGER PRIMARY KEY,
-    license_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL
 );
 
 create table licences2ebuilds (
