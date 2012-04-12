@@ -3,28 +3,26 @@
 # Here should go some comment
 #
 # Initial Author: Vasyl Zuzyak, 01/04/12
-# Latest Modification: Vasyl Zuzyak, 01/06/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'optparse'
 require 'rubygems'
 require 'sqlite3'
-require 'tools'
+require 'utils'
 
 # hash with default settings
 options = {
-    :sql_src_home => '../sql',
-    :sql_src => 'portage.sqlite.sql',
-    :sql_extra_src => 'notes.sqlite.sql',
-    :db_path => nil,
-    :batch_mode => false,
-    :verbose => false,
-    :list => false,
-    :extra => true
+    "sql_src_home" => '../sql',
+    "sql_src" => 'portage.sqlite.sql',
+    "batch_mode" => false,
+    "verbose" => false,
+    "list" => false,
 # lets merge stuff from tools lib
-}.merge!(OPTIONS)
+}.merge!(Utils::OPTIONS)
+
 # db_filename
-options[:db_filename] = "test-#{get_timestamp()}.sqlite"
+db_filename = "test-#{Utils.get_timestamp()}.sqlite"
 
 OptionParser.new do |opts|
     # help header
@@ -33,28 +31,28 @@ OptionParser.new do |opts|
 
     # parsing 'provide_listing' option if present
     opts.on("-l", "--list-recent", "List recent dbs") do |value|
-        options[:list] = true
+        options["list"] = true
     end
 
     # parsing 'batch_mode' option if present
     opts.on("-b", "--batch-mode", "Batch mode") do |value|
-        options[:batch_mode] = true
-        options[:list] = false
+        options["batch_mode"] = true
+        options["list"] = false
     end
 
     # parsing 'root' option if present
     opts.on("-r", "--root-dir STRING", "Dir where new database file will be located") do |base_dir|
-        if !File.exists?(base_dir)
+        unless File.exists?(base_dir)
             puts "ERROR: directory '#{base_dir}' does not exist!"
             exit(1)
         end
 
-        if !File.writable?(base_dir)
+        unless File.writable?(base_dir)
             puts "ERROR: directory '#{base_dir}' is not writable!"
             exit(1)
         end
 
-        options[:storage][:root] = base_dir
+        options["storage"]["root"] = base_dir
     end
 
     # parsing 'db_filename' option if present
@@ -78,13 +76,13 @@ OptionParser.new do |opts|
 
         value << '.sqlite' if File.extname(value) != 'sqlite'
 
-        options[:db_filename] = value
-        options[:list] = false
+        options["db_filename"] = value
+        options["list"] = false
     end
 
     # parsing 'verbose' option if present
     opts.on("-v", "--verbose", "Versbose mode") do |value|
-        options[:verbose] = true
+        options["verbose"] = true
     end
 
     # parsing 'help' option if present
@@ -94,57 +92,26 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-# get sql code
-sql = IO.read(File.join(
-    File.dirname(__FILE__),
-    options[:sql_src_home],
-    options[:sql_src]
-))
-
-sql_extra = IO.read(File.join(
-    File.dirname(__FILE__),
-    options[:sql_src_home],
-    options[:sql_extra_src]
-))
-
 # get path to the database file
-options[:db_path] = File.join(
-    options[:storage][:root],
-    options[:storage][:home_folder],
-    options[:db_filename]
-)
-# some var definition
-error_code, message = 0, 'Everything is OK. Database was created at:'
-# print sql if verbose is set
-puts '='*30, sql, '='*30 if options[:verbose]
+db_path = File.join(options["portage_home"], db_filename)
 
 begin
-    db = SQLite3::Database.new(options[:db_path])
-    db.execute_batch(sql)
-    db.execute_batch(sql_extra) if options[:extra]
+    db = SQLite3::Database.new(db_path)
+    db.execute_batch(IO.read(File.join(
+        File.dirname(__FILE__),
+        options["sql_src_home"],
+        options["sql_src"]
+    )))
 
-    if File.size(options[:db_path]) == 0
-        message = 'Something went wrong. created db has zero size'
-        error_code = 2
+    puts "Everything is OK. Database was created at:\n#{db_path}"
+
+    if options["list"]
+        path = File.join(options["portage_home"], "*.sqlite")
+        puts "\n#{`ls -l #{path} | tail -n 10`}"
     end
 rescue Exception => msg
-    File.delete(options[:db_path])
-    message = msg
-    error_code = 1
+    File.delete(db_path) if File.exists?(db_path)
+    puts msg
 ensure
     db.close() if db.closed? == false
 end
-
-puts message if !options[:batch_mode]
-puts options[:db_path] if error_code == 0
-
-if options[:list]
-    path = File.join(
-        options[:storage][:root],
-        options[:storage][:home_folder],
-        "*.sqlite"
-    )
-    puts "\n#{`ls -l #{path} | tail -n 10`}"
-end
-
-exit(error_code)

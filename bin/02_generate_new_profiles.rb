@@ -3,17 +3,17 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/11/12
-# Latest Modification: Vasyl Zuzyak, 01/11/12
+# Initial Author: Vasyl Zuzyak, 01/27/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'fileutils'
-require 'tools'
+require 'utils'
 
 # hash with options
-options = Hash.new.merge!(OPTIONS)
-portage_home = get_full_tree_path(options)
-FileUtils.cd(portage_home)
+options = Hash.new.merge!(Utils::OPTIONS)
+# change dir to `home of the new portage data`
+FileUtils.cd(Utils.get_full_tree_path(options))
 
 # new profiles folder
 `mkdir -p profiles_v2`

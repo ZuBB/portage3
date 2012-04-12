@@ -3,23 +3,21 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/04/12
-# Latest Modification: Vasyl Zuzyak, 01/06/12
+# Initial Author: Vasyl Zuzyak, 6 01/06/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'optparse'
 require 'rubygems'
-require 'tools'
+require 'utils'
 
 # hash with options
-options = {
-    :run_all => true
-}
+options = {"run_all" => true}
 
 # lets merge stuff from tools lib
-options.merge!(OPTIONS)
+options.merge!(Utils::OPTIONS)
 # get last created database
-options[:db_filename] = get_last_created_database(options)
+options["db_filename"] = Utils.get_last_created_database(options)
 
 OptionParser.new do |opts|
     # help header
@@ -28,23 +26,28 @@ OptionParser.new do |opts|
 
     opts.on("-a", "--[no-]run-all-scripts",
             "Run all scripts for populating db") do |value|
-        options[:run_all] = value
+        options["run_all"] = value
     end
 
     opts.on("-f", "--database-file STRING",
             "Path where new database file will be created") do |value|
         # TODO check if path id valid
-        options[:db_filename] = value
+        options["db_filename"] = value
     end
 
     # parsing 'quite' option if present
     opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
+        options["quiet"] = true
+    end
+
+    # parsing 'quite' option if present
+    opts.on("-m", "--method STRING", "Parse method") do |value|
+        options["method"] = value
     end
 
     # parsing 'untill' option if present
     opts.on("-u", "--run-untill STRING", "Run all scripts untill script with specified index") do |value|
-        options[:until] = value
+        options["until"] = value
     end
 
     # parsing 'help' option if present
@@ -54,17 +57,19 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-options[:db_filename] = ARGV[0] if ARGV.size == 1
+options["db_filename"] = ARGV[0] if ARGV.size == 1
 
 plugins_dir = File.join(File.dirname(__FILE__), "tables_population")
 
-if options[:run_all]
+if options["run_all"]
     Dir.glob(File.join(plugins_dir, "/*")).sort.each do |script|
-        break if options[:until] && script.include?(options[:until])
+        break if options["until"] && script.include?(options["until"])
 
-        if (script.match(/\d\d_[a-z_\-]+\.rb$/))
+        if (script.match(/\d\d_[a-z_]+\.rb$/))
+            command = "./#{script} -f #{options["db_filename"]}"
+            command << " -m #{options["method"]}" if options["method"]
             # TODO: output, error_output, exit status, timeouts
-            `./#{script} -f #{options[:db_filename]}`
+            `#{command}`
         end
     end
 end
