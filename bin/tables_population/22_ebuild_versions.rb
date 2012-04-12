@@ -7,53 +7,20 @@
 # Latest Modification: Vasyl Zuzyak, 01/06/12
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
-require 'optparse'
-require 'rubygems'
-require 'sqlite3'
-require 'tools'
-require 'time'
+require 'script'
 
-# hash with options
-options = Hash.new.merge!(OPTIONS)
-# hash with options
-SQL_QUERY = <<SQL
-INSERT INTO ebuilds
-(package_id, version, mtime, mauthor, eapi_id, slot, license)
-VALUES (?, ?, ?, ?, ?, ?, ?);
-SQL
-
-OptionParser.new do |opts|
-    # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
-
-    opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
-        # TODO check if path id valid
-        options[:db_filename] = value
-    end
-
-    #TODO do we need a setting `:root` option here?
-    # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
-    end
-
-    # parsing 'help' option if present
-    opts.on_tail("-h", "--help", "Show this message") do
-        puts opts
-        exit
-    end
-end.parse!
-
-# get true portage home
-portage_home = get_full_tree_path(options)
-if options[:db_filename].nil?
-    # get last created database
-    options[:db_filename] = get_last_created_database(options)
-end
+script = Script.new({
+    "script" => __FILE__,
+    # query for getting all versions of current package
+    "sql_query" => "UPDATE ebuilds SET version_order=? WHERE id=?",
+    # query for getting all packages
+    "helper_query1" => "SELECT id from packages",
+    # query for getting all versions of current package
+    "helper_query2" => "SELECT id,version FROM ebuilds WHERE package_id=?"
+})
 
 def compare_package_versions(ebuild_a, ebuild_b)
+    p '='*10 if @debug
     a_parts = ebuild_a.split(/[\.\-_]/)
     b_parts = ebuild_b.split(/[\.\-_]/)
     comparison_result = nil
@@ -61,6 +28,9 @@ def compare_package_versions(ebuild_a, ebuild_b)
     a_parts.each_index { |index|
         a_part_raw = a_parts[index] rescue ''
         b_part_raw = b_parts[index] rescue ''
+        p '-'*10 if @debug
+        p a_part_raw if @debug
+        p b_part_raw if @debug
 
         if a_part_raw && b_part_raw.nil?
             comparison_result = 1
@@ -76,12 +46,19 @@ def compare_package_versions(ebuild_a, ebuild_b)
         if a_part_raw == b_part_raw
             next
         elsif is_a_num == is_b_num && is_b_num == true
+            p 'case 1' if @debug
             comparison_result = a_part > b_part ? 1 : -1
         elsif is_a_num == is_b_num && is_b_num == false && a_part_raw.size == b_part_raw.size
+            p 'case 2' if @debug
             comparison_result = a_part_raw > b_part_raw ? 1 : -1
         else
             a_sub_part = a_part_raw.scan(/\d+|[a-z]+/)
             b_sub_part = b_part_raw.scan(/\d+|[a-z]+/)
+            p 'case 3' if @debug
+            #p 'a_sub_part'
+            #p a_sub_part
+            #p 'b_sub_part'
+            #p b_sub_part
 
             if a_sub_part[0] == b_sub_part[0]
                 if a_sub_part[1] && b_sub_part[1].nil?
@@ -90,8 +67,10 @@ def compare_package_versions(ebuild_a, ebuild_b)
                     comparison_result = -1
                 elsif a_sub_part[1].to_i > b_sub_part[1].to_i
                     comparison_result = 1
+                    #p '1st is bigger'
                 else
                     comparison_result = -1
+                    #p '2nd is bigger'
                 end
             else
                 comparison_result = a_sub_part[0] > b_sub_part[0] ? 1 : -1
@@ -110,15 +89,11 @@ end
 
 def fill_table(params)
     # lets walk through all packages
-    params[:database].execute("SELECT id from packages") do |row|
-        # query for getting all versions of current package
-        sql_query1 = "SELECT id,version FROM ebuilds WHERE package_id=?"
-        # query for getting all versions of current package
-        sql_query2 = "UPDATE ebuilds SET version_order=? WHERE id=?"
+    Database.db().execute(params["helper_query1"]) do |row|
         # empty array for versions only
         versions = []
         # lets get them
-        rows = params[:database].execute(sql_query1, row[0])
+        rows = Database.db().execute(params["helper_query2"], [row[0]])
         # get them..
         rows.each { |row| versions << row[1] }
         # ..and sort
@@ -127,20 +102,15 @@ def fill_table(params)
         }
         # and store sort order
         sorted_versions.each_index do |ii|
-            db_insert(
-                params[:database],
-                sql_query2,
-                [
-                    ii + 1,
-                    rows[versions.index(sorted_versions[ii])][0]
-                ]
-            )
+            Database.insert({
+                "sql_query" => params["sql_query"],
+                "values" => [
+                    ii + 1, rows[versions.index(sorted_versions[ii])][0]
+            ]
+            })
         end
     end
 end
 
-fill_table_X(
-    options[:db_filename],
-    method(:fill_table),
-    {:portage_home => portage_home}
-)
+script.fill_table_X(method(:fill_table))
+

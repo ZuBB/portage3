@@ -3,57 +3,23 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/11/12
-# Latest Modification: Vasyl Zuzyak, 01/11/12
+# Initial Author: Vasyl Zuzyak, 01/20/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
-require 'optparse'
-require 'rubygems'
-require 'sqlite3'
-require 'tools'
+require 'script'
 
-# hash with options
-options = Hash.new.merge!(OPTIONS)
-
-OptionParser.new do |opts|
-    # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
-
-    opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
-        # TODO check if path id valid
-        options[:db_filename] = value
-    end
-
-    #TODO do we need a setting `:root` option here?
-    # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
-    end
-
-    # parsing 'help' option if present
-    opts.on_tail("-h", "--help", "Show this message") do
-        puts opts
-        exit
-    end
-end.parse!
-
-# get true portage home
-portage_home = get_full_tree_path(options)
-if options[:db_filename].nil?
-    # get last created database
-    options[:db_filename] = get_last_created_database(options)
-end
+script = Script.new({
+    "table" => "platforms",
+    "script" => __FILE__
+})
 
 def fill_table(params)
-    filename = File.join(params[:portage_home], "profiles", "arch.list")
-    file_content = IO.read(filename).to_a rescue []
-    sql_query = "INSERT INTO platforms (platform_name) VALUES (?);"
+    filename = File.join(params["portage_home"], "profiles", "arch.list")
     platforms = []
 
     # walk through all use lines in that file
-    file_content.each do |line|
+    (IO.read(filename).to_a rescue []).each do |line|
         # skip comments
         next if line.index('#') == 0
         # trim '\n'
@@ -67,15 +33,14 @@ def fill_table(params)
         platforms << line.split('-')[1]
     end
 
-    platforms.uniq.each { |platform| 
+    platforms.uniq.each { |platform|
         # lets trim newlines and insert
-        db_insert(params[:database], sql_query, [platform.chomp()])
+        Database.insert({
+            "table" => params["table"],
+            "data" => {"platform_name" => platform.chomp()}
+        })
     }
 end
 
-fill_table_X(
-    options[:db_filename],
-    method(:fill_table),
-    {:portage_home => portage_home}
-)
+script.fill_table_X(method(:fill_table))
 

@@ -3,88 +3,50 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/04/12
-# Latest Modification: Vasyl Zuzyak, 01/06/12
+# Initial Author: Vasyl Zuzyak, 02/07/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
-require 'optparse'
-require 'rubygems'
-require 'sqlite3'
-require 'tools'
+require 'script'
+require 'parser'
 
-# hash with options
-options = Hash.new.merge!(OPTIONS)
-# hash with options
-SQL_QUERY = "INSERT INTO system_settings (param, value) VALUES (?, ?);"
-
-OptionParser.new do |opts|
-    # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
-
-    opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
-        # TODO check if path id valid
-        options[:db_filename] = value
-    end
-
-    #TODO do we need a setting `:root` option here?
-    # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
-    end
-
-    # parsing 'help' option if present
-    opts.on_tail("-h", "--help", "Show this message") do
-        puts opts
-        exit
-    end
-end.parse!
-
-# get true portage home
-portage_home = get_full_tree_path(options)
-if options[:db_filename].nil?
-    # get last created database
-    options[:db_filename] = get_last_created_database(options)
-end
-
-def get_accept_keywords(ebuild_text)
-    get_single_line_ini_value(ebuild_text, 'ACCEPT_KEYWORDS') || '0_AK_NF'
-end
+script = Script.new({
+    "script" => __FILE__,
+    "table" => "system_settings",
+    "helper_query1" => "SELECT id FROM arches WHERE arch_name=?",
+    "helper_query2" => "SELECT id FROM keywords WHERE keyword=?"
+})
 
 def fill_table(params)
-    make_conf = IO.read('/etc/make.conf').to_a rescue []
-    accept_keywords = get_accept_keywords(make_conf)
+    accept_keywords = Parser.get_multi_line_ini_value(
+        (IO.read('/etc/make.conf').to_a rescue []),
+        'ACCEPT_KEYWORDS'
+    )
+
+    if accept_keywords.include?('0_ACCEPT_KEYWORDS')
+        puts 'Error Can not find `ACCEPT_KEYWORDS` variable in make.conf'
+        exit(1)
+    end
+
     keyword_name = accept_keywords.index('~') == 0 ? 'unstable' : 'stable'
     arch_name = accept_keywords.sub(/^~/, '')
 
-    db_insert(
-        params[:database],
-        SQL_QUERY,
-        [
-            'arch',
-            params[:database].get_first_value(
-                "SELECT id FROM arches WHERE arch_name=?",
-                arch_name
-            )
-        ]
-    )
+    Database.insert({
+        "table" => params["table"],
+        "data" => {
+            "param" => 'arch_id',
+            "value" => Database.get_1value(params["helper_query1"], arch_name)
+        }
+    })
 
-    db_insert(
-        params[:database],
-        SQL_QUERY,
-        [
-            'keyword',
-            params[:database].get_first_value(
-                "SELECT id FROM keywords WHERE keyword=?",
-                keyword_name
-            )
-        ]
-    )
+    Database.insert({
+        "table" => params["table"],
+        "data" => {
+            "param" => 'keyword_id',
+            "value" => Database.get_1value(params["helper_query2"], keyword_name)
+        }
+    })
 end
 
-fill_table_X(
-    options[:db_filename],
-    method(:fill_table),
-    {}
-)
+script.fill_table_X(method(:fill_table))
+
