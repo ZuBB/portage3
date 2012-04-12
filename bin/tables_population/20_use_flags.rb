@@ -3,79 +3,47 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/11/12
-# Latest Modification: Vasyl Zuzyak, 01/11/12
+# Initial Author: Vasyl Zuzyak, 01/19/12
+# Latest Modification: Vasyl Zuzyak, ...
 #
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
-require 'optparse'
-require 'rubygems'
-require 'sqlite3'
-require 'tools'
+require 'script'
 
-# hash with options
-options = Hash.new.merge!(OPTIONS)
-
-OptionParser.new do |opts|
-    # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
-
-    opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
-        # TODO check if path id valid
-        options[:db_filename] = value
-    end
-
-    #TODO do we need a setting `:root` option here?
-    # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
-    end
-
-    # parsing 'help' option if present
-    opts.on_tail("-h", "--help", "Show this message") do
-        puts opts
-        exit
-    end
-end.parse!
-
-# get true portage home
-portage_home = get_full_tree_path(options)
-if options[:db_filename].nil?
-    # get last created database
-    options[:db_filename] = get_last_created_database(options)
-end
+script = Script.new({
+    "table" => "use_flags",
+    "script" => __FILE__
+})
 
 def fill_table(params)
-    filename = File.join(params[:portage_home], "profiles", "use.desc")
-    use_flags_file_content = IO.read(filename).to_a rescue []
-    sql_query =<<SQL
-INSERT INTO all_use_flags
-(flag_name, flag_description)
-VALUES (?, ?);
-SQL
+    # pattern for flag, its description (and package)
+    pattern = Regexp.new("([\\w\\/\\-]+:)?([\\w\\+\\-]+)(?: - )(.*)")
 
-    # walk through all use flags in that file
-    use_flags_file_content.sort.each do |use_flag|
-        # skip comments
-        next if use_flag.index('#') == 0
-        # lets trim newlines
-        use_flag.chomp!()
-        # skip empty lines
-        next if use_flag.empty?
+    ["use.desc", "use.local.desc"].each do |file|
+        # get full filename
+        filename = File.join(params["portage_home"], "profiles_v2", file)
 
-        # lets split flag and its description
-        flag_stuff = use_flag.split(' - ')
+        # read use flags and process each line
+        (IO.read(filename).to_a rescue []).each do |line|
+            # lets trim newlines
+            line.chomp!()
+            # skip comments or empty lines
+            next if line.index('#') == 0 or line.empty?
 
-        db_insert(params[:database], sql_query, [flag_stuff[0], flag_stuff[1]])
+            # lets get flag and desc
+            match = pattern.match(line)
+
+            Database.insert({
+                "table" => params["table"],
+                "command" => "INSERT OR REPLACE",
+                "data" => {
+                    "flag_name" => match[2],
+                    "flag_description" => match[3],
+                    "flag_type_id" => match[1].nil?() ? 1 : 2
+                }
+            })
+        end
     end
 end
 
-# TODO: check if all dependant tables are filled
-#File.basename(__FILE__).match(/^\d\d_([a-z]+)\.rb$/)[1].to_s,
+script.fill_table_X(method(:fill_table))
 
-fill_table_X(
-    options[:db_filename],
-    method(:fill_table),
-    {:portage_home => portage_home}
-)
