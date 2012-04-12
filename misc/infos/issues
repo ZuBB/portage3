@@ -1,12 +1,22 @@
+* put portage tree to the faster location
+* options["storage"]["root"] is not valid 'path'
+* deal with pathes: "root_path" vs "root_folder" vs "portage_home"
+* parser
+* vesions
+* use flags
+* improve logger
+* improve database
+* multithreading for filling db
+
+http://blog.flameeyes.eu/2009/09/the-size-of-the-gentoo-tree
+http://blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data
+
 http://devmanual.gentoo.org
 http://znurt.org
 
 Sequel ruby
 
 https://bugs.gentoo.org/show_bug.cgi?id=333531
-http://blog.flameeyes.eu/2009/09/28/the-size-of-the-gentoo-tree
-
-package description: metadata vs ebuild
 
 SELECT count(*) FROM ebuilds2architectures where architecture_id is null and prefix_profile_id is null
 
@@ -14,13 +24,9 @@ overhead in keywords
 ./app-accessibility/espeak/espeak-1.45.03.ebuild
 KEYWORDS="~alpha ~amd64 ~hppa ~ia64 ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux"
 
-http://stackoverflow.com/questions/6164498/string-greater-than-or-less-than
-http://stackoverflow.com/questions/528830/how-can-i-use-sql-to-order-by-for-version-numbers-strings
-
 lrwxrwxrwx 1 root root      40 гру 29 22:27 make.globals -> ../usr/share/portage/config/make.globals
 lrwxrwxrwx 1 root root      46 лис 14  2009 make.profile -> ../usr/portage/profiles/default/linux/x86/10.0
 
 http://www.linux-archive.org/gentoo-alt/582446-rfc-changing-sys-apps-portage-python-api-use-eroot-instead-root-keys-portage-db-similar-map-objects.html
 http://xanda.org/index.php?page=install-gentoo-portage-on-non-gentoo-distribution
 
-options["storage"]["root"] is not valid 'path'
