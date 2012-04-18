@@ -13,101 +13,71 @@ script = Script.new({
     "script" => __FILE__,
     # query for getting all versions of current package
     "sql_query" => "UPDATE ebuilds SET version_order=? WHERE id=?",
-    # query for getting all packages
-    "helper_query1" => "SELECT id from packages",
     # query for getting all versions of current package
-    "helper_query2" => "SELECT id,version FROM ebuilds WHERE package_id=?"
+    "helper_query2" => "SELECT id,version FROM ebuilds WHERE package_id=?",
+    # query for getting all packages
+    "helper_query1" => <<SQL
+SELECT c.category_name, p.package_name, p.id
+from categories c, packages p
+WHERE p.category_id=c.id;
+SQL
 })
 
-def compare_package_versions(ebuild_a, ebuild_b)
-    p '='*10 if @debug
-    a_parts = ebuild_a.split(/[\.\-_]/)
-    b_parts = ebuild_b.split(/[\.\-_]/)
-    comparison_result = nil
+def get_eix_versions(atom)
+    versions_line = %x[eix -x --end #{atom} | grep 'Available versions']
 
-    a_parts.each_index { |index|
-        a_part_raw = a_parts[index] rescue ''
-        b_part_raw = b_parts[index] rescue ''
-        p '-'*10 if @debug
-        p a_part_raw if @debug
-        p b_part_raw if @debug
+    # drop wording at start
+    versions_line.sub!(/^\s*Available versions:/, "")
 
-        if a_part_raw && b_part_raw.nil?
-            comparison_result = 1
-            break
-        end
+    # drop use flags
+    versions_line.sub!(/\{[^\}]+\}\s*$/, "") if versions_line.match(/\}\s*$/)
 
-        a_part = a_part_raw.to_i
-        b_part = b_part_raw.to_i
+    # get versions and make it looks nice
+    versions_line.split(' ').map! { |version|
+        version.sub!(/!.+/, '')  if version.match(/!.+/)
+        version.sub!(/\([^\)]+\)\s*$/, '') if version.match(/\)\s*$/)
+        version.sub!(/\+i$/, '') if version.match(/\+i$/)
+        version.sub!(/\+v$/, '') if version.match(/\+v$/)
+        version
+    }
+end
 
-        is_a_num = a_part.to_s == a_part_raw
-        is_b_num = b_part.to_s == b_part_raw
-
-        if a_part_raw == b_part_raw
-            next
-        elsif is_a_num == is_b_num && is_b_num == true
-            p 'case 1' if @debug
-            comparison_result = a_part > b_part ? 1 : -1
-        elsif is_a_num == is_b_num && is_b_num == false && a_part_raw.size == b_part_raw.size
-            p 'case 2' if @debug
-            comparison_result = a_part_raw > b_part_raw ? 1 : -1
-        else
-            a_sub_part = a_part_raw.scan(/\d+|[a-z]+/)
-            b_sub_part = b_part_raw.scan(/\d+|[a-z]+/)
-            p 'case 3' if @debug
-            #p 'a_sub_part'
-            #p a_sub_part
-            #p 'b_sub_part'
-            #p b_sub_part
-
-            if a_sub_part[0] == b_sub_part[0]
-                if a_sub_part[1] && b_sub_part[1].nil?
-                    comparison_result = 1
-                elsif b_sub_part[1] && a_sub_part[1].nil?
-                    comparison_result = -1
-                elsif a_sub_part[1].to_i > b_sub_part[1].to_i
-                    comparison_result = 1
-                    #p '1st is bigger'
-                else
-                    comparison_result = -1
-                    #p '2nd is bigger'
-                end
-            else
-                comparison_result = a_sub_part[0] > b_sub_part[0] ? 1 : -1
-            end
-        end
-
-        break unless comparison_result.nil?
+def get_portage_versions(atom)
+    versions = []
+    # empty array for versions only
+    %x[../list_package_ebuilds.py #{atom}].split("\n").each { |line|
+        versions << line[atom.size + 1..-1]
     }
 
-    if comparison_result.nil?
-        comparison_result = a_parts.size > b_parts.size ? 1 : -1
-    end
-
-    return comparison_result
+    return versions
 end
 
 def fill_table(params)
     # lets walk through all packages
-    Database.db().execute(params["helper_query1"]) do |row|
-        # empty array for versions only
-        versions = []
+    Database.db().execute(params["helper_query1"]) do |package_row|
+        # get atom naem
+        atom = "#{package_row[0]}/#{package_row[1]}"
+        # get versions sorted by eix
+        eix_versions = get_eix_versions(atom)
+
+        PLogger.info("Package #{atom}")
+
         # lets get them
-        rows = Database.db().execute(params["helper_query2"], [row[0]])
-        # get them..
-        rows.each { |row| versions << row[1] }
-        # ..and sort
-        sorted_versions = versions.sort { |item_1, item_2|
-            compare_package_versions(item_1, item_2)
-        }
-        # and store sort order
-        sorted_versions.each_index do |ii|
-            Database.insert({
-                "sql_query" => params["sql_query"],
-                "values" => [
-                    ii + 1, rows[versions.index(sorted_versions[ii])][0]
-            ]
-            })
+        Database.db().execute(params["helper_query2"], [package_row[2]]) do |ebuild_row|
+            eix_index = eix_versions.index { |version|
+                version.end_with?(ebuild_row[1])
+            }
+
+            unless eix_index.nil?
+                PLogger.info("Ebuild id: #{ebuild_row[0]}, index: #{eix_index + 1}")
+                Database.insert({
+                    "sql_query" => params["sql_query"],
+                    "values" => [eix_index + 1, ebuild_row[0]]
+                })
+            else
+                PLogger.warn("Version #{ebuild_row[1]} - 'cache miss'")
+                PLogger.info("eix versions #{eix_versions.join(', ')}")
+            end
         end
     end
 end
