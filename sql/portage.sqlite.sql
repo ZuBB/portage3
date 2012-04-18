@@ -167,6 +167,8 @@ create table ebuilds (
     mauthor VARCHAR NOT NULL,
     eapi_id INTEGER NOT NULL,
     slot VARCHAR NOT NULL,
+    --eix_version_order INTEGER,
+    --portage_version_order INTEGER,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
     CONSTRAINT idx1_unq UNIQUE (package_id, version),
