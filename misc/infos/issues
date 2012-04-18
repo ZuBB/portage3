@@ -2,7 +2,6 @@
 * options["storage"]["root"] is not valid 'path'
 * deal with pathes: "root_path" vs "root_folder" vs "portage_home"
 * parser
-* vesions
 * use flags
 * improve logger
 * improve database
