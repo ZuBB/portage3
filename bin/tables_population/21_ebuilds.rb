@@ -28,8 +28,7 @@ def parse_ebuild(params)
             "mtime" => ebuild.mtime,
             "mauthor" => ebuild.author,
             "eapi_id" => ebuild.eapi_id(),
-            "slot" => ebuild.slot,
-            "license" => ebuild.license
+            "slot" => ebuild.slot
         }
     })
 

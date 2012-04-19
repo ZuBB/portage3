@@ -162,7 +162,6 @@ create table ebuilds (
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
     version_order INTEGER NOT NULL,
-    license VARCHAR NOT NULL,
     mtime VARCHAR NOT NULL,
     mauthor VARCHAR NOT NULL,
     eapi_id INTEGER NOT NULL,
@@ -173,7 +172,7 @@ create table ebuilds (
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
     CONSTRAINT idx1_unq UNIQUE (package_id, version),
     PRIMARY KEY (id)
-    -- flags/enabled flags/depend/rdepend/overlay/inherit/manifest
+    -- overlay/inherit/manifest
     -- data blob /*NOT NULL*/,
 );
 
