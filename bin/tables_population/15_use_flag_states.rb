@@ -17,8 +17,6 @@ script = Script.new({
 })
 
 def fill_table(params)
-    # array of all inserts
-    queries_array = []
     # array of all keywords
     FLAG_STATES.each { |state|
         Database.insert({
