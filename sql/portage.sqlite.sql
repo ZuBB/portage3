@@ -115,10 +115,12 @@ create table use_flags_states (
 
 create table use_flags (
     id INTEGER,
-    flag_name VARCHAR NOT NULL UNIQUE,
-    flag_description VARCHAR,
+    flag_name VARCHAR NOT NULL,
+    flag_description VARCHAR NOT NULL,
     flag_type_id INTEGER NOT NULL,
+    package_id INTEGER,
     FOREIGN KEY (flag_type_id) REFERENCES use_flags_types(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
 
