@@ -14,7 +14,7 @@ script = Script.new({
     "script" => __FILE__,
     "sql_query" => <<SQL
 INSERT INTO package_keywords
-(package_id, version, keyword_id, arch_id, source_id)
+(package_id, ebuild_id, keyword_id, arch_id, source_id)
 VALUES (
     ?,
     ?,
@@ -104,8 +104,7 @@ def packages_block(params)
     Dir.glob(File.join(params["item_path"], '*.ebuild')).each do |ebuild|
         store_ebuild_keywords(
             params["sql_query"],
-            parse_ebuild({"filename" => ebuild}.merge!(params)
-            )
+            parse_ebuild({"filename" => ebuild}.merge!(params))
         )
     end
 end

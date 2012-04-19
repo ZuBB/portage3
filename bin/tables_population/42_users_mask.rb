@@ -13,7 +13,7 @@ script = Script.new({
     "script" => __FILE__,
     "sql_query" => <<SQL
 INSERT INTO package_masks
-(package_id, version, arch_id, mask_state_id, source_id)
+(package_id, ebuild_id, arch_id, mask_state_id, source_id)
 VALUES (?, ?, ?, ?, ?)
 SQL
 })

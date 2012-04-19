@@ -182,17 +182,17 @@ CREATE INDEX ebuilds_idx2 on ebuilds (package_id);
 create table package_keywords (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    version INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
     keyword_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (version) REFERENCES ebuilds(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (keyword_id) REFERENCES keywords(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, arch_id, keyword_id, source_id
+        package_id, ebuild_id, arch_id, keyword_id, source_id
     ),
     PRIMARY KEY (id)
 );
@@ -200,17 +200,17 @@ create table package_keywords (
 create table package_masks (
     id INTEGER,
     package_id INTEGER NOT NULL,
-    version VARCHAR NOT NULL,
+    ebuild_id VARCHAR NOT NULL,
     arch_id INTEGER NOT NULL,
     mask_state_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (version) REFERENCES ebuilds(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (mask_state_id) REFERENCES mask_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CONSTRAINT idx1_unq UNIQUE (
-        package_id, version, arch_id, mask_state_id, source_id
+        package_id, ebuild_id, arch_id, mask_state_id, source_id
     ),
     PRIMARY KEY (id)
 );
