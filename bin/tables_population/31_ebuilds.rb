@@ -16,7 +16,7 @@ script = Script.new({
 })
 
 def parse_ebuild(params)
-    PLogger.debug("Ebuild: #{params["filename"]}")
+    PLogger.info("Ebuild: #{params["filename"]}")
 
     ebuild = Ebuild.new(Utils.create_ebuild_params(params))
     Database.insert({

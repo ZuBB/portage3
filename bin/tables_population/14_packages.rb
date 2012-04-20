@@ -28,9 +28,7 @@ def packages_block(params)
         "table" => params["table"],
         "data" => {
             "category_id" => package.category_id(),
-            "package_name" => package.package(),
-            "description" => package.package_description(),
-            "homepage" => package.package_homepage()
+            "package_name" => package.package()
         }
     })
 end
