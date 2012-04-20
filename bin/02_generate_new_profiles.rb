@@ -63,3 +63,6 @@ FileUtils.cd(Utils.get_full_tree_path(options))
 `cp -r profiles/default/linux/x86/* profiles_v2/base/x86/linux/default/ 2> /dev/null`
 # adding subprofiles for amd64
 `cp -r profiles/default/linux/amd64/* profiles_v2/base/amd64/linux/default/ 2> /dev/null`
+
+# folder with expand use flags
+`cp -r profiles/desc -t profiles_v2/`
