@@ -67,17 +67,42 @@ create table eapis (
     PRIMARY KEY (id)
 );
 
-create table restriction_types (
+/*create table restriction_types (
     id INTEGER,
     restriction VARCHAR NOT NULL UNIQUE,
     -- sql_query VARCHAR NOT NULL UNIQUE,
     -- CONSTRAINT idx1_unq UNIQUE (restriction, sql_query),
     PRIMARY KEY (id)
-);
+);*/
 
 create table mask_states (
     id INTEGER,
     mask_state VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table use_flags_states (
+    id INTEGER,
+    flag_state VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table use_flags_types (
+    id INTEGER,
+    flag_type VARCHAR NOT NULL UNIQUE,
+    description VARCHAR NOT NULL UNIQUE,
+    source VARCHAR NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table use_flags (
+    id INTEGER,
+    flag_name VARCHAR NOT NULL,
+    flag_description VARCHAR NOT NULL,
+    flag_type_id INTEGER NOT NULL,
+    package_id INTEGER,
+    FOREIGN KEY (flag_type_id) REFERENCES use_flags_types(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
 
@@ -92,35 +117,8 @@ create table packages (
     id INTEGER,
     category_id INTEGER NOT NULL,
     package_name VARCHAR NOT NULL,
-    description VARCHAR NOT NULL,
-    homepage VARCHAR NOT NULL,
     CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
-    PRIMARY KEY (id)
-);
-
-create table use_flags_types (
-    id INTEGER,
-    flag_type VARCHAR NOT NULL UNIQUE,
-    description VARCHAR NOT NULL UNIQUE,
-    source VARCHAR NOT NULL,
-    PRIMARY KEY (id)
-);
-
-create table use_flags_states (
-    id INTEGER,
-    flag_state VARCHAR NOT NULL UNIQUE,
-    PRIMARY KEY (id)
-);
-
-create table use_flags (
-    id INTEGER,
-    flag_name VARCHAR NOT NULL,
-    flag_description VARCHAR NOT NULL,
-    flag_type_id INTEGER NOT NULL,
-    package_id INTEGER,
-    FOREIGN KEY (flag_type_id) REFERENCES use_flags_types(id),
-    FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
 
@@ -180,6 +178,61 @@ create table ebuilds (
 
 CREATE INDEX ebuilds_idx2 on ebuilds (package_id);
 
+create table package_descriptions (
+    id INTEGER,
+    description VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table descriptions2ebuilds (
+    id INTEGER,
+    description_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    CONSTRAINT idx1_unq UNIQUE (description_id, package_id, ebuild_id),
+    FOREIGN KEY (description_id) REFERENCES package_descriptions(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    PRIMARY KEY (id)
+);
+
+create table package_homepages (
+    id INTEGER,
+    homepage VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table homepages2ebuilds (
+    id INTEGER,
+    homepage_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    CONSTRAINT idx1_unq UNIQUE (homepage_id, package_id, ebuild_id),
+    FOREIGN KEY (homepage_id) REFERENCES package_homepages(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    PRIMARY KEY (id)
+);
+
+create table package_licenses (
+    id INTEGER,
+    license VARCHAR NOT NULL UNIQUE,
+    -- url/hdd location ?
+    PRIMARY KEY (id)
+);
+
+create table licenses2ebuilds (
+    id INTEGER,
+    license_id INTEGER NOT NULL,
+    package_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    CONSTRAINT idx1_unq UNIQUE (license_id, package_id, ebuild_id),
+    FOREIGN KEY (license_id) REFERENCES package_licenses(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    PRIMARY KEY (id)
+);
+
 create table package_keywords (
     id INTEGER,
     package_id INTEGER NOT NULL,
@@ -231,20 +284,7 @@ create table use_flags2ebuilds (
     PRIMARY KEY (id)
 );
 
-/*create table licences (
-    id INTEGER PRIMARY KEY,
-    license_name VARCHAR NOT NULL
-    -- url VARCHAR ?,
-    -- content blob zipped data
-);
-
-create table licences2ebuilds (
-    id INTEGER PRIMARY KEY,
-    license_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL
-);
-
-create table sets (
+/*create table sets (
     id INTEGER PRIMARY KEY,
     set_name VARCHAR NOT NULL
 );
