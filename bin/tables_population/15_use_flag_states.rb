@@ -9,7 +9,7 @@
 $:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 require 'script'
 
-FLAG_STATES = ['disabled', 'enabled', 'masked', 'forced']
+FLAG_STATES = ['masked', 'disabled', 'enabled', 'forced']
 
 script = Script.new({
     "table" => "use_flags_states",
