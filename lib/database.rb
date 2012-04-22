@@ -4,6 +4,7 @@
 # Initial Author: Vasyl Zuzyak, 04/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'rubygems' unless Object.const_defined?(:Rubygems)
 require 'sqlite3' unless Object.const_defined?(:SQLite3)
  
 module Database
