@@ -6,14 +6,14 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, 01/11/12
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '../../lib/common'))
 require 'optparse'
 require 'rubygems'
 require 'sqlite3'
-require 'tools'
+require 'utils'
 
 # hash with options
-options = Hash.new.merge!(OPTIONS)
+options = Hash.new.merge!(Utils::OPTIONS)
 
 OptionParser.new do |opts|
     # help header
@@ -28,8 +28,8 @@ OptionParser.new do |opts|
 
     #TODO do we need a setting `:root` option here?
     # parsing 'quite' option if present
-    opts.on("-q", "--quiet", "Quiet mode") do |value|
-        options[:quiet] = true
+    opts.on("-d", "--debug", "Debug mode") do |value|
+        options["debug"] = true
     end
 
     # parsing 'help' option if present
@@ -40,56 +40,50 @@ OptionParser.new do |opts|
 end.parse!
 
 # get true portage home
-portage_home = get_full_tree_path(options)
 if options[:db_filename].nil?
     # get last created database
-    options[:db_filename] = get_last_created_database(options)
+    options[:db_filename] = Utils.get_last_created_database(options)
 end
 
 sql_query01 = "SELECT value FROM system_settings WHERE param='arch';"
 sql_query02 = "SELECT value FROM system_settings WHERE param='keyword';"
+
 sql_query1 = "SELECT package_id FROM installed_apps"
 sql_query2 = <<SQL
-SELECT ebuilds.package_id, ebuilds.id, categories.category_name, packages.package_name, ebuilds.version
-FROM categories, packages, ebuilds
-WHERE
-    ebuilds.package_id=? AND
-    ebuilds.package_id = packages.id AND
-    packages.category_id = categories.id
-ORDER BY ebuilds.version_order DESC
+SELECT e.id, c.category_name, p.package_name, e.version
+FROM ebuilds e
+JOIN packages p ON p.id=e.package_id
+JOIN categories c ON c.id=p.category_id
+WHERE e.package_id=?
+ORDER BY e.version_order DESC
 SQL
 
 sql_query3 = <<SQL
-SELECT package_keywords.package_id, package_keywords.version
-FROM package_keywords
+SELECT ebuild_id
+FROM ebuild_keywords
 WHERE
-    package_keywords.package_id=? AND
-    package_keywords.version=? AND
-    package_keywords.arch_id = ? AND
-    package_keywords.keyword_id = ?
-ORDER BY package_keywords.id DESC
+    ebuild_id=? AND
+    arch_id = ? AND
+    keyword_id = ?
+ORDER BY id DESC
 LIMIT 1
 SQL
 
-#SELECT COUNT(*)
 sql_query41 = <<SQL
-SELECT package_masks.package_id, package_masks.version
-FROM package_masks
+SELECT count(id)
+FROM ebuild_masks
 WHERE
-    package_masks.package_id = ? and
-    package_masks.version = ? and
-    package_masks.arch_id = ?
+    ebuild_id = ? and
+    mask_state_id = (SELECT id FROM mask_states WHERE mask_state='masked')
 SQL
 
 sql_query42 = <<SQL
-SELECT package_masks.source_id
-FROM mask_states, package_masks
+SELECT MAX(source_id)
+FROM ebuild_masks
 WHERE
-    package_masks.package_id = ? AND
-    package_masks.version = ? AND
-    package_masks.arch_id = ? AND
-    package_masks.mask_state_id =
-        (SELECT id FROM mask_states WHERE mask_state=?)
+    ebuild_id = ? AND
+    arch_id = ? AND
+    mask_state_id = (SELECT id FROM mask_states WHERE mask_state=?)
 SQL
 
 found = nil
@@ -97,25 +91,36 @@ database = SQLite3::Database.new(options[:db_filename])
 arch = database.get_first_value(sql_query01)
 keyword = database.get_first_value(sql_query02)
 database.execute(sql_query1) { |row_l1|
+    p '='*40 if options['debug']
+    p row_l1 if options['debug']
     database.execute(sql_query2, row_l1[0]) { |row_l2|
+        p '*'*30 if options['debug']
+        p row_l2 if options['debug']
         found = false
-        database.execute(sql_query3, row_l2[0], row_l2[1], arch, keyword) { |row_l3|
-            res0 = database.execute(sql_query41, row_l3[0], row_l3[1], arch)
-            if res0.size == 0
-                puts "#{row_l2[2]}/#{row_l2[3]}-#{row_l2[4]}"
+        database.execute(sql_query3, row_l2[0], arch, keyword) { |row_l3|
+            p '+'*20 if options['debug']
+            p row_l3 if options['debug']
+            res0 = database.get_first_value(sql_query41, row_l2[0])
+            p "res0: #{res0}" if options['debug']
+            if res0.to_i == 0
+                p '"no masked" match' if options['debug']
+                puts "#{row_l2[1]}/#{row_l2[2]}-#{row_l2[3]}"
                 found = true
                 next
             end
 
             res1 = database.get_first_value(
-                sql_query42, row_l3[0], row_l3[1], arch, 'unmasked'
+                sql_query42, row_l2[0], arch, 'unmasked'
             ) || 0
+            p "res1: #{res1}" if options['debug']
             res2 = database.get_first_value(
-                sql_query42, row_l3[0], row_l3[1], arch, 'masked'
+                sql_query42, row_l2[0], arch, 'masked'
             ) || 0
+            p "res2: #{res2}" if options['debug']
 
-            if res1 > res2
-                puts "#{row_l2[2]}/#{row_l2[3]}-#{row_l2[4]}"
+            if res1.to_i > res2.to_i
+                p '"unmasked" match' if options['debug']
+                puts "#{row_l2[1]}/#{row_l2[2]}-#{row_l2[3]}"
                 found = true
             end
         }
