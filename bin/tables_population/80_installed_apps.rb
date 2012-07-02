@@ -6,40 +6,49 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
 
-script = Script.new({
-    "script" => __FILE__,
-    "sql_query" => <<SQL
-INSERT INTO installed_apps
-(package_id)
-VALUES ((
-    SELECT packages.id
-    FROM packages, categories
-    WHERE
-        categories.category_name=? and
-        categories.id=packages.category_id and
-        packages.package_name=?
-));
-SQL
-})
+def get_data(params)
+    # query
+    results = []
 
-def fill_table(params)
     filename = "/var/lib/portage/world"
-    file_content = IO.read(filename).to_a rescue []
+    return results unless File.exist?(filename)
+
     # walk through all use lines in that file
-    file_content.each do |line|
+    IO.foreach(filename) do |line|
         # lets trim newlines and insert
         line.chomp!()
         category_name = line.split('/')[0]
         package_name = line.split('/')[1]
-        Database.insert({
-            "sql_query" => params["sql_query"],
-            "values" => [category_name, package_name]
-        })
+        results << [category_name, package_name]
     end
+
+    return results
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+    Database.insert({
+        "values" => [params['value'][0], params['value'][1]],
+        "sql_query" => <<-SQL
+            INSERT INTO installed_apps
+            (package_id)
+            VALUES ((
+                SELECT p.id
+                FROM packages p
+                JOIN categories c ON p.category_id=c.id
+                WHERE c.category_name=? and p.package_name=?
+            ))
+        SQL
+    })
+end
+
+script = Script.new({
+    "script" => __FILE__,
+    'thread_code' => method(:process),
+    'data_source' => method(:get_data),
+})
 

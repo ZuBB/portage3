@@ -6,10 +6,11 @@
 # Initial Author: Vasyl Zuzyak, 04/04/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 
-TYPES = [
+USEFLAG_TYPES = [
     {
         "type" => "global",
         "description" => "Global USE Flags (present in at least 5 packages)",
@@ -32,23 +33,25 @@ TYPES = [
     }
 ]
 
-script = Script.new({
-    "table" => "use_flags_types",
-    "script" => __FILE__
-})
-
-def fill_table(params)
-    TYPES.each do |item|
-        Database.insert({
-            "table" => params["table"],
-            "data" => {
-                "flag_type" => item["type"],
-                "description" => item["description"],
-                "source" => item["source"]
-            }
-        })
-    end
+def get_data(params)
+    USEFLAG_TYPES
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+    Database.insert({
+        "table" => params["table"],
+        "data" => {
+            "flag_type" => params["value"]["type"],
+            "description" => params["value"]["description"],
+            "source" => params["value"]["source"]
+        }
+    })
+end
+
+script = Script.new({
+    "script" => __FILE__,
+    "table" => "use_flags_types",
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
+})
 

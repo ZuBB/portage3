@@ -6,7 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 02/06/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
 require 'fileutils'
 require 'utils'
 

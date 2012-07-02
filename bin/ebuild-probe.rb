@@ -6,7 +6,8 @@
 # Initial Author: Vasyl Zuzyak, 04/09/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'portage'))
 require 'optparse'
 require 'database'
 require 'plogger'
@@ -92,6 +93,11 @@ OptionParser.new do |opts|
     end
 
     # parsing 'quite' option if present
+    opts.on("-U", "--use-flags", "Show use flags") do |value|
+        options[:use] = value
+    end
+
+    # parsing 'quite' option if present
     opts.on("-2", "--2way-parse", "Use both parse methods") do |value|
         options[:parse2] = true
     end
@@ -124,6 +130,15 @@ data = {
     "method" => options[:method],
 }
 
+# hash with data
+data = {
+	"value" => {
+		"parent_dir" => file[0..file.rindex('/') - 1],
+		"value" => file[file.rindex('/') + 1..-1],
+	},
+    "method" => options[:method],
+}
+
 ebuild = Ebuild.new(data)
 
 PLogger.init()
@@ -133,13 +148,14 @@ puts "category: #{ebuild.category}" if options[:category]
 puts "category_id: #{ebuild.category_id}" if options[:category_id] && options[:db_filename]
 puts "package: #{ebuild.package}" if options[:package]
 puts "package_id: #{ebuild.package_id}" if options[:package_id] && options[:db_filename]
-puts "description: #{ebuild.description}" if options[:description]
-puts "homepage: #{ebuild.homepage}" if options[:homepage]
-puts "mtime: #{ebuild.mtime}" if options[:mtime]
-puts "mauthor: #{ebuild.author}" if options[:mauthor]
-puts "version: #{ebuild.version}" if options[:version]
-puts "slot: #{ebuild.slot}" if options[:slot]
-puts "license: #{ebuild.license}" if options[:license]
-puts "eapi: #{ebuild.eapi}" if options[:eapi]
-puts "eapi_id: #{ebuild.eapi_id}" if options[:eapi_id] && options[:db_filename]
+puts "description: #{ebuild.ebuild_description}" if options[:description]
+puts "homepage: #{ebuild.ebuild_homepage}" if options[:homepage]
+puts "mtime: #{ebuild.ebuild_mtime}" if options[:mtime]
+puts "mauthor: #{ebuild.ebuild_author}" if options[:mauthor]
+puts "version: #{ebuild.ebuild_version}" if options[:version]
+puts "slot: #{ebuild.ebuild_slot}" if options[:slot]
+puts "license: #{ebuild.ebuild_license}" if options[:license]
+puts "eapi: #{ebuild.ebuild_eapi}" if options[:eapi]
+puts "eapi_id: #{ebuild.ebuild_eapi_id}" if options[:eapi_id] && options[:db_filename]
+puts "use flags: #{ebuild.ebuild_use_flags}" if options[:use]
 

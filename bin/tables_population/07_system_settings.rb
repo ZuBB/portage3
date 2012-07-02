@@ -6,18 +6,12 @@
 # Initial Author: Vasyl Zuzyak, 02/07/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 require 'parser'
 
-script = Script.new({
-    "script" => __FILE__,
-    "table" => "system_settings",
-    "helper_query1" => "SELECT id FROM arches WHERE arch_name=?",
-    "helper_query2" => "SELECT id FROM keywords WHERE keyword=?"
-})
-
-def fill_table(params)
+def get_data(params)
     accept_keywords = Parser.get_multi_line_ini_value(
         (IO.read('/etc/make.conf').to_a rescue []),
         'ACCEPT_KEYWORDS'
@@ -30,23 +24,30 @@ def fill_table(params)
 
     keyword_name = accept_keywords.index('~') == 0 ? 'unstable' : 'stable'
     arch_name = accept_keywords.sub(/^~/, '')
+	return [
+		"arch" + ':' + Database.get_1value(
+			"SELECT id FROM arches WHERE arch_name=?", arch_name
+		).to_s,
+		"keyword" + ':' + Database.get_1value(
+			"SELECT id FROM keywords WHERE keyword=?", keyword_name
+		).to_s
+	]
+end
 
+def process(params)
     Database.insert({
         "table" => params["table"],
         "data" => {
-            "param" => 'arch_id',
-            "value" => Database.get_1value(params["helper_query1"], arch_name)
-        }
-    })
-
-    Database.insert({
-        "table" => params["table"],
-        "data" => {
-            "param" => 'keyword_id',
-            "value" => Database.get_1value(params["helper_query2"], keyword_name)
+            "param" => params["value"].split(':')[0],
+            "value" => params["value"].split(':')[1]
         }
     })
 end
 
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    "script" => __FILE__,
+    "table" => "system_settings",
+    "data_source" => method(:get_data),
+    "thread_code" => method(:process)
+})
 

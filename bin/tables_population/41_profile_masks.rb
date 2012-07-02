@@ -6,21 +6,29 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
-require 'fileutils'
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
+require 'fileutils'
 
-script = Script.new({
-    "script" => __FILE__,
-    "sql_query" => <<SQL
-INSERT INTO package_masks
-(package_id, ebuild_id, arch_id, source_id, mask_state_id)
-VALUES (
-    ?, ?, ?, ?,
-    (SELECT id FROM mask_states WHERE mask_state=?)
-)
-SQL
-})
+def get_data(params)
+    # query
+    results = []
+    FileUtils.cd(params['profiles2_home'])
+
+    # walk through all use flags in that file
+    Dir['**/package.mask'].each do |filename|
+        # skip dirs that has 'deprecated' file in it
+        next if File.exist?(File.join(
+            params['profiles2_home'], filename.sub('package.mask', 'deprecated')
+        ))
+
+        results << filename
+    end
+
+    return results
+end
 
 def parse_line(line)
     result = {}
@@ -84,96 +92,112 @@ def get_arch_id(file)
     dir = File.dirname(file) + '/'
 
     if dir == 'base/'
-        Database.db().execute("SELECT id FROM arches").flatten
+        Database.execute("SELECT id FROM arches").flatten
     elsif dir.count('/') == 2
-        sql_query = <<SQL
-SELECT id
-FROM arches
-WHERE architecture_id=
-    (SELECT id from architectures where architecture=?)
-SQL
-        Database.db().execute(sql_query, dir.split('/')[1])
+        sql_query = <<-SQL
+            SELECT id
+            FROM arches
+            WHERE architecture_id=
+                (SELECT id from architectures where architecture=?)
+        SQL
+        Database.execute(sql_query, dir.split('/')[1]).flatten
     else
-        sql_query = <<SQL
-SELECT id
-FROM arches
-WHERE
-    architecture_id=(SELECT id FROM architectures WHERe architecture=?) AND
-    platform_id=(SELECT id FROM platforms WHERe platform_name=?)
-SQL
-        Database.db().execute(sql_query, dir.split('/')[1], dir.split('/')[2]).flatten
+        sql_query = <<-SQL
+            SELECT id
+            FROM arches
+            WHERE
+                architecture_id=(
+                    SELECT id FROM architectures WHERe architecture=?
+                ) AND
+                platform_id=(SELECT id FROM platforms WHERe platform_name=?)
+        SQL
+        Database.execute(sql_query, [dir.split('/')[1], dir.split('/')[2]]).flatten
     end
 end
 
-def fill_table(params)
-    filepath = File.join(params["portage_home"], "profiles_v2")
-    FileUtils.cd(filepath)
+def process(params)
+    PLogger.debug("File: #{params["value"]}")
+    filename = params["value"]
 
-    # walk through all use flags in that file
-    Dir['**/package.mask'].each do |filename|
-        # skip dirs that has 'deprecated' file in it
-        next if File.exist?(File.join(
-            filepath, filename.sub('package.mask', 'deprecated')
-        ))
+    IO.foreach(filename) do |line|
+        # skip comments
+        next if line.index('#') == 0
+        # skip empty lines
+        next if line.chomp!().empty?
 
-        File.open(filename, "r") do |infile|
-            while (line = infile.gets)
-                # skip comments
-                next if line.index('#') == 0
-                # skip empty lines
-                next if line.chomp!().empty?
+        result = parse_line(line)
 
-                result = parse_line(line)
+        result['package_id'] = Database.select(
+            "SELECT p.id "\
+            "FROM packages p "\
+            "JOIN categories c on p.category_id=c.id "\
+            "WHERE c.category_name=? and p.package_name=?",
+             [result['category'], result['package']]
+        ).flatten()[0]
 
-                result['package_id'] = Database.get_1value(
-                    "SELECT packages.id FROM packages, categories WHERE categories.category_name=? and packages.package_name=? and packages.category_id = categories.id",
-                     [result['category'], result['package']]
-                )
+        if result['package_id'].nil?
+            # means category/package that already does not exist in portage
+            PLogger.warn(
+                "File `#{filename}` contains package "\
+                "(#{result['category']}/#{result['package']}) "\
+                "that already is not present in portage"
+            )
+            next 
+        end
 
-                if result['package_id'].nil?
-                    # TODO
-                    next 
-                end
+        result_set = nil
 
-                result_set = nil
+        if result["version"] == '*'
+            local_query = "SELECT id FROM ebuilds WHERE package_id=?"
+            result_set = Database.execute(local_query, result["package_id"]).flatten
+        elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
+            version_like = result["version"].sub('*', '')
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+            result_set = Database.execute(local_query, result["package_id"]).flatten
+        else
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
+            result_set = Database.execute(local_query, [result["package_id"], result["version"]]).flatten
+        end
 
-                if result["version"] == '*'
-                    local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-                    result_set = Database.db().execute(local_query, result["package_id"]).flatten
-                elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
-                    version_like = result["version"].sub('*', '')
-                    local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-                    result_set = Database.db().execute(local_query, result["package_id"]).flatten
-                else
-                    local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-                    result_set = Database.db().execute(local_query, result["package_id"], result["version"]).flatten
-                end
+        result["arch"] = get_arch_id(filename)
 
-                result["arch"] = get_arch_id(filename)
-
-                if result_set.size() > 0
-                    result_set.each { |version|
-                        result['arch'].each { |arch|
-                            Database.insert({
-                                "sql_query" => params["sql_query"],
-                                "values" => [
-                                    result['package_id'],
-                                    version,
-                                    arch,
-                                    get_source_id(filename),
-                                    result["mask_state"]
-                            ]
-                            })
-                        }
-                    }
-                else
-                    # means =category/atom-version that
-                    # already does not exist in portage
-                    # TODO handles this
-                end
-            end
+        if result_set.size() > 0
+            result_set.each { |version|
+                result['arch'].each { |arch|
+                    Database.insert({
+                        "values" => [
+                            version,
+                            arch,
+                            get_source_id(filename),
+                            result["mask_state"]
+                        ],
+                        "sql_query" => <<-SQL
+                            INSERT INTO ebuild_masks
+                            (ebuild_id, arch_id, source_id, mask_state_id)
+                            VALUES (
+                                ?, ?, ?,
+                                (SELECT id FROM mask_states WHERE mask_state=?)
+                            )
+                        SQL
+                    })
+                }
+            }
+        else
+            # means =category/package-version that already does not exist in portage
+            PLogger.warn(
+                "File `#{filename}` contains atom "\
+                "(#{result["version_restrictions"]}"\
+                "#{result['category']}/#{result['package']}"\
+                "-#{result["version"]}) "\
+                "that already is not present in portage"
+            )
         end
     end
 end
 
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    'script' => __FILE__,
+    'thread_code' => method(:process),
+    'data_source' => method(:get_data),
+})
+

@@ -3,32 +3,33 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 01/16/12
+# Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
 lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
 $:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 $:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
-require 'package'
+require 'repository'
 
 def process(params)
-    PLogger.info("Package: #{params["value"]}")
-    package = Package.new(params)
+    PLogger.info("Repository: #{params["value"]}")
+    repository = Repository.new(params)
 
     Database.insert({
         "table" => params["table"],
         "data" => {
-            "category_id" => package.category_id(),
-            "package_name" => package.package()
+            'repository_name' => repository.repository(),
+            'parent_folder' => repository.repository_pd(),
+            'repository_folder' => repository.repository_fs()
         }
     })
 end
 
 script = Script.new({
+    "table" => "repositories",
     "script" => __FILE__,
-    "table" => "packages",
     "thread_code" => method(:process),
-    "data_source" => Package.method(:get_packages)
+    "data_source" => Repository.method(:get_repositories)
 })
 

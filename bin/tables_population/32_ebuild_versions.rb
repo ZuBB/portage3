@@ -6,81 +6,65 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, 01/06/12
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
+require 'ebuild'
 
-script = Script.new({
-    "script" => __FILE__,
-    # query for getting all versions of current package
-    "sql_query" => "UPDATE ebuilds SET version_order=? WHERE id=?",
-    # query for getting all versions of current package
-    "helper_query2" => "SELECT id,version FROM ebuilds WHERE package_id=?",
-    # query for getting all packages
-    "helper_query1" => <<SQL
-SELECT c.category_name, p.package_name, p.id
-from categories c, packages p
-WHERE p.category_id=c.id;
-SQL
-})
+def get_data(params)
+    # query
+    results = []
+    # query
+    sql_query = <<-SQL
+        SELECT c.category_name, p.package_name, p.id
+        FROM packages p
+        INNER JOIN categories c on p.category_id=c.id
+    SQL
 
-def get_eix_versions(atom)
-    versions_line = %x[eix -x --end #{atom} | grep 'Available versions']
-
-    # drop wording at start
-    versions_line.sub!(/^\s*Available versions:/, "")
-
-    # drop use flags
-    versions_line.sub!(/\{[^\}]+\}\s*$/, "") if versions_line.match(/\}\s*$/)
-
-    # get versions and make it looks nice
-    versions_line.split(' ').map! { |version|
-        version.sub!(/!.+/, '')  if version.match(/!.+/)
-        version.sub!(/\([^\)]+\)\s*$/, '') if version.match(/\)\s*$/)
-        version.sub!(/\+i$/, '') if version.match(/\+i$/)
-        version.sub!(/\+v$/, '') if version.match(/\+v$/)
-        version
-    }
-end
-
-def get_portage_versions(atom)
-    versions = []
-    # empty array for versions only
-    %x[../list_package_ebuilds.py #{atom}].split("\n").each { |line|
-        versions << line[atom.size + 1..-1]
-    }
-
-    return versions
-end
-
-def fill_table(params)
     # lets walk through all packages
-    Database.db().execute(params["helper_query1"]) do |package_row|
-        # get atom naem
-        atom = "#{package_row[0]}/#{package_row[1]}"
-        # get versions sorted by eix
-        eix_versions = get_eix_versions(atom)
+    Database.select(sql_query).each { |row|
+        results << {
+            "category" => row[0],
+            "package" => row[1],
+            "package_id" => row[2],
+        }
+    }
 
-        PLogger.info("Package #{atom}")
+    return results
+end
 
-        # lets get them
-        Database.db().execute(params["helper_query2"], [package_row[2]]) do |ebuild_row|
-            eix_index = eix_versions.index { |version|
-                version.end_with?(ebuild_row[1])
-            }
+def process(params)
+    # query for getting all versions of current package
+    sql_query1 = 'SELECT id,version FROM ebuilds WHERE package_id=?'
+    # query for updating
+    sql_query2 = 'UPDATE ebuilds SET version_order=? WHERE id=?'
+    # get atom name
+    atom = params['value']['category'] + '/' + params['value']['package']
+    PLogger.info("Package #{atom}")
 
-            unless eix_index.nil?
-                PLogger.info("Ebuild id: #{ebuild_row[0]}, index: #{eix_index + 1}")
-                Database.insert({
-                    "sql_query" => params["sql_query"],
-                    "values" => [eix_index + 1, ebuild_row[0]]
-                })
-            else
-                PLogger.warn("Version #{ebuild_row[1]} - 'cache miss'")
-                PLogger.info("eix versions #{eix_versions.join(', ')}")
-            end
+    # get all versions of the package, sorted by versions
+    versions = PackageModule.get_package_versions(atom)
+
+    # lets get them
+    Database.select(sql_query1, params['value']['package_id']).each do |row|
+        index = versions.index { |version| version == row[1] }
+
+        if !index.nil?
+            # TODO: replace with bunch update
+            Database.execute(sql_query2, [index + 1, row[0]])
+        else
+            PLogger.warn("Version #{row[1]} - 'cache miss'")
+            PLogger.info("versions #{versions.join(', ')}")
         end
     end
 end
 
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    "table" => "ebuilds",
+    "script" => __FILE__,
+    "thread_code" => method(:process),
+    "data_source" => method(:get_data),
+    "max_threads" => 4
+})
 

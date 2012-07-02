@@ -6,25 +6,27 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 
 FLAG_STATES = ['masked', 'disabled', 'enabled', 'forced']
 
-script = Script.new({
-    "table" => "use_flags_states",
-    "script" => __FILE__
-})
-
-def fill_table(params)
-    # array of all keywords
-    FLAG_STATES.each { |state|
-        Database.insert({
-            "table" => params["table"],
-            "data" => {"flag_state" => state}
-        })
-    }
+def get_data(params)
+    FLAG_STATES
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+    Database.insert({
+        "table" => params["table"],
+        "data" => {"flag_state" => params["value"]}
+    })
+end
+
+script = Script.new({
+    "table" => "use_flags_states",
+    "script" => __FILE__,
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
+})
 

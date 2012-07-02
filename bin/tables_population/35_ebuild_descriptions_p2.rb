@@ -3,7 +3,7 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 03/23/12
+# Initial Author: Vasyl Zuzyak, 04/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
 lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
@@ -13,7 +13,7 @@ require 'script'
 require 'ebuild'
 
 def get_data(params)
-    # query
+    # results
     results = []
     # query
     sql_query = <<-SQL
@@ -41,34 +41,24 @@ def get_data(params)
 end
 
 def process(params)
-    PLogger.debug("Ebuild: #{params["value"]}")
+    PLogger.info("Ebuild: #{params["value"]}")
     ebuild = Ebuild.new(params)
-    ebuild.ebuild_use_flags.split.each do |flag|
-        # app-doc/pms section 8.2
-        flag_state = flag[0].chr == '+' ? 1 : 0
-        flag_name = flag.sub(/^(-|\+)/, '')
 
-        Database.insert({
-            "values" => [
-                ebuild.package_id,
-                ebuild.ebuild_id,
-                flag_name,
-                flag_state,
-                1 # TODO source_id
-            ],
-            "sql_query" => <<SQL
-insert into use_flags2ebuilds
-(package_id, ebuild_id, use_flag_id, flag_state, source_id)
-VALUES (?, ?, (SELECT id FROM use_flags WHERE flag_name=?), ?, ?);
-SQL
-        })
-    end
+    Database.insert({
+        "values" => [ebuild.ebuild_description(), ebuild.ebuild_id()],
+        "sql_query" => <<-SQL
+            UPDATE ebuilds
+            SET description_id=(
+                select id from ebuild_descriptions where description=?
+            )
+            WHERE id=?
+        SQL
+    })
 end
 
 script = Script.new({
     "script" => __FILE__,
     "thread_code" => method(:process),
-    "data_source" => Ebuild.method(:get_data),
-    #"max_threads" => 3
+    "data_source" => method(:get_data),
 })
 

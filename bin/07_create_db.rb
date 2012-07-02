@@ -5,10 +5,9 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
 require 'optparse'
-require 'rubygems'
-require 'sqlite3'
+require 'database'
 require 'utils'
 
 # hash with default settings

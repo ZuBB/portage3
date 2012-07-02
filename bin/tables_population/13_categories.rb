@@ -6,33 +6,29 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
 require 'category'
 
-script = Script.new({
-    "table" => "categories",
-    "script" => __FILE__
-})
-
-def insert_category(params)
-    PLogger.info("Category: #{params["category"]}")
-    category = Category.new(Utils.create_ebuild_params(params))
+def process(params)
+    PLogger.info("Category: #{params['value']}")
+    category = Category.new(params)
 
     Database.insert({
-        "table" => params["table"],
-        "data" => {
-            "category_name" => category.category(), 
-            "description" => category.category_description()
+        'table' => params['table'],
+        'data' => {
+            'category_name' => category.category(), 
+            'description' => category.category_description()
         }
     })
 end
 
-def fill_table(params)
-    Utils.walk_through_categories(
-        {"block1" => method(:insert_category)}.merge!(params)
-    )
-end
-
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    'table' => 'categories',
+    'script' => __FILE__, # TODO name it 'parent_script' ?
+    'thread_code' => method(:process),
+    'data_source' => Category.method(:get_categories)
+})
 
