@@ -1,2 +1,3 @@
 misc/*
-!misc/infos
+!misc/issues*
+!misc/man 5 portage
