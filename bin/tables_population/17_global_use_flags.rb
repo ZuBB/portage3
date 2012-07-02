@@ -6,50 +6,68 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
+require 'useflag'
 
-script = Script.new({
-    "table" => "use_flags",
-    "script" => __FILE__,
-    "helper_query1" => "SELECT id FROM use_flags_types WHERE flag_type=?"
-})
-
-def fill_table(params)
+def get_data(params)
+    # results go here
+    results = []
     # pattern for flag, its description
-    pattern = Regexp.new("([\\w\\+\\-]+)(?: - )(.*)")
+    pattern = Regexp.new('([\\w\\+\\-]+)(?: - )(.*)')
     # flag type id
-    flag_type_id = Database.get_1value(params["helper_query1"], "global")
+    flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'global')
 
     # read use flags and process each line
-    IO.foreach(File.join(params["portage_home"], "profiles_v2", "use.desc")) do |line|
+    IO.foreach(File.join(params['profiles2_home'], 'use.desc')) do |line|
         # lets trim newlines
         line.chomp!()
         # skip comments or empty lines
         next if line.index('#') == 0 or line.empty?
-
         # lets get flag and desc
         match = pattern.match(line)
 
-        Database.insert({
-            "table" => params["table"],
-            "data" => {
-                "flag_name" => match[1],
-                "flag_description" => match[2],
-                "flag_type_id" => flag_type_id
-            }
-        })
+        results << {
+            'flag_name' => match[1],
+            'flag_description' => match[2],
+            'flag_type_id' => flag_type_id
+        }
     end
 
-    sql_query = "SELECT COUNT(id) FROM #{params["table"]} WHERE flag_type_id=#{flag_type_id}"
+    return results
+end
+
+def process(params)
+    Database.insert({
+        'table' => params['table'],
+        'data' => {
+            'flag_name' => params['value']['flag_name'],
+            'flag_description' => params['value']['flag_description'],
+            'flag_type_id' => params['value']['flag_type_id']
+        }
+    })
+end
+
+def check_global_flag_duplicates()
+    flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'global')
+    sql_query = "SELECT COUNT(id) FROM use_flags WHERE flag_type_id=#{flag_type_id}"
     total_global_flags = Database.db().get_first_value(sql_query)
-    sql_query = "SELECT COUNT(DISTINCT flag_name) FROM #{params["table"]} WHERE flag_type_id=#{flag_type_id}"
-    unique_global_flags = Database.db().get_first_value(sql_query)
+    sql_query = "SELECT COUNT(DISTINCT flag_name) FROM use_flags WHERE flag_type_id=#{flag_type_id}"
+    unique_global_flags = Database.get_1value(sql_query)
 
     if total_global_flags != unique_global_flags
-        PLogger.error("Its very likely that global flags have duplicates")
+        PLogger.error('Its very likely that global flags have duplicates')
     end
 end
 
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    'script' => __FILE__,
+    'table' => 'use_flags',
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
+})
 
+# have to comment out this as it runs query on closed db
+#check_global_flag_duplicates()

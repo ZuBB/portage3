@@ -6,10 +6,41 @@
 # Initial Author: Vasyl Zuzyak, 01/27/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 
+def get_data(params)
+    # result here
+    arches = []
+    # name of the file to be processed
+    filename = File.join(params["profiles2_home"], "arch.list")
+
+	# walk through all use flags in that file
+	(IO.read(filename).to_a rescue []).each do |line|
+        # lets trim newlines
+        line.chomp!()
+        # skip empty lines and comments
+        next if line.empty? or line.index('#') == 0
+        # lets split flag and its description
+        arch_stuff = line.split('-')
+        # remember
+		arches << [line, arch_stuff[0], arch_stuff[1] || 'linux']
+    end
+
+	return arches
+end
+
+def process(params)
+	Database.insert({
+		"sql_query" => params["sql_query"],
+		"values" => params["value"]
+	})
+end
+
 script = Script.new({
+    "data_source" => method(:get_data),
+    "thread_code" => method(:process),
     "script" => __FILE__,
     "sql_query" => <<SQL
 INSERT INTO arches
@@ -21,25 +52,4 @@ VALUES (
 );
 SQL
 })
-
-def fill_table(params)
-    filename = File.join(params["portage_home"], "profiles", "arch.list")
-    # walk through all use flags in that file
-        (IO.read(filename).to_a rescue []).each do |line|
-        # lets trim newlines
-        line.chomp!()
-        # skip empty lines and comments
-        next if line.empty? or line.index('#') == 0
-
-        # lets split flag and its description
-        arch_stuff = line.split('-')
-        # insert
-        Database.insert({
-            "sql_query" => params["sql_query"],
-            "values" => [line, arch_stuff[0], arch_stuff[1] || 'linux']
-        })
-    end
-end
-
-script.fill_table_X(method(:fill_table))
 

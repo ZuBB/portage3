@@ -6,11 +6,46 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
+
+def get_data(params)
+    # result here
+    profiles = []
+    # name of the file to be processed
+    filename = File.join(params["profiles2_home"], "profiles.desc")
+
+    # walk through all use flags in that file
+    (IO.read(filename).to_a rescue []).each do |line|
+        # stop if we face with header of 'prefix profiles'
+        break if line.include?("Gentoo Prefix profiles")
+        # skip comments
+        next if line.start_with?('# uclibc')
+        next if line.start_with?('#') && !line.include?('uclibc')
+        # skip empty lines
+        next unless line.match(/\S+/)
+
+        # lets split flag and its description
+        profile_stuff = line.strip.sub("#", '').split()
+        # remember all
+		profiles << [profile_stuff[1], profile_stuff[0], profile_stuff[2]]
+    end
+
+	return profiles
+end
+
+def process(params)
+	Database.insert({
+		"sql_query" => params["sql_query"],
+		"values" => params["value"]
+	})
+end
 
 script = Script.new({
     "script" => __FILE__,
+    "data_source" => method(:get_data),
+    "thread_code" => method(:process),
     "sql_query" => <<SQL
 INSERT INTO profiles
 (profile_name, arch_id, profile_status_id)
@@ -21,35 +56,4 @@ VALUES (
 );
 SQL
 })
-
-def fill_table(params)
-    filename = File.join(params["portage_home"], "profiles_v2", "profiles.desc")
-
-    # walk through all use flags in that file
-    (IO.read(filename).to_a rescue []).each do |line|
-        # skip header
-        break if line.include?("Gentoo Prefix profiles")
-        # skip comments
-        next if line.index('# uclibc') == 0
-        next if line.index('#') == 0 && !line.include?('uclibc')
-        # lets trim newlines
-        line.chomp!()
-        # skip empty lines
-        next if line.empty?
-
-        # lets split flag and its description
-        profile_stuff = line.sub("#", '').split()
-
-        Database.insert({
-            "sql_query" => params["sql_query"],
-            "values" => [
-                profile_stuff[1],
-                profile_stuff[0],
-                profile_stuff[2]
-            ]
-        })
-    end
-end
-
-script.fill_table_X(method(:fill_table))
 

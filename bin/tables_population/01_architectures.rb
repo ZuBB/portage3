@@ -6,45 +6,41 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 
-script = Script.new({
-    "table" => "architectures",
-    "script" => __FILE__
-})
-
-def fill_table(params)
-    architectures = []
-    # ********************* TODO *********************
-    # ********************* TODO *********************
-    # TODO what is better approach: add architectures here or in "arch.list" file?
-    architectures << 'x64'
-    architectures << 'sparc64'
-    # ********************* TODO *********************
-    # ********************* TODO *********************
-
-    filename = File.join(params["portage_home"], "profiles", "arch.list")
+def get_data(params)
+    # result here
+    # TODO we need to add those as they are used later
+    architectures = ['x64', 'sparc64']
+    # name of the file to be processed
+    filename = File.join(params['profiles2_home'], 'arch.list')
 
     # walk through all use lines in that file
     (IO.read(filename).to_a rescue []).each do |line|
         # break if we face with prefixes
-        break if line.include?("# Prefix keywords")
+        break if line.include?('# Prefix keywords')
         # skip comments
-        next if line.index('#') == 0
-        # trim '\s'
-        line.chomp!()
-        # skip empty lines
-        architectures << line unless line.empty?
+        next if line.start_with?('#')
+        # skip empty lines, trim others and add them
+        architectures << line.strip() unless line.match(/\S+/).nil?
     end
 
-    architectures.each { |arch|
-        Database.insert({
-            "table" => params["table"],
-            "data" => {"architecture" => arch}
-        })
-    }
+	return architectures
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+	Database.insert({
+		'table' => params['table'],
+		'data' => {'architecture' => params['value']}
+	})
+end
+
+script = Script.new({
+    'script' => __FILE__,
+    'table' => 'architectures',
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
+})
 

@@ -6,39 +6,38 @@
 # Initial Author: Vasyl Zuzyak, 01/27/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
-require 'fileutils'
 
-script = Script.new({
-    "table" => "sources",
-    "script" => __FILE__
-})
+def get_data(params)
+    # result here
+    sources = []
 
-def fill_table(params)
-    filepath = File.join(params["portage_home"], "profiles_v2")
-    FileUtils.cd(filepath)
-    sources = ['ebuilds']
-
-    # walk through all use flags in that file
-    Dir['**/*/'].each do |dir|
+    # walk through all dirs in profiles dir
+    Dir[File.join(params['profiles2_home'], '**/*/')].each do |dir|
         # skip dirs that not in base
-        next unless dir.include?('base')
+        next unless dir.include?('/base/')
         # skip dirs that not in base
-        next if File.exist?(File.join(filepath, dir, 'deprecated'))
-
+        next if File.exist?(File.join(dir, 'deprecated'))
         # lets remember this
-        sources << dir
+        sources << dir.sub(params['profiles2_home'] + '/', '')
     end
 
-    sources += ['/etc/make.conf', '/etc/portage/', 'CLI']
-    sources.each { |item|
-        Database.insert({
-            "table" => params["table"],
-            "data" => {"source" => item}
-        })
-    }
+    sources.unshift('ebuilds') + ['/etc/make.conf', '/etc/portage/', 'CLI']
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+	Database.insert({
+		'table' => params['table'],
+		'data' => {'source' => params['value']}
+	})
+end
+
+script = Script.new({
+    'script' => __FILE__,
+    'table' => 'sources',
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
+})
 

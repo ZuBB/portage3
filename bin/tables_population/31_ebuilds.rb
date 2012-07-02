@@ -6,50 +6,35 @@
 # Initial Author: Vasyl Zuzyak, 01/16/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
 require 'ebuild'
 
-script = Script.new({
-    "table" => "ebuilds",
-    "script" => __FILE__
-})
+def process(params)
+    PLogger.info("Ebuild: #{params["value"]}")
+    ebuild = Ebuild.new(params)
 
-def parse_ebuild(params)
-    PLogger.info("Ebuild: #{params["filename"]}")
-
-    ebuild = Ebuild.new(Utils.create_ebuild_params(params))
     Database.insert({
         "table" => params["table"],
         "data" => {
             "package_id" => ebuild.package_id,
-            "version" => ebuild.version,
-            "version_order" => 1,
-            "mtime" => ebuild.mtime,
-            "mauthor" => ebuild.author,
-            "eapi_id" => ebuild.eapi_id(),
-            "slot" => ebuild.slot
+            "version" => ebuild.ebuild_version,
+            "repository_id" => ebuild.repository_id_by_fs,
+            #"mtime" => ebuild.ebuild_mtime,
+            #"mauthor" => ebuild.ebuild_author,
+            #"eapi_id" => ebuild.ebuild_eapi_id,
+            #"slot" => ebuild.ebuild_slot
         }
     })
-
-    # TODO store_real_eapi(ebuild_obj)
 end
 
-def category_block(params)
-    Utils.walk_through_packages({"block2" => method(:packages_block)}.merge!(params))
-end
-
-def packages_block(params)
-    Dir.glob(File.join(params["item_path"], '*.ebuild')).each do |ebuild|
-        parse_ebuild({"filename" => ebuild}.merge!(params))
-    end
-end
-
-def fill_table(params)
-    Utils.walk_through_categories(
-        {"block1" => method("category_block")}.merge!(params)
-    )
-end
-
-script.fill_table_X(method(:fill_table))
+script = Script.new({
+    "table" => "ebuilds",
+    "script" => __FILE__,
+    "thread_code" => method(:process),
+    "data_source" => Ebuild.method(:get_ebuilds),
+    "max_threads" => 4
+})
 

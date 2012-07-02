@@ -6,25 +6,28 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
-
-script = Script.new({
-    "table" => "keywords",
-    "script" => __FILE__
-})
 
 # TODO symbols
 KEYWORDS = ['not work', 'not known', 'unstable', 'stable']
 
-def fill_table(params)
-    KEYWORDS.each { |keyword|
-        Database.insert({
-            "table" => params["table"],
-            "data" => {"keyword" => keyword}
-        })
-    }
+def get_data(params)
+	return KEYWORDS
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+	Database.insert({
+		"table" => params["table"],
+		"data" => {"keyword" => params["value"]}
+	})
+end
+
+script = Script.new({
+    "script" => __FILE__,
+    "table" => "keywords",
+    "data_source" => method(:get_data),
+    "thread_code" => method(:process)
+})
 

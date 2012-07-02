@@ -6,40 +6,48 @@
 # Initial Author: Vasyl Zuzyak, 01/28/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
 require 'script'
 require 'ebuild'
 
-script = Script.new({
-    "script" => __FILE__,
-    "sql_query" => <<SQL
-INSERT INTO package_keywords
-(package_id, ebuild_id, keyword_id, arch_id, source_id)
-VALUES (
-    ?,
-    ?,
-    (SELECT id FROM keywords WHERE keyword=?),
-    (SELECT id FROM arches WHERE arch_name=?),
-    (SELECT id FROM sources WHERE source='ebuilds')
-);
-SQL
-})
+def get_data(params)
+    # results
+    results = []
+    # query
+    sql_query = <<-SQL
+        SELECT
+            parent_folder,
+            repository_folder,
+            category_name,
+            package_name,
+            version
+        FROM ebuilds e
+        JOIN packages p on p.id=e.package_id
+        JOIN categories c on p.category_id=c.id
+        JOIN repositories r on r.id=e.repository_id
+    SQL
 
-def store_ebuild_keywords(main_query, ebuild_obj)
-    keywords, ebuild_obj["keywords"] = ebuild_obj["keywords"], []
+    # lets walk through all packages
+    Database.select(sql_query).each { |row|
+        results << {
+            'value' => row[3] + '-' + row[4] + '.ebuild',
+            'parent_dir' => File.join(row[0], row[1], row[2], row[3])
+        }
+    }
+
+    return results
+end
+
+def store_ebuild_keywords(ebuild)
+    keywords = ebuild.ebuild_keywords
+
     if keywords == '0_KEYWORDS_NF' || keywords.include?("*")
         sign = '-' if keywords.include?("-*")
-        if keywords.include?("-*")
-            ebuild_obj["keyword_minus_all"] = true
-        end
+        sign = '?' if keywords.include?("0_KEYWORDS_NF")
 
-        if keywords.include?("0_KEYWORDS_NF")
-            sign = '?'
-            ebuild_obj["keywords_real"] = '0_KEYWORDS_NF'
-        end
-
-        sql_query = "SELECT arch_name FROM arches;"
-        arches = Database.db().execute(sql_query).flatten
+        arches = Database.select('SELECT arch_name FROM arches').flatten
 
         unless sign.nil?
             arches.map! { |arch| arch.insert(0, sign)}
@@ -48,8 +56,7 @@ def store_ebuild_keywords(main_query, ebuild_obj)
         end
 
         if keywords.include?("0_KEYWORDS_NF")
-            ebuild_obj["keywords"] = arches
-            keywords.sub!("0_KEYWORDS_NF", '')
+            keywords.sub!("0_KEYWORDS_NF", arches)
         else
             keywords.sub!('-*', '')
             old_arches = keywords.split()
@@ -60,13 +67,11 @@ def store_ebuild_keywords(main_query, ebuild_obj)
                     end
                 }
             }
-            ebuild_obj["keywords"] = arches
+            keywords = arches.join(' ')
         end
     end
 
-    keywords.split.each { |keyword| ebuild_obj["keywords"] << keyword }
-
-    ebuild_obj["keywords"].each do |keyword|
+    keywords.split.each do |keyword|
         status, arch = 'stable', keyword
         status = 'unstable' if keyword.index('~') == 0
         status = 'not work' if keyword.index('-') == 0
@@ -74,45 +79,33 @@ def store_ebuild_keywords(main_query, ebuild_obj)
         arch = keyword.sub(/^./, '') if status != 'stable'
 
         Database.insert({
-            "sql_query" => main_query,
             "values" => [
-                ebuild_obj['package_id'],
-                ebuild_obj['ebuild_id'],
+                ebuild.ebuild_id,
                 status,
                 arch
-            ]
+            ],
+            "sql_query" => <<SQL
+INSERT INTO ebuild_keywords
+(ebuild_id, keyword_id, arch_id, source_id)
+VALUES (
+    ?,
+    (SELECT id FROM keywords WHERE keyword=?),
+    (SELECT id FROM arches WHERE arch_name=?),
+    (SELECT id FROM sources WHERE source='ebuilds')
+);
+SQL
         })
     end
 end
 
-def parse_ebuild(params)
-    puts "Ebuild: #{params["filename"]}" if @debug
-    ebuild = Ebuild.new(Utils.create_ebuild_params(params))
-
-    return {
-        'package_id' => ebuild.package_id(),
-        'ebuild_id' => ebuild.ebuild_id(),
-        'keywords' => ebuild.keywords()
-    }
+def process(params)
+    PLogger.info("Ebuild: #{params["value"]}")
+    store_ebuild_keywords(Ebuild.new(params))
 end
 
-def category_block(params)
-    Utils.walk_through_packages({"block2" => method(:packages_block)}.merge!(params))
-end
+script = Script.new({
+    "script" => __FILE__,
+    "thread_code" => method(:process),
+    "data_source" => Ebuild.method(:get_data)
+})
 
-def packages_block(params)
-    Dir.glob(File.join(params["item_path"], '*.ebuild')).each do |ebuild|
-        store_ebuild_keywords(
-            params["sql_query"],
-            parse_ebuild({"filename" => ebuild}.merge!(params))
-        )
-    end
-end
-
-def fill_table(params)
-    Utils.walk_through_categories(
-        {"block1" => method(:category_block)}.merge!(params)
-    )
-end
-
-script.fill_table_X(method(:fill_table))

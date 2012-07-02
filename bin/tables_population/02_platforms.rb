@@ -6,41 +6,41 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
+lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
+$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
 require 'script'
 
-script = Script.new({
-    "table" => "platforms",
-    "script" => __FILE__
-})
-
-def fill_table(params)
-    filename = File.join(params["portage_home"], "profiles", "arch.list")
+def get_data(params)
+    # result here
     platforms = []
+    # name of the file to be processed
+	# TODO fix name of the 1st and 2nd params
+    filename = File.join(params["profiles2_home"], "arch.list")
 
     # walk through all use lines in that file
     (IO.read(filename).to_a rescue []).each do |line|
         # skip comments
         next if line.index('#') == 0
-        # trim '\n'
-        line.chomp!()
-        # skip empty lines
-        next if line.empty?()
-        # skip architectures
-        next unless line.include?('-')
-
+        # skip empty lines and architectures
+        next unless line.match(/\S+/) && line.include?('-')
         # remember
-        platforms << line.split('-')[1]
+        platforms << line.split('-')[1].strip()
     end
 
-    platforms.uniq.each { |platform|
-        # lets trim newlines and insert
-        Database.insert({
-            "table" => params["table"],
-            "data" => {"platform_name" => platform.chomp()}
-        })
-    }
+    return platforms.uniq
 end
 
-script.fill_table_X(method(:fill_table))
+def process(params)
+	Database.insert({
+		"table" => params["table"],
+		"data" => {"platform_name" => params["value"]}
+	})
+end
+
+script = Script.new({
+    "script" => __FILE__,
+    "table" => "platforms",
+    "data_source" => method(:get_data),
+    "thread_code" => method(:process)
+})
 
