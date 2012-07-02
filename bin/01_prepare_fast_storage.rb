@@ -7,7 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 curr_dir = File.dirname(__FILE__);
-$:.push File.expand_path(File.join(curr_dir, '..', 'lib'))
+$:.push File.expand_path(File.join(curr_dir, '..', 'lib', 'common'))
 require 'fileutils'
 require 'optparse'
 require 'utils'
@@ -36,9 +36,9 @@ OptionParser.new do |opts|
         options["download_snapshot"] = options["recreate_tree"] = true
     end
 
-    opts.on("-f", "--root-folder STRING", "Dir where portage tree will be extracted") do |value|
-        options["storage"]["root"] = File.expand_path(value)
-    end
+    #opts.on("-f", "--root-folder STRING", "Dir where portage tree will be extracted") do |value|
+        #options["storage"]["root"] = File.expand_path(value)
+    #end
 
     opts.on("-r", "--recreate-tree", "Recreate portage tree") do |value|
         options["recreate_tree"] = true

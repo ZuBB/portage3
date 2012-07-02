@@ -6,9 +6,8 @@
 # Initial Author: Vasyl Zuzyak, 6 01/06/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
 require 'optparse'
-require 'rubygems'
 require 'utils'
 
 # hash with options
@@ -65,7 +64,7 @@ if options["run_all"]
     Dir.glob(File.join(plugins_dir, "/*")).sort.each do |script|
         break if options["until"] && script.include?(options["until"])
 
-        if (script.match(/\d\d_[a-z_]+\.rb$/))
+        if (script.match(/\d\d_[a-z0-9_]+\.rb$/))
             command = "./#{script} -f #{options["db_filename"]}"
             command << " -m #{options["method"]}" if options["method"]
             # TODO: output, error_output, exit status, timeouts
