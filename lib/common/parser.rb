@@ -26,7 +26,7 @@ module Parser
             if line.include?('# $Header:') # TODO: or index == 0 ?
                 # https://bugs.gentoo.org/show_bug.cgi?id=398567
                 match = const.match(line)
-                if match.nil? && match[1].nil?
+                if match.nil?
                     return  "X_" + keyword.upcase + "_REGEXP"
                 else
                     return (match[1] || match).to_s 
@@ -43,9 +43,11 @@ module Parser
         # strip spaces at start
         value.lstrip!()
         # get quote char
-        quote = (value.slice!(0)).chr
+        #quote = value[0].chr rescue ''
+        quote = (value.slice!(0)).chr rescue ''
         if quote && (quote == '"' || quote == "'")
             # strip quotes at start
+            #pattern = Regexp.new(quote + "([^" + quote + "]*)" + quote)
             pattern = Regexp.new("((\\" + quote + "|[^" + quote + "])*)" + quote)
             # strip quotes at start
             pattern.match(value)[1].strip() rescue ''
@@ -93,7 +95,7 @@ module Parser
             # if line does not have '=', go next
             next unless line.include?('=')
 
-            # if line has UN_KEYWORDED_PACKAGE but not a KEYWORD, go next
+            # if line has NON_KEYWORD_VAR but not a KEYWORD, go next
             next if Regexp.new("\\b" + keyword + "\\s*=").match(line).nil?
 
             # if '=' is before keyword, go next
