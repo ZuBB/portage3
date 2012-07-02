@@ -34,6 +34,7 @@ Requirements
     http://rubygems.org/
     http://sqlite-ruby.rubyforge.org/
     http://nokogiri.org/
+	explicit ACCEPT_KEYWORDS in /etc/make.conf
 
 
 Testing
