@@ -16,65 +16,34 @@ module Database
     
     @database = nil
     @statement = nil
-    @queue = Queue.new
-    @mutex = Mutex.new
-    @resource = ConditionVariable.new
+    @data4db = Queue.new
     Thread.abort_on_exception = true
-    @running = true
-    @data = nil
     @thread = Thread.new do
-        @mutex.synchronize do
-            while @running
-            #p 'in thread; before WAIT'
-                @resource.wait(@mutex)
-            #p 'in thread; after WAIT'
-                next if @data.nil?
+        while true
+            data2insert = @data4db.pop()
 
-                #@mutex.unlock
-                last_id_case = nil
-                select_case = nil
-                result_set = nil
-
-                begin
-                    command = @data["sql_query"].downcase.split(' ')[0]
-                    last_id_case = ['insert', 'update'].include?(command)
-                    select_case = command == 'select'
-
-                    unless @statement.nil?
-                        if !@data["values"].nil?
-                            @statement.bind_params(*@data["values"])
-                        end
-                        result_set = @statement.execute()
-                    else
-                        result_set = @database.execute2(
-                            @data["sql_query"], *@data["values"]
-                        )
-                    end
-                rescue SQLite3::Exception => exception
-                    PLogger.error("Database error happened")
-                    PLogger.error("Message: #{exception.message()}")
-                    PLogger.error("Sql query: #{@data["sql_query"]}")
-                    unless @data["values"].nil?
-                        PLogger.error("Values: [#{@data["values"].join(', ')}]")
-                    end
-                end
-
-                #@mutex.lock
-                #@data["result"] = last_inserted_id() if last_id_case
-                @data["result"] = result_set.drop(1) if select_case
-                #@data["result"] = nil if last_inserted_id.nil? && select_case.nil?
+            begin
+                @statement.execute(*data2insert)
+            rescue SQLite3::Exception => exception
+                PLogger.error("Message: #{exception.message()}")
+                PLogger.error("Values: [#{data2insert.join(', ')}]")
             end
         end
     end
-    @queue << @thread
 
-    def self.init(db_filename)
+    def self.init(db_filename, sql_query)
         unless is_filename_valid?(db_filename)
             throw "Can not create/use db file at `#{db_filename}"
-        else
-            @database = SQLite3::Database.new(db_filename)
-            @database.transaction()
         end
+
+        @database = SQLite3::Database.new(db_filename)
+
+        unless @database.complete?(sql_query)
+            throw "Passed sql query is not valid"
+        end
+
+        @statement = @database.prepare(sql_query)
+        @database.transaction()
     end
 
     def self.is_filename_valid?(db_filename)
@@ -157,9 +126,8 @@ module Database
     end
 
     def self.select(sql_query, values = nil)
-        @queue.pop()
-        self.set_data(sql_query, values)
-        self.reset_data()
+        values = [values] unless values.is_a?(Array)
+        @database.execute(sql_query, *(values.flatten().compact()))
     end
 
     def self.get_1value(sql_query, values = nil)
@@ -219,13 +187,18 @@ module Database
         result
     end
 
+    def self.add_data4insert(item)
+        @data4db << item
+    end
+
+    # TODO need to make sure that thread termination
+    # can not cause data loss (some data are still in queue)
     def self.close()
-        @statement.close if @statement.is_a?(SQLite3::Statement)
-        @mutex.synchronize do
-            @running = false
-            @resource.signal
+        if @statement.is_a?(SQLite3::Statement)
+            # FIXME everythin should be OK without rescue
+            @statement.close rescue nil
         end
-        @thread.join
+        @thread.terminate()
         @database.commit()
         @database.close() unless @database.closed?
     end
