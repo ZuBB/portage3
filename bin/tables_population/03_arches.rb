@@ -16,8 +16,8 @@ def get_data(params)
     # name of the file to be processed
     filename = File.join(params["profiles2_home"], "arch.list")
 
-	# walk through all use flags in that file
-	(IO.read(filename).to_a rescue []).each do |line|
+    # walk through all use flags in that file
+    (IO.read(filename).to_a rescue []).each do |line|
         # lets trim newlines
         line.chomp!()
         # skip empty lines and comments
@@ -25,17 +25,14 @@ def get_data(params)
         # lets split flag and its description
         arch_stuff = line.split('-')
         # remember
-		arches << [line, arch_stuff[0], arch_stuff[1] || 'linux']
+        arches << [line, arch_stuff[0], arch_stuff[1] || 'linux']
     end
 
-	return arches
+    return arches
 end
 
 def process(params)
-	Database.insert({
-		"sql_query" => params["sql_query"],
-		"values" => params["value"]
-	})
+    Database.add_data4insert(params["value"])
 end
 
 script = Script.new({

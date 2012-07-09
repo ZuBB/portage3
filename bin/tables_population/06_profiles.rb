@@ -29,17 +29,14 @@ def get_data(params)
         # lets split flag and its description
         profile_stuff = line.strip.sub("#", '').split()
         # remember all
-		profiles << [profile_stuff[1], profile_stuff[0], profile_stuff[2]]
+        profiles << [profile_stuff[1], profile_stuff[0], profile_stuff[2]]
     end
 
-	return profiles
+    return profiles
 end
 
 def process(params)
-	Database.insert({
-		"sql_query" => params["sql_query"],
-		"values" => params["value"]
-	})
+    Database.add_data4insert(params["value"])
 end
 
 script = Script.new({

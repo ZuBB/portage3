@@ -78,23 +78,7 @@ def store_ebuild_keywords(ebuild)
         status = 'not known' if keyword.index('?') == 0
         arch = keyword.sub(/^./, '') if status != 'stable'
 
-        Database.insert({
-            "values" => [
-                ebuild.ebuild_id,
-                status,
-                arch
-            ],
-            "sql_query" => <<SQL
-INSERT INTO ebuild_keywords
-(ebuild_id, keyword_id, arch_id, source_id)
-VALUES (
-    ?,
-    (SELECT id FROM keywords WHERE keyword=?),
-    (SELECT id FROM arches WHERE arch_name=?),
-    (SELECT id FROM sources WHERE source='ebuilds')
-);
-SQL
-        })
+        Database.add_data4insert([ebuild.ebuild_id, status, arch])
     end
 end
 
@@ -106,6 +90,16 @@ end
 script = Script.new({
     "script" => __FILE__,
     "thread_code" => method(:process),
-    "data_source" => Ebuild.method(:get_data)
+    "data_source" => Ebuild.method(:get_data),
+    "sql_query" => <<SQL
+INSERT INTO ebuild_keywords
+(ebuild_id, keyword_id, arch_id, source_id)
+VALUES (
+    ?,
+    (SELECT id FROM keywords WHERE keyword=?),
+    (SELECT id FROM arches WHERE arch_name=?),
+    (SELECT id FROM sources WHERE source='ebuilds')
+);
+SQL
 })
 

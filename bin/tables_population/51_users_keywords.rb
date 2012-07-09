@@ -39,7 +39,7 @@ def parse_line(line)
         atom = line.split()[0]
         arch = line.split()[1]
         if arch == '**'
-            result["arch"] = Database.execute("SELECT id FROM arches;").flatten
+            result["arch"] = Database.select("SELECT id FROM arches;").flatten
             atom << '*' unless atom.end_with?('*')
         end
     else
@@ -89,7 +89,7 @@ def parse_line(line)
     result['category'] = match[0]
     result['package'] = match[1]
     if result["arch"].nil?
-        result["arch"] = Database.execute(
+        result["arch"] = Database.select(
             "SELECT value FROM system_settings WHERE param='arch';"
         )
     end
@@ -125,34 +125,24 @@ def process(params)
 
     if result["version"] == '*'
         local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-        result_set = Database.execute(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result["package_id"]).flatten
     elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
         version_like = result["version"].sub('*', '')
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.execute(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result["package_id"]).flatten
     else
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-        result_set = Database.execute(local_query, [result["package_id"], result["version"]]).flatten
+        result_set = Database.select(local_query, [result["package_id"], result["version"]]).flatten
     end
 
     if result_set.size() > 0
         result_set.each { |version|
             result['arch'].each { |arch|
-                Database.insert({
-                    "values" => [
-                        version,
-                        result["keyword"],
-                        arch
-                    ],
-                    "sql_query" => <<-SQL
-                        INSERT INTO ebuild_keywords
-                        (ebuild_id, keyword_id, arch_id, source_id)
-                        VALUES (
-                            ?, ?, ?,
-                            (SELECT id FROM sources WHERE source='/etc/portage/')
-                        );
-                    SQL
-                })
+                Database.add_data4insert([
+                    version,
+                    result["keyword"],
+                    arch
+                ])
             }
         }
     else
@@ -171,5 +161,13 @@ script = Script.new({
     "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
+    "sql_query" => <<-SQL
+        INSERT INTO ebuild_keywords
+        (ebuild_id, keyword_id, arch_id, source_id)
+        VALUES (
+            ?, ?, ?,
+            (SELECT id FROM sources WHERE source='/etc/portage/')
+        );
+    SQL
 })
 

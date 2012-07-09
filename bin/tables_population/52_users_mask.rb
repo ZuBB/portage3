@@ -135,34 +135,25 @@ def process(params)
 
     if result["version"] == '*'
         local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-        result_set = Database.execute(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result["package_id"]).flatten
     elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
         version_like = result["version"].sub('*', '')
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.execute(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result["package_id"]).flatten
     else
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-        result_set = Database.execute(local_query, [result["package_id"], result["version"]]).flatten
+        result_set = Database.select(local_query, [result["package_id"], result["version"]]).flatten
     end
 
     result["arch"] = get_arch_id()
 
     if result_set.size() > 0
         result_set.each { |version|
-            Database.insert({
-                "values" => [
-                    version,
-                    result["arch"],
-                    params['value'][1]
-                ],
-                "sql_query" => <<-SQL
-                    INSERT INTO ebuild_masks
-                    (ebuild_id, arch_id, mask_state_id, source_id)
-                    VALUES (
-                        ?, ?, ?, (SELECT id FROM sources WHERE source='/etc/portage/')
-                    )
-                SQL
-            })
+            Database.add_data4insert([
+                version,
+                result["arch"],
+                params['value'][1]
+            ])
         }
     else
         # means =category/atom-version that already does not exist in portage
@@ -180,5 +171,12 @@ script = Script.new({
     "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
+    "sql_query" => <<-SQL
+        INSERT INTO ebuild_masks
+        (ebuild_id, arch_id, mask_state_id, source_id)
+        VALUES (
+            ?, ?, ?, (SELECT id FROM sources WHERE source='/etc/portage/')
+        );
+    SQL
 })
 

@@ -22,16 +22,14 @@ def get_data(params)
 end
 
 def process(params)
-	Database.insert({
-		"table" => params["table"],
-		"data" => {"profile_status" => params["value"]}
-	})
+    Database.add_data4insert(params["value"])
 end
 
 script = Script.new({
     "script" => __FILE__,
     "table" => "profile_statuses",
     "data_source" => method(:get_data),
+    'sql_query' => 'INSERT INTO profile_statuses (profile_status) VALUES (?);',
     "thread_code" => method(:process)
 })
 

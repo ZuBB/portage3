@@ -16,20 +16,18 @@ def process(params)
     PLogger.info("Repository: #{params["value"]}")
     repository = Repository.new(params)
 
-    Database.insert({
-        "table" => params["table"],
-        "data" => {
-            'repository_name' => repository.repository(),
-            'parent_folder' => repository.repository_pd(),
-            'repository_folder' => repository.repository_fs()
-        }
-    })
+    Database.add_data4insert([
+        repository.repository(),
+        repository.repository_pd(),
+        repository.repository_fs()
+    ])
 end
 
 script = Script.new({
     "table" => "repositories",
     "script" => __FILE__,
     "thread_code" => method(:process),
+    'sql_query' => 'INSERT INTO repositories (repository_name, parent_folder, repository_folder) VALUES (?, ?, ?);',
     "data_source" => Repository.method(:get_repositories)
 })
 

@@ -42,13 +42,7 @@ end
 
 def process(params)
     PLogger.info("Ebuild: #{params["value"]}")
-    ebuild = Ebuild.new(params)
-
-    Database.insert({
-        "table" => params['table'],
-        "command" => "INSERT OR IGNORE",
-        "data" => {"homepage" => ebuild.ebuild_homepage()}
-    })
+    Database.add_data4insert([Ebuild.new(params).ebuild_homepage()])
 end
 
 script = Script.new({
@@ -56,5 +50,6 @@ script = Script.new({
     "table" => "ebuild_homepages",
     "thread_code" => method(:process),
     "data_source" => method(:get_data),
+    "sql_query" => "INSERT OR IGNORE INTO ebuild_homepages (homepage) VALUES (?);",
 })
 

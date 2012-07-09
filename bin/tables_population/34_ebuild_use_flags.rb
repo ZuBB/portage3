@@ -48,20 +48,13 @@ def process(params)
         flag_state = flag[0].chr == '+' ? 1 : 0
         flag_name = flag.sub(/^(-|\+)/, '')
 
-        Database.insert({
-            "values" => [
-                ebuild.package_id,
-                ebuild.ebuild_id,
-                flag_name,
-                flag_state,
-                1 # TODO source_id
-            ],
-            "sql_query" => <<SQL
-insert into use_flags2ebuilds
-(package_id, ebuild_id, use_flag_id, flag_state, source_id)
-VALUES (?, ?, (SELECT id FROM use_flags WHERE flag_name=?), ?, ?);
-SQL
-        })
+        Database.add_data4insert([
+            ebuild.package_id,
+            ebuild.ebuild_id,
+            flag_name,
+            flag_state,
+            1 # TODO source_id
+        ])
     end
 end
 
@@ -69,6 +62,10 @@ script = Script.new({
     "script" => __FILE__,
     "thread_code" => method(:process),
     "data_source" => Ebuild.method(:get_data),
-    #"max_threads" => 3
+    "sql_query" => <<SQL
+INSERT INTO use_flags2ebuilds
+(package_id, ebuild_id, use_flag_id, flag_state, source_id)
+VALUES (?, ?, (SELECT id FROM use_flags WHERE flag_name=?), ?, ?);
+SQL
 })
 

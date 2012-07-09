@@ -14,20 +14,18 @@ require 'script'
 KEYWORDS = ['not work', 'not known', 'unstable', 'stable']
 
 def get_data(params)
-	return KEYWORDS
+    return KEYWORDS
 end
 
 def process(params)
-	Database.insert({
-		"table" => params["table"],
-		"data" => {"keyword" => params["value"]}
-	})
+    Database.add_data4insert(params["value"])
 end
 
 script = Script.new({
     "script" => __FILE__,
     "table" => "keywords",
     "data_source" => method(:get_data),
+    'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);',
     "thread_code" => method(:process)
 })
 

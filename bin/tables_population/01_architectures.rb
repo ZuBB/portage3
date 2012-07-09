@@ -27,20 +27,18 @@ def get_data(params)
         architectures << line.strip() unless line.match(/\S+/).nil?
     end
 
-	return architectures
+    return architectures
 end
 
 def process(params)
-	Database.insert({
-		'table' => params['table'],
-		'data' => {'architecture' => params['value']}
-	})
+    Database.add_data4insert(params['value'])
 end
 
 script = Script.new({
     'script' => __FILE__,
     'table' => 'architectures',
     'data_source' => method(:get_data),
+    'sql_query' => 'INSERT INTO architectures (architecture) VALUES (?);',
     'thread_code' => method(:process)
 })
 

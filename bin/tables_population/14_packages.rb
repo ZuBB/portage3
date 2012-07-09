@@ -16,19 +16,14 @@ def process(params)
     PLogger.info("Package: #{params["value"]}")
     package = Package.new(params)
 
-    Database.insert({
-        "table" => params["table"],
-        "data" => {
-            "category_id" => package.category_id(),
-            "package_name" => package.package()
-        }
-    })
+    Database.add_data4insert([package.category_id(), package.package()])
 end
 
 script = Script.new({
     "script" => __FILE__,
     "table" => "packages",
     "thread_code" => method(:process),
+    'sql_query' => 'INSERT INTO packages (category_id, package_name) VALUES (?, ?);',
     "data_source" => Package.method(:get_packages)
 })
 

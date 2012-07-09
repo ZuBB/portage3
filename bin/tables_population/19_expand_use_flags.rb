@@ -60,20 +60,18 @@ def get_data(params)
 end
 
 def process(params)
-    Database.insert({
-        "table" => params["table"],
-        "data" => {
-            "flag_name" => params["value"]["flag_name"],
-            "flag_description" => params["value"]["flag_description"],
-            "flag_type_id" => params["value"]["flag_type_id"]
-        }
-    })
+    Database.add_data4insert([
+        params["value"]["flag_name"],
+        params["value"]["flag_description"],
+        params["value"]["flag_type_id"]
+    ])
 end
 
 script = Script.new({
     "table" => "use_flags",
     "script" => __FILE__,
     'data_source' => method(:get_data),
+    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id) VALUES (?, ?, ?);',
     'thread_code' => method(:process)
 })
 

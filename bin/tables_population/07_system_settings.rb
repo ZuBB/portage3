@@ -24,30 +24,27 @@ def get_data(params)
 
     keyword_name = accept_keywords.index('~') == 0 ? 'unstable' : 'stable'
     arch_name = accept_keywords.sub(/^~/, '')
-	return [
-		"arch" + ':' + Database.get_1value(
-			"SELECT id FROM arches WHERE arch_name=?", arch_name
-		).to_s,
-		"keyword" + ':' + Database.get_1value(
-			"SELECT id FROM keywords WHERE keyword=?", keyword_name
-		).to_s
-	]
+    return [
+        "arch" + ':' + Database.get_1value(
+                "SELECT id FROM arches WHERE arch_name=?", arch_name
+        ).to_s,
+            "keyword" + ':' + Database.get_1value(
+                "SELECT id FROM keywords WHERE keyword=?", keyword_name
+        ).to_s
+    ]
 end
 
 def process(params)
-    Database.insert({
-        "table" => params["table"],
-        "data" => {
-            "param" => params["value"].split(':')[0],
-            "value" => params["value"].split(':')[1]
-        }
-    })
+    Database.add_data4insert(
+        [params["value"].split(':')[0], params["value"].split(':')[1]]
+    )
 end
 
 script = Script.new({
     "script" => __FILE__,
     "table" => "system_settings",
     "data_source" => method(:get_data),
+    'sql_query' => 'INSERT INTO system_settings (param, value) VALUES (?, ?);',
     "thread_code" => method(:process)
 })
 

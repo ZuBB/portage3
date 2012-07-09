@@ -31,24 +31,22 @@ def get_data(params)
 end
 
 def process(params)
-    Database.insert({
-        "values" => [params['value'][0], params['value'][1]],
-        "sql_query" => <<-SQL
-            INSERT INTO installed_apps
-            (package_id)
-            VALUES ((
-                SELECT p.id
-                FROM packages p
-                JOIN categories c ON p.category_id=c.id
-                WHERE c.category_name=? and p.package_name=?
-            ))
-        SQL
-    })
+    Database.add_data4insert([params['value'][0], params['value'][1]])
 end
 
 script = Script.new({
     "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
+    "sql_query" => <<-SQL
+        INSERT INTO installed_apps
+        (package_id)
+        VALUES ((
+            SELECT p.id
+            FROM packages p
+            JOIN categories c ON p.category_id=c.id
+            WHERE c.category_name=? and p.package_name=?
+        ));
+    SQL
 })
 

@@ -44,21 +44,19 @@ def process(params)
     PLogger.info("Ebuild: #{params["value"]}")
     ebuild = Ebuild.new(params)
 
-    Database.insert({
-        "values" => [ebuild.ebuild_homepage(), ebuild.ebuild_id()],
-        "sql_query" => <<-SQL
-            UPDATE ebuilds
-            SET homepage_id=(
-                select id from ebuild_homepages where homepage=?
-            )
-            WHERE id=?
-        SQL
-    })
+    Database.add_data4insert([ebuild.ebuild_homepage(), ebuild.ebuild_id()])
 end
 
 script = Script.new({
     "script" => __FILE__,
     "thread_code" => method(:process),
     "data_source" => method(:get_data),
+    "sql_query" => <<-SQL
+        UPDATE ebuilds
+        SET homepage_id=(
+            select id from ebuild_homepages where homepage=?
+        )
+        WHERE id=?;
+    SQL
 })
 

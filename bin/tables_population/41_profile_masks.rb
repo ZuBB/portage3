@@ -92,7 +92,7 @@ def get_arch_id(file)
     dir = File.dirname(file) + '/'
 
     if dir == 'base/'
-        Database.execute("SELECT id FROM arches").flatten
+        Database.select("SELECT id FROM arches").flatten
     elsif dir.count('/') == 2
         sql_query = <<-SQL
             SELECT id
@@ -100,7 +100,7 @@ def get_arch_id(file)
             WHERE architecture_id=
                 (SELECT id from architectures where architecture=?)
         SQL
-        Database.execute(sql_query, dir.split('/')[1]).flatten
+        Database.select(sql_query, dir.split('/')[1]).flatten
     else
         sql_query = <<-SQL
             SELECT id
@@ -111,7 +111,7 @@ def get_arch_id(file)
                 ) AND
                 platform_id=(SELECT id FROM platforms WHERe platform_name=?)
         SQL
-        Database.execute(sql_query, [dir.split('/')[1], dir.split('/')[2]]).flatten
+        Database.select(sql_query, [dir.split('/')[1], dir.split('/')[2]]).flatten
     end
 end
 
@@ -149,14 +149,14 @@ def process(params)
 
         if result["version"] == '*'
             local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-            result_set = Database.execute(local_query, result["package_id"]).flatten
+            result_set = Database.select(local_query, result["package_id"]).flatten
         elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
             version_like = result["version"].sub('*', '')
             local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-            result_set = Database.execute(local_query, result["package_id"]).flatten
+            result_set = Database.select(local_query, result["package_id"]).flatten
         else
             local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-            result_set = Database.execute(local_query, [result["package_id"], result["version"]]).flatten
+            result_set = Database.select(local_query, [result["package_id"], result["version"]]).flatten
         end
 
         result["arch"] = get_arch_id(filename)
@@ -164,22 +164,12 @@ def process(params)
         if result_set.size() > 0
             result_set.each { |version|
                 result['arch'].each { |arch|
-                    Database.insert({
-                        "values" => [
-                            version,
-                            arch,
-                            get_source_id(filename),
-                            result["mask_state"]
-                        ],
-                        "sql_query" => <<-SQL
-                            INSERT INTO ebuild_masks
-                            (ebuild_id, arch_id, source_id, mask_state_id)
-                            VALUES (
-                                ?, ?, ?,
-                                (SELECT id FROM mask_states WHERE mask_state=?)
-                            )
-                        SQL
-                    })
+                    Database.add_data4insert([
+                        version,
+                        arch,
+                        get_source_id(filename),
+                        result["mask_state"]
+                    ])
                 }
             }
         else
@@ -199,5 +189,13 @@ script = Script.new({
     'script' => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
+    "sql_query" => <<-SQL
+        INSERT INTO ebuild_masks
+        (ebuild_id, arch_id, source_id, mask_state_id)
+        VALUES (
+            ?, ?, ?,
+            (SELECT id FROM mask_states WHERE mask_state=?)
+        );
+    SQL
 })
 
