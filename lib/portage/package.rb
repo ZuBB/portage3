@@ -21,13 +21,13 @@ class Package
         results = []
 
         # get all repos and theirs info
-        Database.execute(RepositoryModule::SQL['all']).each do |repo_row|
+        Database.select(RepositoryModule::SQL['all']).each do |repo_row|
             # get repo home
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
             # skip if we do not have this repo
             next unless File.exist?(repo_home)
 
-            Database.execute(CategoryModule::SQL['all']).each do |category_row|
+            Database.select(CategoryModule::SQL['all']).each do |category_row|
                 # get category home
                 category_home = File.join(repo_home, category_row[1])
                 # skip if we do not have this repo
