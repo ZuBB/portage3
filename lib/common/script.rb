@@ -39,7 +39,7 @@ class Script
         # get data for processing
         # #@debug = data["debug"] # TODO
 
-        Database.init(@data["db_filename"])
+        Database.init(@data["db_filename"], @data["sql_query"])
         PLogger.init({
             "db_filename" => @data["db_filename"],
             "script" => @data["script"]
