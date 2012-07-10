@@ -14,6 +14,13 @@ def get_data(params)
     # get all files from licenses dir
     (Dir[File.join(params["gentoo_tree_home"], 'licenses/*')].map { |item|
         File.file?(item) ?
+            # TODO License names may contain
+            #   [a-zA-Z0-9],
+            #   _ (underscore),
+            #   - (dash),
+            #   . (dot)
+            #   + (plus sign).
+            # lets split flag and its description
             item.slice((params["gentoo_tree_home"] + 'licenses/').size + 1..-1) : nil
     }).compact
 end

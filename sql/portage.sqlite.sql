@@ -112,6 +112,27 @@ create table licences (
     PRIMARY KEY (id)
 );
 
+create table licence_groups (
+    id INTEGER,
+    name VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table licence_group_content (
+    id INTEGER,
+    group_id INTEGER NOT NULL,
+    licence_id INTEGER,
+    sub_group_id INTEGER,
+    FOREIGN KEY (group_id) REFERENCES licence_groups(id),
+    FOREIGN KEY (sub_group_id) REFERENCES licence_groups(id),
+    FOREIGN KEY (licence_id) REFERENCES licences(id),
+    --CONSTRAINT idx1_unq UNIQUE (group_id, licence_id),
+    --CONSTRAINT idx2_unq UNIQUE (group_id, sub_group_id),
+    CONSTRAINT idx3_unq CHECK
+        (licence_id IS NOT NULL OR sub_group_id IS NOT NULL),
+    PRIMARY KEY (id)
+);
+
 /* create table persons (
     id INTEGER,
     name VARCHAR,
