@@ -22,7 +22,7 @@ module EbuildModule
     ENTITY = self.name.downcase[0..-7]
     # suffixes
     PROP_SUFFIXES = [
-        'text', 'version', 'description', 'homepage', 'licenses', 'eapi',
+        'text', 'version', 'description', 'homepage', 'licences', 'eapi',
         'slot', 'author', 'mtime', 'eapi_id', 'eclasses', 'parse_method',
         'iuse'
     ]
@@ -92,7 +92,7 @@ module EbuildModule
         get_value('homepage', method)
     end
 
-    def ebuild_license(method = nil)
+    def ebuild_licences(method = nil)
         get_value('license', method)
     end
 
