@@ -106,6 +106,12 @@ create table use_flags (
     PRIMARY KEY (id)
 );
 
+create table licences (
+    id INTEGER,
+    name VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
 /* create table persons (
     id INTEGER,
     name VARCHAR,
@@ -250,24 +256,15 @@ create table use_flags2ebuilds (
     PRIMARY KEY (id)
 );
 
-/*create table package_licenses (
+create table ebuild_licences (
     id INTEGER,
-    license VARCHAR NOT NULL UNIQUE,
-    -- url/hdd location ?
+    ebuild_id INTEGER NOT NULL,
+    licence_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (licence_id) REFERENCES licences(id),
+    CONSTRAINT idx1_unq UNIQUE (licence_id, ebuild_id),
     PRIMARY KEY (id)
 );
-
-create table licenses2ebuilds (
-    id INTEGER,
-    license_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL,
-    ebuild_id INTEGER NOT NULL,
-    CONSTRAINT idx1_unq UNIQUE (license_id, package_id, ebuild_id),
-    FOREIGN KEY (license_id) REFERENCES package_licenses(id),
-    FOREIGN KEY (package_id) REFERENCES packages(id),
-    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    PRIMARY KEY (id)
-);*/
 
 /*create table sets (
     id INTEGER PRIMARY KEY,
