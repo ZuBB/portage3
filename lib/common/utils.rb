@@ -4,18 +4,14 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'rubygems'
+require 'json'
 
 module Utils
     OPTIONS = {
         "quiet" => true,
         "debug" => false,
-        "db_filename" => nil,
-        "settings_folder" => '/etc/portage/',
-        # It used to call this "root_path" or "root_folder"]
-        # and seems its more correct
-        "portage_home" => '/dev/shm/',
-        "home_folder" => 'portage',
-        "required_space" => 700
+        "db_filename" => nil
     }
 
     # pattern for db files
@@ -40,4 +36,40 @@ module Utils
     def self.is_number?(string)
         true if Float(string) rescue false
     end
+
+    def self.get_settings(settings_file = 'settings.json')
+        config_path_parts = [File.dirname(__FILE__), '../..', 'config']
+        settings_dir = File.expand_path(File.join(*config_path_parts))
+        settings_file = File.join(settings_dir, settings_file)
+
+        if  File.exist?(settings_file)
+            begin
+                data = JSON.parse(IO.read(settings_file))
+            rescue
+                msg = 'Can not parse settings file!'
+            end
+        else
+            msg = 'Can not find settings file!'
+        end
+
+        if msg.nil?
+            return data
+        else
+            throw msg
+        end
+    end
+
+    def self.get_tree_home(settings = self.get_settings)
+        # TODO fix this for case when deploy_type is not defined
+        deploy_type = settings['deploy_type']
+        settings['deployments'][deploy_type]['tree_home']
+    end
+
+    def self.get_profiles2_home(settings = self.get_settings)
+        # TODO fix this for case when deploy_type is not defined
+        deploy_type = settings['deploy_type']
+        tree_home = settings['deployments'][deploy_type]['tree_home']
+        File.join(tree_home, settings['new_profiles'])
+    end
 end
+
