@@ -34,9 +34,8 @@ class Category
             # process all lines
             IO.read(filename).each do |line|
                 # skip empty line, trim spaces and add it
-                # TODO hardcoded constant
                 if line.match(/\S+/)
-                    categories << [line.strip(), params['gentoo_tree_home']]
+                    categories << [line.strip(), params['tree_home']]
                 end
             end
         end
