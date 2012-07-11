@@ -1,6 +1,6 @@
 #### Short term tasks
 * **ruby 1.9 with native threads or multiprocessing + db server**
-* <s>deal with pathes</s>
+* <strike>deal with pathes</strike>
     + <s>find nice way to do includes for all kind of scripts</s>
     + <s>"root_path" vs "root_folder" vs "portage_home"</s>
     + <s>options["storage"]["root"] is not valid 'path'</s>
