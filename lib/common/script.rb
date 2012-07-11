@@ -19,12 +19,8 @@ require 'utils'
 
 class Script
     def initialize(params)
+        @settings = Utils.get_settings()
         @data = {"max_threads" => 2}
-        # >>>>> TODO: remove this hack
-        @data["repo_name"] = 'gentoo'
-        @data["repo_folder"] = 'portage'
-        @data["repo_parent_folder"] = '/usr'
-        # <<<<< TODO: remove this hack
         @idle_threads = Queue.new
         @threads = []
         @start_time = nil
@@ -36,14 +32,15 @@ class Script
         @data.merge!(params)
         # get user's options
         @data.merge!(Script.get_cli_options())
+        if @data["db_filename"].nil?
+            @data["db_filename"] = Utils.get_database(@settings)
+        end
+
         # get data for processing
         # #@debug = data["debug"] # TODO
 
         Database.init(@data["db_filename"], @data["sql_query"])
-        PLogger.init({
-            "db_filename" => @data["db_filename"],
-            "script" => @data["script"]
-        })
+        PLogger.init({"db_filename" => @data["db_filename"], "script" => $0})
 
         # TODO: check if all dependant tables are filled
         fill_table_X
@@ -72,33 +69,20 @@ class Script
     end
 
     def create_process_params()
-        result = {
-            'repo_parent_folder' => @data['repo_parent_folder'],
-            'repo_folder' => @data['repo_folder'],
-            'repo_name' => @data['repo_name'],
-            'method' => @data['method'],
-        }
-
-        result['table'] = @data['table'] if @data['table']
-        result['sql_query'] = @data['sql_query'] if @data['sql_query']
-        result['helper_query1'] = @data['helper_query1'] if @data['helper_query1']
-        result['helper_query2'] = @data['helper_query2'] if @data['helper_query2']
-
-        return result
+        { 'method' => @data['method'] }
     end
 
     private
     def create_pathes()
-        portage_home = File.join(@data["portage_home"], "portage")
+        deploy_type = @settings['deploy_type']
+        portage_home = @settings['deployments'][deploy_type]['tree_home']
         profiles_home = File.join(portage_home, "profiles")
-        # TODO /etc/make.conf
+        new_profiles_home = File.join(portage_home, @settings['new_profiles'])
 
         {
-            #'repo_parent_folder' => @data['repo_parent_folder'],
-            #'repo_folder' => @data['repo_folder'],
-            #'repo_name' => @data['repo_name'],
-            'gentoo_tree_home' => portage_home,
-            'profiles2_home' => profiles_home + '_v2',
+            'tree_home' => portage_home,
+            'profiles2_home' => new_profiles_home,
+            # TODO check if it can be removed
             'profiles_home' => profiles_home
         }
     end
@@ -163,11 +147,6 @@ class Script
                 exit
             end
         end.parse!
-
-        unless options.has_key?("db_filename")
-            options["db_filename"] =
-                Utils.get_last_created_database(Utils::OPTIONS)
-        end
 
         return options
     end
