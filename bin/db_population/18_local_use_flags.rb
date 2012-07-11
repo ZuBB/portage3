@@ -6,9 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 require 'useflag'
 require 'package_module'
@@ -38,10 +36,10 @@ def get_data(params)
             'package_id' => Database.get_1value(
                 PackageModule::SQL['id'],
                 [
-                    match[1].split("/")[1][0..-2],
+                    match[1].split('/')[1][0..-2],
                     Database.get_1value(
                         CategoryModule::SQL['id'],
-                        match[1].split("/")[0]
+                        match[1].split('/')[0]
                     )
                 ]
             )
@@ -61,9 +59,8 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id, package_id) VALUES (?, ?, ?, ?);',
-    'thread_code' => method(:process)
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id, package_id) VALUES (?, ?, ?, ?);'
 })
 

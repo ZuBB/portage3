@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+require 'envsetup'
 require 'script'
 
 def get_data(params)
@@ -15,7 +14,7 @@ def get_data(params)
     platforms = []
     # name of the file to be processed
     # TODO fix name of the 1st and 2nd params
-    filename = File.join(params["profiles2_home"], "arch.list")
+    filename = File.join(params['profiles2_home'], 'arch.list')
 
     # walk through all use lines in that file
     (IO.read(filename).to_a rescue []).each do |line|
@@ -31,13 +30,12 @@ def get_data(params)
 end
 
 def process(params)
-    Database.add_data4insert(params["value"])
+    Database.add_data4insert(params['value'])
 end
 
 script = Script.new({
-    "script" => __FILE__,
-    "data_source" => method(:get_data),
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process)
     'sql_query' => 'INSERT INTO platforms (platform_name) VALUES (?);',
-    "thread_code" => method(:process)
 })
 

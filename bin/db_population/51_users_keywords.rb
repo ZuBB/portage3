@@ -6,16 +6,14 @@
 # Initial Author: Vasyl Zuzyak, 02/02/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 
 def get_data(params)
     # results
     results = []
 
-    filename = File.join(Utils::OPTIONS["settings_folder"], "package.keywords")
+    filename = File.join(Utils.get_portage_settings_home, 'package.keywords')
     return results if !File.exist?(filename) || File.directory?(filename)
 
     IO.foreach(filename) do |line|
@@ -39,7 +37,7 @@ def parse_line(line)
         atom = line.split()[0]
         arch = line.split()[1]
         if arch == '**'
-            result["arch"] = Database.select("SELECT id FROM arches;").flatten
+            result['arch'] = Database.select('SELECT id FROM arches;').flatten
             atom << '*' unless atom.end_with?('*')
         end
     else
@@ -52,7 +50,7 @@ def parse_line(line)
         atom.sub!(/^~/, '')
 
         if atom.include?(':')
-            atom.sub!(":", "*:") unless atom.include?('*:')
+            atom.sub!(':', '*:') unless atom.include?('*:')
         else
             atom << '*' unless atom.end_with?('*')
         end
@@ -60,7 +58,7 @@ def parse_line(line)
 
     # version restrictions
     unless atom.match(Utils::RESTRICTION).nil?
-        result["version_restrictions"] = atom.match(Utils::RESTRICTION).to_s
+        result['version_restrictions'] = atom.match(Utils::RESTRICTION).to_s
         atom.sub!(Utils::RESTRICTION, '')
     end
 
@@ -73,28 +71,28 @@ def parse_line(line)
         version = version_match.last
         version << '*' if version_match.size == 2 && !atom.end_with?('*')
 
-        if result["version_restrictions"].nil?
-            result["version_restrictions"] = '='
+        if result['version_restrictions'].nil?
+            result['version_restrictions'] = '='
         end
 
         result['version'] =  version
 
         atom.sub!(Utils::ATOM_VERSION, '')
     else
-        result["version"] = '*'
-        result["version_restrictions"] = '='
+        result['version'] = '*'
+        result['version_restrictions'] = '='
     end
 
     match = atom.split('/')
     result['category'] = match[0]
     result['package'] = match[1]
-    if result["arch"].nil?
-        result["arch"] = Database.select(
-            "SELECT value FROM system_settings WHERE param='arch';"
+    if result['arch'].nil?
+        result['arch'] = Database.select(
+            'SELECT value FROM system_settings WHERE param=\'arch\';'
         )
     end
-    result["keyword"] = Database.get_1value(
-        "SELECT value FROM system_settings WHERE param='keyword';"
+    result['keyword'] = Database.get_1value(
+        'SELECT value FROM system_settings WHERE param=\'keyword\';'
     )
 
     return result
@@ -123,16 +121,16 @@ def process(params)
 
     result_set = nil
 
-    if result["version"] == '*'
-        local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-        result_set = Database.select(local_query, result["package_id"]).flatten
-    elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
-        version_like = result["version"].sub('*', '')
+    if result['version'] == '*'
+        local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
+        result_set = Database.select(local_query, result['package_id']).flatten
+    elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
+        version_like = result['version'].sub('*', '')
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.select(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result['package_id']).flatten
     else
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-        result_set = Database.select(local_query, [result["package_id"], result["version"]]).flatten
+        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
+        result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
     end
 
     if result_set.size() > 0
@@ -140,7 +138,7 @@ def process(params)
             result['arch'].each { |arch|
                 Database.add_data4insert([
                     version,
-                    result["keyword"],
+                    result['keyword'],
                     arch
                 ])
             }
@@ -158,10 +156,9 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
-    "sql_query" => <<-SQL
+    'sql_query' => <<-SQL
         INSERT INTO ebuild_keywords
         (ebuild_id, keyword_id, arch_id, source_id)
         VALUES (

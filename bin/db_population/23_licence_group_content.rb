@@ -6,13 +6,12 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+require 'envsetup'
 require 'script'
 
 def get_data(params)
     # name of the file to be processed
-    filename = File.join(params["profiles2_home"], "license_groups")
+    filename = File.join(params['profiles2_home'], 'license_groups')
 
     # walk through all use flags in that file
     (IO.read(filename).to_a rescue []).map do |line|
@@ -33,7 +32,7 @@ def get_data(params)
 end
 
 def process(params)
-    items = params["value"].split()
+    items = params['value'].split()
     group = items.delete_at(0)
 
     items.each do |item|
@@ -51,10 +50,9 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
-    "data_source" => method(:get_data),
-    "thread_code" => method(:process),
-    "sql_query" => <<-SQL
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process),
+    'sql_query' => <<-SQL
         INSERT INTO licence_group_content
         (group_id, sub_group_id, licence_id)
         VALUES (

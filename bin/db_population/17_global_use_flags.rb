@@ -6,9 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 require 'useflag'
 
@@ -60,10 +58,9 @@ def check_global_flag_duplicates()
 end
 
 script = Script.new({
-    'script' => __FILE__,
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id) VALUES (?, ?, ?);',
-    'thread_code' => method(:process)
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id) VALUES (?, ?, ?);'
 })
 
 # have to comment out this as it runs query on closed db

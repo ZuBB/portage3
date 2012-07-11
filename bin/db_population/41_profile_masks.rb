@@ -6,13 +6,10 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
-require 'fileutils'
 
-def get_data(params)
+def get_data2(params)
     # query
     results = []
     FileUtils.cd(params['profiles2_home'])
@@ -28,6 +25,14 @@ def get_data(params)
     end
 
     return results
+end
+
+def get_data(params)
+    # walk through all use flags in that file
+    Dir[File.join(params['profiles2_home'], '**/package.mask')].delete_if { |i|
+        # skip dirs that has 'deprecated' file in it
+        File.exist?(i.sub('package.mask', 'deprecated'))
+    }
 end
 
 def parse_line(line)

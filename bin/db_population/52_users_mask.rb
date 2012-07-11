@@ -6,17 +6,15 @@
 # Initial Author: Vasyl Zuzyak, 02/01/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 
 def get_data(params)
     # results
     results = []
-    sql_query = "SELECT id FROM mask_states WHERE mask_state=?"
+    sql_query = 'SELECT id FROM mask_states WHERE mask_state=?'
 
-    filename = File.join(Utils::OPTIONS["settings_folder"], "package.mask")
+    filename = File.join(Utils.get_portage_settings_home, 'package.mask')
     if File.exist?(filename) && File.file?(filename)
         mask_state_id = Database.get_1value(sql_query, 'masked')
 
@@ -32,7 +30,7 @@ def get_data(params)
         end
     end
 
-    filename = File.join(Utils::OPTIONS["settings_folder"], "package.unmask")
+    filename = File.join(Utils.get_portage_settings_home, 'package.unmask')
     if File.exist?(filename) && File.file?(filename)
         mask_state_id = Database.get_1value(sql_query, 'unmasked')
 
@@ -60,7 +58,7 @@ def parse_line(line)
         line.sub!(/^~/, '')
 
         if line.include?(':')
-            line.sub!(":", "*:") unless line.include?('*:')
+            line.sub!(':', '*:') unless line.include?('*:')
         else
             line << '*' unless line.end_with?('*')
         end
@@ -68,7 +66,7 @@ def parse_line(line)
 
     # version restrictions
     unless line.match(Utils::RESTRICTION).nil?
-        result["version_restrictions"] = line.match(Utils::RESTRICTION).to_s
+        result['version_restrictions'] = line.match(Utils::RESTRICTION).to_s
         line.sub!(Utils::RESTRICTION, '')
     end
 
@@ -78,17 +76,17 @@ def parse_line(line)
     version_match = nil if version_match.size == 1 && version_match.to_s.empty?
 
     unless version_match.nil?
-        result["version"] = version_match.last
-        result["version"] << '*' if version_match.size == 2
+        result['version'] = version_match.last
+        result['version'] << '*' if version_match.size == 2
 
-        if result["version_restrictions"].nil?
-            result["version_restrictions"] = '='
+        if result['version_restrictions'].nil?
+            result['version_restrictions'] = '='
         end
 
         line.sub!(Utils::ATOM_VERSION, '')
     else
-        result["version"] = '*'
-        result["version_restrictions"] = '='
+        result['version'] = '*'
+        result['version_restrictions'] = '='
     end
 
     match = line.split('/')
@@ -100,7 +98,7 @@ end
 
 def get_arch_id()
     return Database.get_1value(
-        "SELECT value FROM system_settings WHERE param=?;", ['arch']
+        'SELECT value FROM system_settings WHERE param=?;', ['arch']
     )
 end
 
@@ -133,25 +131,25 @@ def process(params)
 
     result_set = nil
 
-    if result["version"] == '*'
-        local_query = "SELECT id FROM ebuilds WHERE package_id=?"
-        result_set = Database.select(local_query, result["package_id"]).flatten
-    elsif result["version_restrictions"] == '=' && result["version"].end_with?('*')
-        version_like = result["version"].sub('*', '')
+    if result['version'] == '*'
+        local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
+        result_set = Database.select(local_query, result['package_id']).flatten
+    elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
+        version_like = result['version'].sub('*', '')
         local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.select(local_query, result["package_id"]).flatten
+        result_set = Database.select(local_query, result['package_id']).flatten
     else
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result["version_restrictions"]}?"
-        result_set = Database.select(local_query, [result["package_id"], result["version"]]).flatten
+        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
+        result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
     end
 
-    result["arch"] = get_arch_id()
+    result['arch'] = get_arch_id()
 
     if result_set.size() > 0
         result_set.each { |version|
             Database.add_data4insert([
                 version,
-                result["arch"],
+                result['arch'],
                 params['value'][1]
             ])
         }
@@ -168,10 +166,9 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
-    "sql_query" => <<-SQL
+    'sql_query' => <<-SQL
         INSERT INTO ebuild_masks
         (ebuild_id, arch_id, mask_state_id, source_id)
         VALUES (

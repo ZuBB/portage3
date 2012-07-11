@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/31/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+require 'envsetup'
 require 'script'
 
 # mask states
@@ -22,9 +21,8 @@ def process(params)
 end
 
 script = Script.new({
-    'script' => __FILE__,
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO mask_states (mask_state) VALUES (?);',
-    'thread_code' => method(:process)
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO mask_states (mask_state) VALUES (?);'
 })
 

@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+require 'envsetup'
 require 'script'
 
 FLAG_STATES = ['masked', 'disabled', 'enabled', 'forced']
@@ -17,13 +16,12 @@ def get_data(params)
 end
 
 def process(params)
-    Database.add_data4insert(params["value"])
+    Database.add_data4insert(params['value'])
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO use_flags_states (flag_state) VALUES (?);',
-    'thread_code' => method(:process)
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO use_flags_states (flag_state) VALUES (?);'
 })
 

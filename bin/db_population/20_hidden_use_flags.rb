@@ -6,9 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 require 'parser'
 require 'useflag'
@@ -17,23 +15,23 @@ def get_data(params)
     # results go here
     results = []
     # pattern for flag, its description and package
-    pattern = Regexp.new("([\\w\\+\\-]+)(?:\\s-\\s)(.*)")
+    pattern = Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)')
     # flag type id
     flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'expand_hidden')
     # items to construct ful path
-    path_items = [params["profiles2_home"], "desc", "*desc"]
+    path_items = [params['profiles2_home'], 'desc', '*desc']
     # exceptions stuff
     exceptions = Parser.get_multi_line_ini_value(
         (IO.read(File.join(
-            params["profiles2_home"], "base", "make.defaults"
+            params['profiles2_home'], 'base', 'make.defaults'
         )).to_a rescue []),
-        "USE_EXPAND_HIDDEN"
+        'USE_EXPAND_HIDDEN'
     ).split(' ')
 
     # read use flags and process each line
     Dir.glob(File.join(*path_items)).each { |file|
         # get prefix for use flags in this file
-        use_prefix = File.basename(file, ".desc")
+        use_prefix = File.basename(file, '.desc')
         # skip if this file belongs to exceptions
         next unless exceptions.include?(use_prefix.upcase())
         # read use flags and process each line
@@ -49,9 +47,9 @@ def get_data(params)
             next if match.nil?
 
             results << {
-                "flag_name" => use_prefix + '_' + match[1],
-                "flag_description" => match[2],
-                "flag_type_id" => flag_type_id
+                'flag_name' => use_prefix + '_' + match[1],
+                'flag_description' => match[2],
+                'flag_type_id' => flag_type_id
             }
         end
     }
@@ -61,16 +59,15 @@ end
 
 def process(params)
     Database.add_data4insert([
-        params["value"]["flag_name"],
-        params["value"]["flag_description"],
-        params["value"]["flag_type_id"]
+        params['value']['flag_name'],
+        params['value']['flag_description'],
+        params['value']['flag_type_id']
     ])
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id) VALUES (?, ?, ?);',
-    'thread_code' => method(:process)
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id) VALUES (?, ?, ?);'
 })
 

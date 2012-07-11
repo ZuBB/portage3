@@ -6,16 +6,14 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 
 def get_data(params)
     # query
     results = []
 
-    filename = "/var/lib/portage/world"
+    filename = '/var/lib/portage/world'
     return results unless File.exist?(filename)
 
     # walk through all use lines in that file
@@ -35,10 +33,9 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
     'thread_code' => method(:process),
     'data_source' => method(:get_data),
-    "sql_query" => <<-SQL
+    'sql_query' => <<-SQL
         INSERT INTO installed_apps
         (package_id)
         VALUES ((

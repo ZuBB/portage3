@@ -6,9 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/28/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
-$:.push File.expand_path(File.join(*(lib_path_items + ['portage'])))
+require 'envsetup'
 require 'script'
 require 'ebuild'
 
@@ -88,10 +86,9 @@ def process(params)
 end
 
 script = Script.new({
-    "script" => __FILE__,
-    "thread_code" => method(:process),
-    "data_source" => Ebuild.method(:get_data),
-    "sql_query" => <<SQL
+    'thread_code' => method(:process),
+    'data_source' => Ebuild.method(:get_data),
+    'sql_query' => <<SQL
 INSERT INTO ebuild_keywords
 (ebuild_id, keyword_id, arch_id, source_id)
 VALUES (

@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-lib_path_items = [File.dirname(__FILE__), '..', '..', 'lib']
-$:.push File.expand_path(File.join(*(lib_path_items + ['common'])))
+require 'envsetup'
 require 'script'
 
 # TODO symbols
@@ -18,13 +17,12 @@ def get_data(params)
 end
 
 def process(params)
-    Database.add_data4insert(params["value"])
+    Database.add_data4insert(params['value'])
 end
 
 script = Script.new({
-    "script" => __FILE__,
-    "data_source" => method(:get_data),
-    'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);',
-    "thread_code" => method(:process)
+    'data_source' => method(:get_data),
+    'thread_code' => method(:process),
+    'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);'
 })
 
