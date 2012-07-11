@@ -29,8 +29,8 @@ module Utils
         File.join(options["portage_home"], options["home_folder"])
     end
 
-    def self.get_last_created_database(options)
-        Dir.glob(File.join(options["portage_home"], '*.sqlite')).sort.last
+    def self.get_database(settings = self.get_settings)
+        Dir.glob(File.join(self.get_db_home(settings), '*.sqlite')).sort.last
     end
 
     def self.is_number?(string)
@@ -76,6 +76,10 @@ module Utils
         # TODO fix this for case when deploy_type is not defined
         deploy_type = settings['deploy_type']
         settings['deployments'][deploy_type]['db_home']
+    end
+
+    def self.get_portage_settings_home(settings = self.get_settings)
+        settings['settings_home']
     end
 end
 
