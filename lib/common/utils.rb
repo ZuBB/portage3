@@ -71,5 +71,11 @@ module Utils
         tree_home = settings['deployments'][deploy_type]['tree_home']
         File.join(tree_home, settings['new_profiles'])
     end
+
+    def self.get_db_home(settings = self.get_settings)
+        # TODO fix this for case when deploy_type is not defined
+        deploy_type = settings['deploy_type']
+        settings['deployments'][deploy_type]['db_home']
+    end
 end
 
