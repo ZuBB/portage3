@@ -2,17 +2,16 @@
     "deploy_type": "debug",
     "new_profiles": "profiles2",
     "sys_tree_home": "/usr/portage",
-    "version": 1,
+    "settings_home": "/etc/portage",
+    "config_version": 1,
     "uuid": "",
     "deployments": {
         "debug": {
-            "settings_home": "/etc/portage",
             "tree_home": "/dev/shm/portage",
             "log_home": "/dev/shm",
             "db_home": "/dev/shm"
         },
         "production": {
-            "settings_home": "/etc/portage",
             "tree_home": "/usr/portage",
             "log_home": "/var/log/portage/portage3",
             "db_home": "/var/cache"
