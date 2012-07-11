@@ -1,16 +1,15 @@
 #### Short term tasks
-* rewrite using Python (start with things that are used for all scripts)
+* ruby 1.9 with native threads or multiprocessing + db server
 * deal with pathes
     + find nice way to do includes for all kind of scripts
     + "root_path" vs "root_folder" vs "portage_home"
     + options["storage"]["root"] is not valid 'path'
 * database
-    + select python sqlite wrapper (code.google.com/p/apsw as example)
-    + check if using WAL accees mode for sqlite will give some perf?
     + thread pool for queries that insert/update data
-    + make database module injectable into Script/Worker class
     + common statement for queries that insert/update data
     + on exception log only error mesage and values
+    + make database module injectable into Script/Worker class
+    + cache all statements
 * Script class
     + use '$0' to get process name and get rid of 'script' param
     + include database and logger modules
@@ -20,8 +19,6 @@
     + keep in mind that need to have easy way to debug specified item(s)
 * 'tables population' scripts
     + script #32. package conky
-    + new modules/classes for portage objects
-    + integrate code from 'list_package_ebuilds.py' into versions scripts
 * setup scripts
     + new script for getting data/setting/check available apps/props/pathes
     + calling script for all in theirs forlder
@@ -30,15 +27,24 @@
     + before loggin issue itself, need to log source of the issue
 
 #### Long term tasks
-* use flags stuff: scripts + example
-* dependancies: scripts + example
-* installed stuff: scripts + example
+* 'tables population' scripts
+    + use flags stuff: scripts + example
+    + dependancies: scripts + example
+    + installed stuff: scripts + example
 * improve parser
-* check dependant tables before filling current one
+* Python
+    + rewrite using Python (start with things that are used for all scripts)
+    + select python sqlite wrapper (apsw vs pysqlite vs..)
+    + integrate code from 'list_package_ebuilds.py' into versions scripts
+* database
+    + check if using WAL accees mode for sqlite will give some perf?
+    + ```CREATE TABLE time_test (my_date timestamp)```
+    + separate table for repos parent dir
+* Script class
+    + check dependant tables before filling current one
 * put portage tree to the faster location
-* separate table for repos parent dir
-* CREATE TABLE time_test (my_date timestamp)
-* /var/cache/edb/dep/usr/portage.sqlite
+
+#### Blue-sky ideas
 * profiles
 
 #### Useful links
@@ -49,6 +55,13 @@
 * http://blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data (protected with password for some reason), [copy in Google's cache](http://webcache.googleusercontent.com/search?q=cache:dZiCptS9UdwJ:blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data+&cd=1&hl=en&ct=clnk&client=ubuntu), [cc at gdrive](http://goo.gl/9JHh3)
 * [some notes on portage and dbs](http://www.linux-archive.org/gentoo-alt/582446-rfc-changing-sys-apps-portage-python-api-use-eroot-instead-root-keys-portage-db-similar-map-objects.html)
 * [portage on non Gentoo Linux distro](http://xanda.org/index.php?page=install-gentoo-portage-on-non-gentoo-distribution)
+* Database
+    + http://habrahabr.ru/blogs/python/137677/
+    + http://habrahabr.ru/blogs/programming/130617/
+    + http://habrahabr.ru/blogs/development/111754/
+    + http://habrahabr.ru/blogs/php/113872/
+    + http://www.sqlite.org/c3ref/profile.html
+    + http://stackoverflow.com/questions/3199790
 
 #### Source code of some reworked PMs.
 * git://git.debian.org/users/jak/apt2.git
@@ -57,6 +70,9 @@
 * git://git.etoilebsd.net/pkgng
 
 #### Misc
+* /var/cache/edb/dep/usr/portage.sqlite
+* man man |col -bx > /tmp/man.txt
+*
 <pre>
 make.globals -> ../usr/share/portage/config/make.globals  
 make.profile -> ../usr/portage/profiles/default/linux/x86/10.0
