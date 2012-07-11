@@ -20,8 +20,8 @@ options["db_filename"] = Utils.get_last_created_database(options)
 
 OptionParser.new do |opts|
     # help header
-    opts.banner = " Usage: purge_s3_data [options]\n"
-    opts.separator " A script that purges outdated data from s3 bucket\n"
+    opts.banner = " Usage: 03_fill_db [options]\n"
+    opts.separator " A script that fills cache db with all data"
 
     opts.on("-a", "--[no-]run-all-scripts",
             "Run all scripts for populating db") do |value|
@@ -29,7 +29,7 @@ OptionParser.new do |opts|
     end
 
     opts.on("-f", "--database-file STRING",
-            "Path where new database file will be created") do |value|
+            "Path to database file to fill") do |value|
         # TODO check if path id valid
         options["db_filename"] = value
     end
@@ -58,10 +58,10 @@ end.parse!
 
 options["db_filename"] = ARGV[0] if ARGV.size == 1
 
-plugins_dir = File.join(File.dirname(__FILE__), "tables_population")
+scripts_dir = File.join(File.dirname(__FILE__), "db_population")
 
 if options["run_all"]
-    Dir.glob(File.join(plugins_dir, "/*")).sort.each do |script|
+    Dir.glob(File.join(scripts_dir, "/*")).sort.each do |script|
         break if options["until"] && script.include?(options["until"])
 
         if (script.match(/\d\d_[a-z0-9_]+\.rb$/))
@@ -72,3 +72,4 @@ if options["run_all"]
         end
     end
 end
+
