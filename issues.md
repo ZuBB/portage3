@@ -1,17 +1,17 @@
 #### Short term tasks
-* ruby 1.9 with native threads or multiprocessing + db server
-* deal with pathes
-    + find nice way to do includes for all kind of scripts
-    + "root_path" vs "root_folder" vs "portage_home"
-    + options["storage"]["root"] is not valid 'path'
+* *ruby 1.9 with native threads or multiprocessing + db server*
+* <s>deal with pathes</s>
+    + <s>find nice way to do includes for all kind of scripts</s>
+    + <s>"root_path" vs "root_folder" vs "portage_home"</s>
+    + <s>options["storage"]["root"] is not valid 'path'</s>
 * database
-    + thread pool for queries that insert/update data
-    + common statement for queries that insert/update data
-    + on exception log only error mesage and values
+    + <s>thread pool for queries that insert/update data</s>
+    + <s>common statement for queries that insert/update data</s>
+    + <s>on exception log only error mesage and values</s>
     + make database module injectable into Script/Worker class
     + cache all statements
 * Script class
-    + use '$0' to get process name and get rid of 'script' param
+    + </s>use '$0' to get process name and get rid of 'script' param</s>
     + include database and logger modules
     + shared resources for workers
     + pre/post processing hooks
@@ -20,7 +20,7 @@
 * 'tables population' scripts
     + script #32. package conky
 * setup scripts
-    + new script for getting data/setting/check available apps/props/pathes
+    + <s>new script for getting data/setting/check available apps/props/pathes</s>
     + calling script for all in theirs forlder
 * Logger
     + create log file on first log attempt
