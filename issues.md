@@ -72,7 +72,7 @@
 #### Misc
 * /var/cache/edb/dep/usr/portage.sqlite
 * man man |col -bx > /tmp/man.txt
-* ```
+<pre>
 make.globals -> ../usr/share/portage/config/make.globals  
 make.profile -> ../usr/portage/profiles/default/linux/x86/10.0
-```
+</pre>
