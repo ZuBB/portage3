@@ -6,15 +6,11 @@
 # Initial Author: Vasyl Zuzyak, 02/06/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
-require 'fileutils'
+require 'envsetup'
 require 'utils'
 
 # hash with options
-options = Hash.new.merge!(Utils::OPTIONS)
-# get home of the new portage data
-FileUtils.cd(Utils.get_full_tree_path(options))
-package_mask_file = 'profiles_v2/base/package.mask'
+package_mask_file = File.join(Utils.get_profiles2_home, 'base/package.mask')
 
 # remove uclibc
 line_num = `grep -nh '^sys-libs/uclibc' #{package_mask_file} | sed 's/:.*//'`

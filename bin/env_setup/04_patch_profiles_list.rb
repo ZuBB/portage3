@@ -6,15 +6,11 @@
 # Initial Author: Vasyl Zuzyak, 02/06/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'common'))
-require 'fileutils'
+require 'envsetup'
 require 'utils'
 
 # hash with options
-options = Hash.new.merge!(Utils::OPTIONS)
-# change dir to `home of the new portage data`
-FileUtils.cd(Utils.get_full_tree_path(options))
-profiles_file = 'profiles_v2/profiles.desc'
+profiles_file = File.join(Utils.get_profiles2_home, 'profiles.desc')
 
 %x[sed -i.bak "s/default\\/linux\\/amd64/amd64\\/linux\\/default/" #{profiles_file}]
 %x[sed -i.bak "s/default\\/linux\\/x86/x86\\/linux\\/default/" #{profiles_file}]
