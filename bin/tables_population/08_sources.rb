@@ -33,7 +33,6 @@ end
 
 script = Script.new({
     'script' => __FILE__,
-    'table' => 'sources',
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO sources (source) VALUES (?);',
     'thread_code' => method(:process)

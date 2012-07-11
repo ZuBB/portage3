@@ -31,7 +31,6 @@ def process(params)
 end
 
 script = Script.new({
-    'table' => 'eapis',
     'script' => __FILE__,
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO eapis (eapi_version) VALUES (?);',

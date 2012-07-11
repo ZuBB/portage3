@@ -21,7 +21,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "packages",
     "thread_code" => method(:process),
     'sql_query' => 'INSERT INTO packages (category_id, package_name) VALUES (?, ?);',
     "data_source" => Package.method(:get_packages)

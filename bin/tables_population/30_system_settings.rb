@@ -40,7 +40,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "system_settings",
     "data_source" => method(:get_data),
     'sql_query' => 'INSERT INTO system_settings (param, value) VALUES (?, ?);',
     "thread_code" => method(:process)

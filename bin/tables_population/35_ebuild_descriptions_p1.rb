@@ -47,7 +47,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "ebuild_descriptions",
     "thread_code" => method(:process),
     "data_source" => method(:get_data),
     "sql_query" => "INSERT OR IGNORE INTO ebuild_descriptions (description) VALUES (?);",

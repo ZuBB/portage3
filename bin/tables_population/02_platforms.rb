@@ -36,7 +36,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "platforms",
     "data_source" => method(:get_data),
     'sql_query' => 'INSERT INTO platforms (platform_name) VALUES (?);',
     "thread_code" => method(:process)

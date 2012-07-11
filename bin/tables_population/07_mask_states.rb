@@ -23,7 +23,6 @@ end
 
 script = Script.new({
     'script' => __FILE__,
-    'table' => 'mask_states',
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO mask_states (mask_state) VALUES (?);',
     'thread_code' => method(:process)

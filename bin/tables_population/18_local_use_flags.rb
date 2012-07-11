@@ -61,7 +61,6 @@ def process(params)
 end
 
 script = Script.new({
-    "table" => "use_flags",
     "script" => __FILE__,
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id, package_id) VALUES (?, ?, ?, ?);',

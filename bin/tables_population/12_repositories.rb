@@ -24,7 +24,6 @@ def process(params)
 end
 
 script = Script.new({
-    "table" => "repositories",
     "script" => __FILE__,
     "thread_code" => method(:process),
     'sql_query' => 'INSERT INTO repositories (repository_name, parent_folder, repository_folder) VALUES (?, ?, ?);',

@@ -28,7 +28,6 @@ def process(params)
 end
 
 script = Script.new({
-    "table" => "ebuilds",
     "script" => __FILE__,
     "thread_code" => method(:process),
     "data_source" => Ebuild.method(:get_ebuilds),

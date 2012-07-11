@@ -47,7 +47,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "use_flags_types",
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO use_flags_types (flag_type, description, source) VALUES (?, ?, ?);',
     'thread_code' => method(:process)

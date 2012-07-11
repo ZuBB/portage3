@@ -21,7 +21,6 @@ def process(params)
 end
 
 script = Script.new({
-    "table" => "use_flags_states",
     "script" => __FILE__,
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO use_flags_states (flag_state) VALUES (?);',

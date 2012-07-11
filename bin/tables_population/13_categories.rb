@@ -22,7 +22,6 @@ def process(params)
 end
 
 script = Script.new({
-    'table' => 'categories',
     'script' => __FILE__, # TODO name it 'parent_script' ?
     'thread_code' => method(:process),
     'sql_query' => 'INSERT INTO categories (category_name, description) VALUES (?, ?);',

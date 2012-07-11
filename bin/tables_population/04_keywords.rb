@@ -23,7 +23,6 @@ end
 
 script = Script.new({
     "script" => __FILE__,
-    "table" => "keywords",
     "data_source" => method(:get_data),
     'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);',
     "thread_code" => method(:process)
