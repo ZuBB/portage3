@@ -16,7 +16,7 @@ options = {"run_all" => true}
 # lets merge stuff from tools lib
 options.merge!(Utils::OPTIONS)
 # get last created database
-options["db_filename"] = Utils.get_last_created_database(options)
+options["db_filename"] = Utils.get_database()
 
 OptionParser.new do |opts|
     # help header
