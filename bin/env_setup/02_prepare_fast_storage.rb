@@ -62,7 +62,8 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-portage_home = Utils.get_tree_home()
+settings = Utils.get_settings()
+portage_home = Utils.get_tree_home(settings)
 root_path = File.dirname(portage_home)
 
 unless File.exist?(root_path)
@@ -120,8 +121,8 @@ if options["download_snapshot"] || Dir[snapshots_home].size == 0
 end
 
 if options["recreate_tree"] || !File.exist?(portage_home)
-    FileUtils.rm_r(portage_home) if File.exist?(portage_home)
     print "Starting exctact portage snapshot.. "
+    FileUtils.rm_r(portage_home) if File.exist?(portage_home)
     STDOUT.flush
     `tar xjf #{soft_link} -C #{root_path}`
     puts "Done"
@@ -130,7 +131,11 @@ end
 if options['sync_tree']
     print "Starting syncing portage snapshot with system tree.. "
     STDOUT.flush
-    #`tar xjf #{soft_link} -C #{root_path}`
+	command = 'rsync -a --delete'
+	['metadata', 'distfiles', 'packages'].each { |item|
+		command << " --exclude=#{item}"
+	}
+	command << " #{settings['sys_tree_home']} #{portage_home}"
     puts "Done"
 end
 
