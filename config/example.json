@@ -1,9 +1,12 @@
 {
+    "config_version": 1,
     "deploy_type": "debug",
+    "eix_presence": true,
+    "gentoo_os": true,
     "new_profiles": "profiles2",
+    "overlay_support": false,
     "sys_tree_home": "/usr/portage",
     "settings_home": "/etc/portage",
-    "config_version": 1,
     "uuid": "",
     "deployments": {
         "debug": {
