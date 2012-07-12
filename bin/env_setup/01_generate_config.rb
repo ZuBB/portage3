@@ -7,13 +7,14 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'envsetup'
+require 'utils'
 
 config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'config']
 settings_dir = File.expand_path(File.join(*config_path_parts))
 settings_file = File.join(settings_dir, 'settings.json')
 example_file = File.join(settings_dir, 'example.json')
 
-if File.exist?(settings_file)
+if File.exist?(settings_file) && File.size(settings_file) > 0
     puts('Settings already generated')
     exit(0)
 end
@@ -29,9 +30,11 @@ unless  File.writable?(settings_dir)
 end
 
 data = JSON.parse(IO.read(example_file))
+
+# TODO: recheck all values that might be different on target PC
 data['uuid'] = `cat /proc/sys/kernel/random/uuid`.strip()
-# TODO: get PORTDIR value
+
 File.open(settings_file, 'w') do |file|
-      file.write(data.to_json)
+    file.write(JSON.pretty_generate(data))
 end
 
