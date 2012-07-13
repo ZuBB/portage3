@@ -55,13 +55,12 @@ OptionParser.new do |opts|
     end
 end.parse!
 
+# get path to the database file
+db_path = File.join(Utils.get_db_home, db_filename)
+sql_home = File.join(File.dirname(__FILE__), options["sql_src_home"])
+sql_filename = Dir.glob(File.join(sql_home, '*sql'))[0]
 
 begin
-    # get path to the database file
-    db_path = File.join(Utils.get_db_home, db_filename)
-    sql_home = File.join(File.dirname(__FILE__), options["sql_src_home"])
-    sql_filename = Dir.glob(File.join(sql_home, '*sql'))[0]
-
     db = SQLite3::Database.new(db_path)
     db.execute_batch(IO.read(sql_filename))
 
