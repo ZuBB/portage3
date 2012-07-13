@@ -32,7 +32,7 @@ class Category
 
         if File.exist?(filename)
             # process all lines
-            IO.read(filename).each do |line|
+            IO.foreach(filename) do |line|
                 # skip empty line, trim spaces and add it
                 if line.match(/\S+/)
                     categories << [line.strip(), params['tree_home']]
