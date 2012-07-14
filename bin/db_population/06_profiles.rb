@@ -16,7 +16,7 @@ def get_data(params)
     filename = File.join(params['profiles2_home'], 'profiles.desc')
 
     # walk through all use flags in that file
-    (IO.read(filename).to_a rescue []).each do |line|
+    IO.foreach(filename) do |line|
         # stop if we face with header of 'prefix profiles'
         break if line.include?('Gentoo Prefix profiles')
         # skip comments

@@ -12,7 +12,7 @@ require 'parser'
 
 def get_data(params)
     accept_keywords = Parser.get_multi_line_ini_value(
-        (IO.read('/etc/make.conf').to_a rescue []),
+        IO.read('/etc/make.conf').split("\n"),
         'ACCEPT_KEYWORDS'
     )
 

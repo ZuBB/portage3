@@ -17,7 +17,7 @@ def get_data(params)
     filename = File.join(params['profiles2_home'], 'arch.list')
 
     # walk through all use lines in that file
-    (IO.read(filename).to_a rescue []).each do |line|
+    IO.foreach(filename) do |line|
         # skip comments
         next if line.index('#') == 0
         # skip empty lines and architectures

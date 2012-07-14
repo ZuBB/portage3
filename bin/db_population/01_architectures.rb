@@ -17,7 +17,7 @@ def get_data(params)
     filename = File.join(params['profiles2_home'], 'arch.list')
 
     # walk through all use lines in that file
-    (IO.read(filename).to_a rescue []).each do |line|
+    IO.foreach(filename) do |line|
         # break if we face with prefixes
         break if line.include?('# Prefix keywords')
         # skip comments

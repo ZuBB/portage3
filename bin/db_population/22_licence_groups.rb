@@ -14,7 +14,7 @@ def get_data(params)
     filename = File.join(params['profiles2_home'], 'license_groups')
 
     # walk through all use flags in that file
-    (IO.read(filename).to_a rescue []).map do |line|
+    IO.read(filename).split("\n").map do |line|
         # skip comments
         next if line.start_with?('#')
         # skip empty lines

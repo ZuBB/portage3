@@ -16,7 +16,7 @@ def get_data(params)
     filename = File.join(params['profiles2_home'], 'arch.list')
 
     # walk through all use flags in that file
-    (IO.read(filename).to_a rescue []).each do |line|
+    IO.foreach(filename) do |line|
         # lets trim newlines
         line.chomp!()
         # skip empty lines and comments

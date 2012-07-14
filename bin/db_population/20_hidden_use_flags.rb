@@ -24,7 +24,7 @@ def get_data(params)
     exceptions = Parser.get_multi_line_ini_value(
         (IO.read(File.join(
             params['profiles2_home'], 'base', 'make.defaults'
-        )).to_a rescue []),
+        )).splait("\n")),
         'USE_EXPAND_HIDDEN'
     ).split(' ')
 
