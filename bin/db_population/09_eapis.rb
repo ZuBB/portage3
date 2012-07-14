@@ -16,7 +16,7 @@ def get_data(params)
     search_pattern = "#{params['tree_home']}/*/*/*ebuild"
     grep_command = "grep -h '^EAPI' #{search_pattern} 2> /dev/null"
 
-    for letter in 'a'..'z':
+    for letter in 'a'..'z'
         results += %x[#{grep_command.sub(/\*/, "#{letter}*")}].split("\n")
     end
 
