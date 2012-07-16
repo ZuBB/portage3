@@ -16,22 +16,22 @@ class Repository
 
     def self.get_repositories(params = {})
         repos = [{
-            # TODO hardcoded values
-            'value' => 'gentoo',
-            # for public tests we need location that is
-            #  * fast
-            #  * available on any system
-            #@'parent_dir' => '/usr',
-            'parent_dir' => '/dev/shm',
-            'fsvalue' => 'portage'
+            'parent_dir' => File.dirname(params['tree_home']),
+            'fsvalue' => File.basename(params['tree_home']),
+            'value' => IO.read(File.join(
+                params['profiles2_home'], 'repo_name'
+            )).strip
         }]
 
-        repos + self.get_layman_repositories()
+        if Utils::Settings['overlay_support']
+            repos =+ self.get_layman_repositories()
+        end
+
+        repos
     end
 
     def self.get_layman_repositories()
         # for public tests its enough base repo
-        return []
         repos = []
         layman_config = '/etc/layman/layman.cfg'
         return repos unless File.exist?(layman_config)
