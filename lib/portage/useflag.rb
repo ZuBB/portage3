@@ -16,7 +16,7 @@ class UseFlag
     PROP_SUFFIXES = ['name', 'description', 'type_id']
     # sql stuff
     SQL = {
-        'type' => 'SELECT id FROM use_flags_types WHERE flag_type=?'
+        'type' => 'SELECT id FROM use_flag_types WHERE flag_type=?'
     }
 
     def initialize(params)
