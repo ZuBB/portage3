@@ -48,8 +48,10 @@ class Category
         # result here
         result = []
 
+		# NOTE external should exclude repo that locates in
+		# 	Utils::Settings['tree_home']
         # get all external repos and theirs info
-        Database.db().execute(Repository::SQL['external']) do |repo_row|
+        Database.select(Repository::SQL['external']) do |repo_row|
             # get repo home
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
             # skip if we do not have this repo
