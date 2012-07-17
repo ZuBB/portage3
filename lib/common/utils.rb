@@ -22,15 +22,7 @@ module Utils
     ATOM_VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 
     def self.get_timestamp()
-        return Time.now.strftime(TIMESTAMP)
-    end
-
-    def self.get_full_tree_path(options)
-        File.join(options["portage_home"], options["home_folder"])
-    end
-
-    def self.get_database(settings = self.get_settings)
-        Dir.glob(File.join(self.get_db_home(settings), '*.sqlite')).sort.last
+        Time.now.strftime(TIMESTAMP)
     end
 
     def self.is_number?(string)
@@ -52,34 +44,51 @@ module Utils
             msg = 'Can not find settings file!'
         end
 
-        if msg.nil?
-            return data
-        else
-            throw msg
-        end
+        throw msg unless msg.nil?
+        data
     end
 
-    def self.get_tree_home(settings = self.get_settings)
+    def self.get_pathes()
+        deploy_type = SETTINGS['deploy_type']
+        portage_home = SETTINGS['deployments'][deploy_type]['tree_home']
+        profiles_home = File.join(portage_home, "profiles")
+        new_profiles_home = File.join(portage_home, SETTINGS['new_profiles'])
+
+        {
+            'tree_home' => portage_home,
+            'profiles2_home' => new_profiles_home,
+            # TODO check if it can be removed
+            'profiles_home' => profiles_home
+        }
+    end
+
+    def self.get_tree_home()
         # TODO fix this for case when deploy_type is not defined
-        deploy_type = settings['deploy_type']
-        settings['deployments'][deploy_type]['tree_home']
+        deploy_type = SETTINGS['deploy_type']
+        SETTINGS['deployments'][deploy_type]['tree_home']
     end
 
-    def self.get_profiles2_home(settings = self.get_settings)
+    def self.get_profiles2_home()
         # TODO fix this for case when deploy_type is not defined
-        deploy_type = settings['deploy_type']
-        tree_home = settings['deployments'][deploy_type]['tree_home']
-        File.join(tree_home, settings['new_profiles'])
+        deploy_type = SETTINGS['deploy_type']
+        tree_home = SETTINGS['deployments'][deploy_type]['tree_home']
+        File.join(tree_home, SETTINGS['new_profiles'])
     end
 
-    def self.get_db_home(settings = self.get_settings)
+    def self.get_db_home()
         # TODO fix this for case when deploy_type is not defined
-        deploy_type = settings['deploy_type']
-        settings['deployments'][deploy_type]['db_home']
+        deploy_type = SETTINGS['deploy_type']
+        SETTINGS['deployments'][deploy_type]['db_home']
     end
 
-    def self.get_portage_settings_home(settings = self.get_settings)
-        settings['settings_home']
+    def self.get_portage_settings_home()
+        SETTINGS['settings_home']
     end
+
+    def self.get_database()
+        Dir.glob(File.join(self.get_db_home(), '*.sqlite')).sort.last
+    end
+
+    SETTINGS = Utils.get_settings()
 end
 
