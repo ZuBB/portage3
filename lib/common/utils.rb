@@ -81,6 +81,12 @@ module Utils
         SETTINGS['deployments'][deploy_type]['db_home']
     end
 
+    def self.get_log_home()
+        # TODO fix this for case when deploy_type is not defined
+        deploy_type = SETTINGS['deploy_type']
+        SETTINGS['deployments'][deploy_type]['log_home']
+    end
+
     def self.get_portage_settings_home()
         SETTINGS['settings_home']
     end
@@ -89,6 +95,6 @@ module Utils
         Dir.glob(File.join(self.get_db_home(), '*.sqlite')).sort.last
     end
 
-    SETTINGS = Utils.get_settings()
+    SETTINGS = Utils.get_settings() unless $0.end_with?('01_generate_config.rb')
 end
 
