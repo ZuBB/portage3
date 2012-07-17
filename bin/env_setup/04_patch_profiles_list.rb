@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 02/06/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'utils'
+require_relative 'envsetup'
 
 # hash with options
 profiles_file = File.join(Utils.get_profiles2_home, 'profiles.desc')

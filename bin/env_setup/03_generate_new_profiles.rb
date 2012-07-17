@@ -6,14 +6,11 @@
 # Initial Author: Vasyl Zuzyak, 01/27/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'utils'
+require_relative 'envsetup'
 
-# hash with options
-settings = Hash.new.merge!(Utils.get_settings)
 # change dir to `home of the new portage data`
-Dir.chdir(Utils.get_tree_home(settings))
-profiles2_dir = settings['new_profiles']
+Dir.chdir(Utils.get_tree_home)
+profiles2_dir = Utils.get_profiles2_home
 
 # new profiles folder
 `mkdir -p #{profiles2_dir}`

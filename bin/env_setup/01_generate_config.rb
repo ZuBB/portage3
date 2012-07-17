@@ -6,8 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'utils'
+require_relative 'envsetup'
 
 config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'config']
 settings_dir = File.expand_path(File.join(*config_path_parts))
@@ -31,8 +30,9 @@ end
 
 data = JSON.parse(IO.read(example_file))
 
-# TODO: recheck all values that might be different on target PC
+# generate uuid for current system
 data['uuid'] = `cat /proc/sys/kernel/random/uuid`.strip()
+# TODO: recheck all values that might be different on target PC
 
 File.open(settings_file, 'w') do |file|
     file.write(JSON.pretty_generate(data))

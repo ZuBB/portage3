@@ -6,10 +6,9 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
+require_relative 'envsetup'
 require 'fileutils'
 require 'optparse'
-require 'utils'
 
 options = {
     "download_snapshot" => false,
@@ -63,7 +62,7 @@ OptionParser.new do |opts|
 end.parse!
 
 settings = Utils.get_settings()
-portage_home = Utils.get_tree_home(settings)
+portage_home = Utils.get_tree_home()
 root_path = File.dirname(portage_home)
 
 unless File.exist?(root_path)
@@ -82,7 +81,7 @@ unless File.writable?(root_path)
 end
 
 space_available = `df -kP #{root_path}`.split("\n")[1].split(" ")[3].to_i
-portage_size = `du -s #{portage_home}`.split()[0].to_i rescue 0
+portage_size = `du -s #{root_path}`.split()[0].to_i rescue 0
 required_space = options["required_space"] * 1024
 
 if portage_size + space_available < required_space
