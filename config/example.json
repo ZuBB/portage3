@@ -1,7 +1,7 @@
 {
     "config_version": 1,
     "deploy_type": "debug",
-    "eix_presence": true,
+    "eix_present": true,
     "gentoo_os": true,
     "new_profiles": "profiles2",
     "overlay_support": false,
