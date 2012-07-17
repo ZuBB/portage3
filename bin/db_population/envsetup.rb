@@ -5,6 +5,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 
+Encoding.default_external = 'UTF-8'
 module EnvSetup
     def self.get_path2root
         '../..'
@@ -25,3 +26,5 @@ end
 EnvSetup.get_lib_dirs().each { |libdir|
     $:.push File.expand_path(libdir)
 }
+
+require 'script'
