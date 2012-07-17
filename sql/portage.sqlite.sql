@@ -81,13 +81,13 @@ create table mask_states (
     PRIMARY KEY (id)
 );
 
-create table use_flags_states (
+create table use_flag_states (
     id INTEGER,
     flag_state VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
-create table use_flags_types (
+create table use_flag_types (
     id INTEGER,
     flag_type VARCHAR NOT NULL UNIQUE,
     description VARCHAR NOT NULL UNIQUE,
@@ -101,7 +101,7 @@ create table use_flags (
     flag_description VARCHAR NOT NULL,
     flag_type_id INTEGER NOT NULL,
     package_id INTEGER,
-    FOREIGN KEY (flag_type_id) REFERENCES use_flags_types(id),
+    FOREIGN KEY (flag_type_id) REFERENCES use_flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
