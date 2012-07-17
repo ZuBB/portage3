@@ -4,8 +4,8 @@
 # Initial Author: Vasyl Zuzyak, 04/10/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'logger' unless Object.const_defined?(:Logger)
- 
+require 'logger'
+
 class SimpleLog < Logger::Formatter
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     # http://blog.grayproductions.net/articles/the_books_are_wrong_about_logger
@@ -21,37 +21,21 @@ end
 module PLogger
     @logger = nil
     @log_dir = nil
-    @logfile = nil
-    @log4res = nil
     @logfile_ext = ".log"
 
     def self.init(params = {})
-        if params.has_key?("db_filename") && params.has_key?("script")
-            unless is_filename_valid?(params["db_filename"])
-                throw "Can not find 'anchor' file `#{params["db_filename"]}"
-            end
-
-            if params["script"].nil? || params["script"].empty?
-                throw "'script' param is not valid"
-            end
+        if !params["path"] || !params["dir"] || !params["file"]
+            throw "Required parameters was not passed!"
         end
 
-        if params.has_key?("db_filename") && params.has_key?("script")
-            dot_index = params["db_filename"].rindex('.')
-            @log_dir = params["db_filename"][0..dot_index - 1]
+        dir = File.basename(params["dir"])
+        dir = dir[0...dir.rindex('.')]
+        @log_dir = File.join(params["path"], dir)
+        Dir.mkdir(@log_dir) unless File.exist?(@log_dir)
 
-            Dir.mkdir(@log_dir) unless File.exist?(@log_dir)
-
-            @log4res = params["script"].index('/').nil?() ?
-                params["script"] :
-                params["script"].split('/').last
-
-            @logfile = File.join(@log_dir,  @log4res + @logfile_ext)
-            @logger = Logger.new(@logfile)
-            @logger.level = params["level"] || Logger::DEBUG
-        else
-            @logger = Logger.new(STDOUT)
-        end
+        file = File.basename(params["file"]) + @logfile_ext
+        @logger = Logger.new(File.join(@log_dir,  file))
+        @logger.level = params["level"] || Logger::DEBUG
 
         @logger.formatter = SimpleLog.new
     end
