@@ -5,11 +5,6 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 module Routines
-    # home of the portage tree
-    #PORTDIR = %x[emerge --info | grep -w PORTDIR].match(/"([^"]+)"/)[1]
-    # flag that shows if eix is available
-    EIX = `whereis eix`.split(' ').drop(1).index { |i| i.index('/bin/') } != nil
-
     # creates instance properties that is related to all included modules
     # eg `Repository.new` was called. Next properties will be created
     #  * 'repository' from GPobject
