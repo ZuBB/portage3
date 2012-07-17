@@ -115,7 +115,7 @@ module EbuildModule
     end
 
     def load_ebuild_content()
-        self.set_prop(IO.read(File.join(@ebuild_pd, @ebuild)).to_a, 'text')
+        self.set_prop(IO.read(File.join(@ebuild_pd, @ebuild)).split("\n"), 'text')
     end
 
     private
