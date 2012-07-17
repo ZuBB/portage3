@@ -16,7 +16,7 @@ module EnvSetup
     end
 
     def self.get_lib_dirs()
-        Dir[File.join(self.get_path2lib, '*')].delete_if { |item| 
+        Dir[File.join(self.get_path2lib, '*')].delete_if { |item|
             File.file?(item)
         }
     end
@@ -25,3 +25,5 @@ end
 EnvSetup.get_lib_dirs().each { |libdir|
     $:.push File.expand_path(libdir)
 }
+
+require 'utils'
