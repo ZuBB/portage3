@@ -40,7 +40,11 @@ class Script
         # #@debug = data["debug"] # TODO
 
         Database.init(@data["db_filename"], @data["sql_query"])
-        PLogger.init({"db_filename" => @data["db_filename"], "script" => $0})
+        PLogger.init({
+            "path" => Utils::get_log_home,
+            "dir" => @data["db_filename"],
+            "file" => $0
+        })
 
         # TODO: check if all dependant tables are filled
         fill_table_X
