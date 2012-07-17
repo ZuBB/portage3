@@ -23,7 +23,7 @@ class Repository
             )).strip
         }]
 
-        if Utils::Settings['overlay_support']
+        if Utils::SETTINGS['overlay_support']
             repos =+ self.get_layman_repositories()
         end
 
