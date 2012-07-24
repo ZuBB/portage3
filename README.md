@@ -21,7 +21,7 @@ For now its a JFF project but if it will look solid and fast, it would be nice t
 Installation
 -----------
 
-smth like this
+Something like this
 <pre>
 git clone git://github.com/zvasyl/portage3.git /opt/portage-next
 </pre>
@@ -30,7 +30,7 @@ git clone git://github.com/zvasyl/portage3.git /opt/portage-next
 Requirements
 -----
 
-    Ruby 1.8
+    Ruby 1.9
     http://rubygems.org/
     http://sqlite-ruby.rubyforge.org/
     http://nokogiri.org/
@@ -46,4 +46,4 @@ Take a look at files in *bin/examples* directory
 Contributing
 ------------
 
-Something like [this](https://github.com/github/markup/#contributing-1)
+[As usual](https://github.com/github/markup/#contributing-1)
