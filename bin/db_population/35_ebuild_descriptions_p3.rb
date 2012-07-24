@@ -9,30 +9,44 @@
 require_relative 'envsetup'
 
 def get_data(params)
-	sql_query = 'SELECT description FROM ebuild_descriptions'
-	Database.select(sql_query).flatten
+    sql_query = 'SELECT description FROM ebuild_descriptions'
+    Database.select(sql_query).flatten
 end
 
 class Script
     def process(desc)
-		sql_query = <<-SQL
-			SELECT ed.id, td.ebuild_id
-			FROM ebuild_descriptions ed
-			JOIN tmp_ebuild_descriptions td
-				ON ed.description = td.description
-			WHERE ed.description=?
-		SQL
+        sql_query = <<-SQL
+            SELECT ed.id, td.ebuild_id
+            FROM ebuild_descriptions ed
+            JOIN tmp_ebuild_descriptions td
+                ON ed.description = td.description
+            WHERE ed.description=?
+        SQL
 
-		Database.select(sql_query, desc).each do |row|
-			Database.add_data4insert(row[0], row[1])
-		end
+        Database.select(sql_query, desc).each do |row|
+            Database.add_data4insert(row[0], row[1])
+        end
     end
 
     def post_insert_task
-		# TODO checks
-		# 1. we should not have description_id with '0'
-		# 2. every description should referenced at least once
-		# 3. if checks are OK then we can delete tmp
+        sql_query = 'SELECT COUNT(id) FROM ebuilds WHERE description_id=0'
+        tmp = Database.get_1value(sql_query).to_i
+        if tmp > 0
+            PLogger.error("Some ebuilds(#{tmp} items) miss its description")
+            return
+        end
+
+        sql_query = <<-SQL
+            SELECT COUNT(id)
+            FROM ebuild_descriptions
+            WHERE id NOT IN (SELECT DISTINCT description_id from ebuilds)
+        SQL
+        tmp = Database.get_1value(sql_query).to_i
+        if tmp > 0
+            PLogger.error('Some descriptions(#{tmp} items) are is not being used')
+            return
+        end
+
         #sql_query = 'DROP TABLE IF EXISTS tmp_ebuild_descriptions;'
         #Database.select(sql_query)
     end
