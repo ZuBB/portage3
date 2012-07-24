@@ -1,5 +1,6 @@
 #### Short term tasks
-* **ruby 1.9 with native threads or multiprocessing + db server**
+* ~~**ruby 1.9 with native threads**~~
+* ~~**portage libs: one more refactoring**~~
 * ~~deal with pathes~~
     + ~~find nice way to do includes for all kind of scripts~~
     + ~~"root_path" vs "root_folder" vs "portage_home"~~
@@ -8,36 +9,49 @@
     + ~~thread pool for queries that insert/update data~~
     + ~~common statement for queries that insert/update data~~
     + ~~on exception log only error mesage and values~~
-    + ~~cache all statements (we have only 1 for now)~~
-    + make database module injectable into Script/Worker class
+    + ~~cache statements~~
+    + support insert via specified cached statement
+	+ issue with queries and specified params run from workers
+    + **SQL**: tables/colums naming
 * Script class
     + ~~use '$0' to get process name and get rid of 'script' param~~
     + ~~shared resources for workers~~
     + ~~evaluate injecting of :get_data and :process methods into Script/Worker~~
-    + post processing hooks
+    + ~~post processing hooks~~
     + keep in mind that need to have easy way to debug specified item(s)
-    + include database and logger modules
 * 'tables population' scripts
-    + script #32. package conky
-    + use flags stuff: scripts + example
-    + dependancies: scripts + example
-    + installed stuff: scripts + example
+    + wrong handling of homepages: ebuild may refer to 1+ homepage
+    + use flags stuff
+    + dependancies
+    + installed stuff
+    + find another way of getting available EAPIs
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + calling script for all in theirs forlder
 * Logger
     + create log file on first log attempt
     + before loggin issue itself, need to log source of the issue
-* improve parser
+* parser
+    * fix bugs
+    * light improvement
+* examples:
+    + example(s) for use flags stuff
+    + example(s) for dependancies
+    + example(s) for installed stuff
+    + statistics on what is in db
+* installation
+    * gemfile
+    * setup instructions
 
 #### Long term tasks
 * Python
-    + rewrite using Python (start with things that are used for all scripts)
     + select python sqlite wrapper (apsw vs pysqlite vs..)
+    + rewrite using Python (start with things that are used for all scripts)
     + replace calls of external apps with Python API calls
         - env setup
         - versions
         - portageq
+    + find calls for install/uninstall actions
 
 #### Blue-sky ideas
 * profiles
@@ -45,6 +59,7 @@
     + check if using WAL accees mode for sqlite will give some perf?
     + ```CREATE TABLE time_test (my_date timestamp)```
     + separate table for repos parent dir
+    + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
 * Script class
     + check dependant tables before filling current one
 * put portage tree to the faster location
@@ -75,7 +90,4 @@
 #### Misc
 * /var/cache/edb/dep/usr/portage.sqlite
 * man man |col -bx > /tmp/man.txt
-<pre>
-make.globals -> ../usr/share/portage/config/make.globals
-make.profile -> ../usr/portage/profiles/default/linux/x86/10.0
-</pre>
+* check all soft links in ```/etc``` folder
