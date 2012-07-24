@@ -216,6 +216,15 @@ create table ebuilds (
 CREATE INDEX ebuilds_idx2 on ebuilds (package_id, version);
 CREATE INDEX ebuilds_idx3 on ebuilds (package_id);
 
+create table tmp_ebuild_descriptions (
+    id INTEGER,
+    description VARCHAR NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX ted on tmp_ebuild_descriptions (description);
+
 create table ebuild_descriptions (
     id INTEGER,
     description VARCHAR NOT NULL UNIQUE,

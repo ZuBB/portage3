@@ -7,26 +7,14 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-require 'ebuild'
 
-class Script
-    def get_shared_data()
-        sql_query = 'select description, id from ebuild_descriptions;'
-        @shared_data['descriptions@id'] = Hash[Database.select(sql_query)]
-    end
-
-    def process(params)
-        PLogger.info("Ebuild: #{params[3, 3].join('-')}")
-
-        ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
-        description_id = @shared_data['descriptions@id'][ebuild.ebuild_description]
-
-        Database.add_data4insert(description_id, ebuild.ebuild_id)
-    end
+def get_data(params)
+	sql_query = 'SELECT distinct description FROM tmp_ebuild_descriptions'
+	Database.select(sql_query).flatten
 end
 
 script = Script.new({
-    'data_source' => Ebuild.method(:get_ebuilds),
-    'sql_query' => 'UPDATE ebuilds SET description_id=? WHERE id=?;'
+    'data_source' => method(:get_data),
+    'sql_query' => 'INSERT INTO ebuild_descriptions (description) VALUES (?);'
 })
 
