@@ -6,6 +6,7 @@
 #
 
 Encoding.default_external = 'UTF-8'
+Encoding.default_internal = 'UTF-8'
 module EnvSetup
     def self.get_path2root
         '../..'
