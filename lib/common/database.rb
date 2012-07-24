@@ -1,5 +1,5 @@
 #
-# Library supporting analytics scripts running on CloudDB
+# Dumb DB wrapper
 #
 # Initial Author: Vasyl Zuzyak, 04/05/12
 # Latest Modification: Vasyl Zuzyak, ...
@@ -7,199 +7,123 @@
 require 'rubygems'
 require 'sqlite3'
 require 'thread'
- 
+
 module Database
-    TABLE = "$TN"
-    COLUMNS = "$CN"
-    VALUES = "$CV"
-    INSERT = "$INS"
-    
     @database = nil
-    @statement = nil
+    @sql_queries = []
+    @statements = []
     @data4db = Queue.new
+    @workers_running = true
+    @semaphore = Mutex.new
     Thread.abort_on_exception = true
     @thread = Thread.new do
-        while true
+        Thread.current.priority = 1
+        Thread.current['count'] = 0
+        Thread.current["name"] = "db filler"
+
+        while (self.is_workers_running? ? true : @data4db.size > 0)
             data2insert = @data4db.pop()
 
             begin
-                @statement.execute(*data2insert)
+                # TODO full support of the multiple statements
+                @statements[0].execute(*data2insert)
             rescue SQLite3::Exception => exception
                 PLogger.error("Message: #{exception.message()}")
-                PLogger.error("Values: [#{data2insert.join(', ')}]")
+                PLogger.error("Values: #{data2insert.inspect}")
             end
+            Thread.current['count'] += 1
         end
     end
 
-    def self.init(db_filename, sql_query)
-        unless is_filename_valid?(db_filename)
+    def self.init(db_filename, queries = nil)
+        filename_valid = true
+        if db_filename.is_a?(String) && !db_filename.empty?
+            if File.exist?(db_filename)
+                filetype = `file -b #{db_filename}`
+                filename_valid &= !filetype.match(/sqlite/i).nil?
+                filename_valid &= File.writable?(db_filename)
+            else
+                filename_valid &= File.writable?(File.dirname(db_filename))
+            end
+        else
+            filename_valid &= false
+        end
+
+        unless filename_valid
             throw "Can not create/use db file at `#{db_filename}"
         end
 
         @database = SQLite3::Database.new(db_filename)
 
-        unless @database.complete?(sql_query)
+        # TODO merge next if and 'validate_query' function
+        if queries
+            if queries.is_a?(Array)
+                queries.each { |query| self.validate_query(query) }
+            elsif queries.is_a?(String)
+                self.validate_query(queries)
+            else
+                throw "Passed sql query is not valid"
+            end
+        end
+    end
+
+    def self.validate_query(query)
+        unless @database.complete?(query)
+            @database.close
+            @sql_queries = nil
             throw "Passed sql query is not valid"
         end
-
-        @statement = @database.prepare(sql_query)
-        @database.transaction()
+        @sql_queries << query
     end
 
-    def self.is_filename_valid?(db_filename)
-        return false if !db_filename.is_a?(String) || db_filename.empty?
-
-        if File.exist?(db_filename)
-            filetype = `file -b #{db_filename}`
-            return false if filetype.match(/sqlite/i).nil?
-            return false unless File.writable?(db_filename)
-        else
-            return false unless File.writable?(File.dirname(db_filename))
-        end
-
-        return true
+    def self.add_data4insert(*item)
+        @data4db << item
     end
 
-    def self.create_insert_query(params)
-        column_names = []
-        values_pattern = []
-        sql_query = "#{INSERT} INTO #{TABLE} (#{COLUMNS}) VALUES (#{VALUES});"
-
-        # deal with command
-        sql_query.sub!(INSERT, params['command'] || "INSERT")
-
-        # deal with table name
-        sql_query.sub!(TABLE, params['table'])
-
-        params["data"].keys.sort.each do |key|
-            column_names << key
-            values_pattern << '?'
-        end
-
-        # deal with column names
-        sql_query.sub!(COLUMNS, column_names.join(', '))
-        # deal with column values
-        sql_query.sub!(VALUES, values_pattern.join(', '))
-
-        return sql_query
+    def self.select(sql_query, *values)
+        @database.execute(sql_query, *values)
     end
 
-    def self.create_insert_values(params)
-        column_values = []
-
-        params["data"].keys.sort.each do |key|
-            column_values << params["data"][key]
-        end
-
-        return column_values
-    end
-
-    def self.insert2(params)
-        #p '--- START'
-        #p 'in insert2'
-        sql_query = params["sql_query"] || create_insert_query(params)
-        values = params["values"] || create_insert_values(params)
-
-        if @statement.nil?
-            @statement = @database.prepare(sql_query)
-        end
-
-        @queue.pop()
-        #p 'in insert2; got free thread'
-        self.set_data(sql_query, values)
-        self.reset_data()
-    end
-
-    def self.insert(params)
-        @queue.pop()
-        self.set_data(
-            params["sql_query"] || create_insert_query(params),
-            params["values"] || create_insert_values(params)
-        )
-        self.reset_data()
-    end
-
-    def self.execute(sql_query, values = nil)
-        @queue.pop()
-        self.set_data(sql_query, values)
-        self.reset_data()
-    end
-
-    def self.select(sql_query, values = nil)
-        values = [values] unless values.is_a?(Array)
-        @database.execute(sql_query, *(values.flatten().compact()))
-    end
-
-    def self.get_1value(sql_query, values = nil)
-        # TODO get *params in call.
-        # unshift sql
-        # use else as values
-        values = [values] unless values.is_a?(Array)
+    def self.get_1value(sql_query, *values)
         @database.get_first_value(sql_query, *values)
     end
 
     def self.last_inserted_id()
-        return @database.get_first_value("SELECT last_insert_rowid();")
+        @database.get_first_value("SELECT last_insert_rowid();")
     end
 
-    def self.set_data(sql_query, values = nil)
-        #p 'in set_data'
-        @mutex.synchronize do
-            raise RuntimeError, "Thread already busy." unless @data.nil?
-            @data = {
-                "sql_query" => sql_query,
-                "values" => values.nil?() ? [] : [values].flatten,
-            }
-            # Signal the thread in this class, that there's a job to be done
-            #p 'in set_data; before SIGNAL'
-            @resource.signal
+    def self.prepare_bunch_insert
+        @database.transaction()
+        @sql_queries.each { |query|
+            @statements << @database.prepare(query)
+        }
+    end
+
+    def self.is_workers_running?
+        @semaphore.synchronize { @workers_running }
+    end
+
+    def self.set_workers_done
+        @semaphore.synchronize { @workers_running = false }
+    end
+
+    def self.close_statements
+        @sql_queries = nil
+        @statements.each do |statement|
+            statement.reset!
+            statement.close
         end
     end
 
-    def self.reset_data()
-        #p 'in reset_data; waiting for thread'
-        # lets waint until thread finish
-        while @thread.status != 'sleep'
-            sleep(0.02)
-        end
-        #p 'in reset_data; thread should sleep'
+    def self.finalize_bunch_insert
+        sleep(0.2) while @thread.stop? == false
 
-        result = nil
-        @mutex.synchronize do
-            # something made thread running
-            if @thread.status != 'sleep'
-                raise RuntimeError, "Thread already gone."
-            end
-            #p 'in reset_data; thread sleeps INDEED'
-
-            # something cleared data
-            if @thread.status == 'sleep' && @data.nil?
-                raise RuntimeError, "Data already gone."
-            end
-            #p 'in reset_data; RESET'
-
-            # get result and add thread to the queue
-            result = @data.delete('result')
-            @data = nil
-            #p '--- BEFORE END'
-            @queue << @thread
-        end
-        result
+        self.close_statements
+        @database.commit
+        @thread['count']
     end
 
-    def self.add_data4insert(item)
-        @data4db << item
-    end
-
-    # TODO need to make sure that thread termination
-    # can not cause data loss (some data are still in queue)
-    def self.close()
-        if @statement.is_a?(SQLite3::Statement)
-            # FIXME everythin should be OK without rescue
-            @statement.close rescue nil
-        end
-        @thread.terminate()
-        @database.commit()
-        @database.close() unless @database.closed?
+    def self.close
+        @database.close
     end
 end
