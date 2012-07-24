@@ -6,24 +6,27 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
+require_relative 'envsetup'
 require 'repository'
-require 'script'
 
-def process(params)
-    PLogger.info("Repository: #{params["value"]}")
-    repository = Repository.new(params)
+class Script
+    def process(params)
+        PLogger.info("Repository: #{params}")
+        repository = Repository.new(params)
 
-    Database.add_data4insert([
-        repository.repository(),
-        repository.repository_pd(),
-        repository.repository_fs()
-    ])
+        Database.add_data4insert(repository.repository,
+                                 repository.repository_pd,
+                                 repository.repository_fs
+                                )
+    end
 end
 
 script = Script.new({
-    'thread_code' => method(:process),
     'data_source' => Repository.method(:get_repositories),
-    'sql_query' => 'INSERT INTO repositories (repository_name, parent_folder, repository_folder) VALUES (?, ?, ?);'
+    'sql_query' => <<-SQL
+        INSERT INTO repositories
+        (repository_name, parent_folder, repository_folder)
+        VALUES (?, ?, ?);
+    SQL
 })
 

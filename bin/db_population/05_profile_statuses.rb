@@ -6,27 +6,19 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # path to be processed
     path = File.join(params['profiles2_home'], 'profiles.desc')
-    # lets find all lines from profiles.desc file
-    results = %x[grep -oP '\t[a-z]*$' #{path}].to_a rescue []
+    results = %x[grep -oP '\t[a-z]*$' #{path}].split("\n") rescue []
     # drop first item since its a header
-    results.shift()
-    # drop items that repeat and are empty and return
-    return results.uniq.compact.map { |status| status.strip }
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
+    results.shift
+    # drop duplicates and strip leading \t
+    results.uniq.map { |status| status.strip }
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
     'sql_query' => 'INSERT INTO profile_statuses (profile_status) VALUES (?);'
 })
 

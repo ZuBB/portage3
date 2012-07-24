@@ -6,61 +6,51 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 require 'useflag'
-require 'package_module'
-require 'category_module'
 
 def get_data(params)
-    # results go here
     results = []
     # pattern for flag, its description and package
     pattern = Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?: - )(.*)")
-    # flag type id
     flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'local')
 
-    # read use flags and process each line
     IO.foreach(File.join(params['profiles2_home'], 'use.local.desc')) do |line|
-        # lets trim newlines
         line.chomp!()
-        # skip comments or empty lines
-        next if line.index('#') == 0 or line.empty?
-        # lets get flag and desc
-        match = pattern.match(line)
-
-        results << {
-            'flag_name' => match[2],
-            'flag_description' => match[3],
-            'flag_type_id' => flag_type_id,
-            'package_id' => Database.get_1value(
-                PackageModule::SQL['id'],
-                [
-                    match[1].split('/')[1][0..-2],
-                    Database.get_1value(
-                        CategoryModule::SQL['id'],
-                        match[1].split('/')[0]
-                    )
-                ]
-            )
-        }
+        next if line.start_with?('#')
+        next if line.empty?
+        results << [*pattern.match(line).to_a.drop(1), flag_type_id]
     end
 
-    return results
+    results
 end
 
-def process(params)
-    Database.add_data4insert([
-        params['value']['flag_name'],
-        params['value']['flag_description'],
-        params['value']['flag_type_id'],
-        params['value']['package_id']
-    ])
+class Script
+    def get_shared_data()
+        @shared_data['atom@id'] = {}
+        sql_query = <<-SQL
+            SELECT p.id, c.category_name, p.package_name
+            FROM packages p
+            JOIN categories c ON p.category_id = c.id;
+        SQL
+        Database.select(sql_query).each do |row|
+            @shared_data['atom@id'][row[1] + '/' + row[2]] = row[0]
+        end
+    end
+
+    def process(params)
+        Database.add_data4insert(params[1], params[2], params[3],
+                                 @shared_data['atom@id'][params[0][0..-2]]
+                                )
+    end
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
-    'sql_query' => 'INSERT INTO use_flags (flag_name, flag_description, flag_type_id, package_id) VALUES (?, ?, ?, ?);'
+    'sql_query' => <<-SQL
+        INSERT INTO use_flags
+        (flag_name, flag_description, flag_type_id, package_id)
+        VALUES (?, ?, ?, ?);
+    SQL
 })
 

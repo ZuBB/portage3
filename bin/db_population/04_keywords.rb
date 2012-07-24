@@ -6,23 +6,13 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 # TODO symbols
 KEYWORDS = ['not work', 'not known', 'unstable', 'stable']
 
-def get_data(params)
-    return KEYWORDS
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
-end
-
 script = Script.new({
-    'data_source' => method(:get_data),
-    'thread_code' => method(:process),
+    'data_source' => Proc.new { KEYWORDS },
     'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);'
 })
 

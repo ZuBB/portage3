@@ -6,36 +6,26 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # result here
-    # TODO we need to add those as they are used later
-    architectures = ['x64', 'sparc64']
-    # name of the file to be processed
+    # NOTE we need to add those as they are used later
+    results = ['x64', 'sparc64']
     filename = File.join(params['profiles2_home'], 'arch.list')
 
-    # walk through all use lines in that file
     IO.foreach(filename) do |line|
-        # break if we face with prefixes
+        # break if we come down to prefixes
         break if line.include?('# Prefix keywords')
-        # skip comments
         next if line.start_with?('#')
-        # skip empty lines, trim others and add them
-        architectures << line.strip() unless line.match(/\S+/).nil?
+        next if /^\s*$/ =~ line
+        results << line.strip()
     end
 
-    return architectures
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
+    results
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
     'sql_query' => 'INSERT INTO architectures (architecture) VALUES (?);'
 })
 

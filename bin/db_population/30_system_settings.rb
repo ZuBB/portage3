@@ -6,10 +6,10 @@
 # Initial Author: Vasyl Zuzyak, 02/07/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 require 'parser'
 
+# TODO rewrite with settings settings
 def get_data(params)
     accept_keywords = Parser.get_multi_line_ini_value(
         IO.read('/etc/make.conf').split("\n"),
@@ -33,13 +33,8 @@ def get_data(params)
     ]
 end
 
-def process(params)
-    Database.add_data4insert(params['value'])
-end
-
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
     'sql_query' => 'INSERT INTO system_settings (param, value) VALUES (?, ?);'
 })
 

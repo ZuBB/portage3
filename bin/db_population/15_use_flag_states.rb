@@ -6,22 +6,12 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 FLAG_STATES = ['masked', 'disabled', 'enabled', 'forced']
 
-def get_data(params)
-    FLAG_STATES
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
-end
-
 script = Script.new({
-    'data_source' => method(:get_data),
-    'thread_code' => method(:process),
-    'sql_query' => 'INSERT INTO use_flags_states (flag_state) VALUES (?);'
+    'data_source' => Proc.new { FLAG_STATES },
+    'sql_query' => 'INSERT INTO use_flag_states (flag_state) VALUES (?);'
 })
 

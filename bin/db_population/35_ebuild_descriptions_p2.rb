@@ -6,56 +6,27 @@
 # Initial Author: Vasyl Zuzyak, 04/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 require 'ebuild'
 
-def get_data(params)
-    # results
-    results = []
-    # query
-    sql_query = <<-SQL
-        SELECT
-            parent_folder,
-            repository_folder,
-            category_name,
-            package_name,
-            version
-        FROM ebuilds e
-        JOIN packages p on p.id=e.package_id
-        JOIN categories c on p.category_id=c.id
-        JOIN repositories r on r.id=e.repository_id
-    SQL
+class Script
+    def get_shared_data()
+        sql_query = 'select description, id from ebuild_descriptions;'
+        @shared_data['descriptions@id'] = Hash[Database.select(sql_query)]
+    end
 
-    # lets walk through all packages
-    Database.select(sql_query).each { |row|
-        results << {
-            'value' => row[3] + '-' + row[4] + '.ebuild',
-            'parent_dir' => File.join(row[0], row[1], row[2], row[3])
-        }
-    }
+    def process(params)
+        PLogger.info("Ebuild: #{params[3, 3].join('-')}")
 
-    return results
-end
+        ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
+        description_id = @shared_data['descriptions@id'][ebuild.ebuild_description]
 
-def process(params)
-    PLogger.info("Ebuild: #{params["value"]}")
-    ebuild = Ebuild.new(params)
-
-    Database.add_data4insert(
-        [ebuild.ebuild_description(), ebuild.ebuild_id()]
-    )
+        Database.add_data4insert(description_id, ebuild.ebuild_id)
+    end
 end
 
 script = Script.new({
-    'thread_code' => method(:process),
-    'data_source' => method(:get_data),
-    'sql_query' => <<-SQL
-        UPDATE ebuilds
-        SET description_id=(
-            select id from ebuild_descriptions where description=?
-        )
-        WHERE id=?;
-    SQL
+    'data_source' => Ebuild.method(:get_ebuilds),
+    'sql_query' => 'UPDATE ebuilds SET description_id=? WHERE id=?;'
 })
 

@@ -6,82 +6,61 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, 01/06/12
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 require 'ebuild'
 
 def get_data(params)
-    # query
-    sql_query = <<-SQL
-        SELECT c.category_name, p.package_name, p.id
-        FROM packages p
-        INNER JOIN categories c on p.category_id=c.id
-        ORDER BY p.id ASC
-    SQL
-
-    # lets get all packages
-    results = Database.select(sql_query)
-
-    # query
-    sql_query = <<-SQL
-        SELECT package_id, id, version
-        FROM ebuilds
-        ORDER BY package_id ASC
-    SQL
-
-    # lets get all ebuild versions
     tmp_results = {}
-    Database.select(sql_query).each do |row|
-        package_id = row[0]
+
+    Ebuild.list_ebuilds.each do |row|
+        package_id = row[7]
         unless tmp_results.has_key?(package_id)
-            tmp_results[package_id] = [[], []]
+            tmp_results[package_id] = {
+                'category' => row[3],
+                'package'  => row[4],
+                'versions' => [],
+                'ids'      => []
+            }
         end
 
-        tmp_results[package_id][0] << row[1]
-        tmp_results[package_id][1] << row[2]
+        tmp_results[package_id]['versions'] << row[5]
+        tmp_results[package_id]['ids'] << row[6]
     end
 
-    results.map! do |row|
-        package_id = row.pop()
-        if tmp_results.has_key?(package_id)
-            row << tmp_results[package_id][0]
-            row << tmp_results[package_id][1]
-        else
-            row = nil
-        end
-
-        row
-    end
-
-    return results.compact()
+    tmp_results.values
 end
 
-def process(params)
-    # get atom name
-    atom = params['value'][0] + '/' + params['value'][1]
-    PLogger.debug("Package #{atom}")
+class Script
+    def process(params)
+        atom = params['category'] + '/' + params['package']
+        versions = params['versions']
+        PLogger.debug("Package #{atom}")
 
-    # get all versions of the package, sorted by versions
-    versions = PackageModule.get_package_versions(atom)
+        ordered_versions = Package.get_package_versions(atom)
 
-    # lets get them
-    params['value'][2].each_index do |data_index|
-        index = versions.index { |version|
-            version == params['value'][3][data_index]
-        }
+        versions.each_index do |index|
+            ord_num = ordered_versions.index { |version|
+                version == versions[index]
+            }
 
-        if !index.nil?
-            Database.add_data4insert([index + 1, params['value'][2][data_index]])
-        else
-            PLogger.warn("Version `#{params['value'][3][data_index]}` - 'cache miss'")
-            PLogger.info("versions #{versions.join(', ')}")
+            if !ord_num.nil?
+                Database.add_data4insert([ord_num + 1, params['ids'][index]])
+            else
+                PLogger.warn("Version `#{versions[index]}` - 'cache miss'")
+                PLogger.info("versions #{versions.join(', ')}")
+            end
         end
+    end
+
+    def post_insert_task()
+        # TASK #1: no '0' at version_order position
+        # TASK #2: max(version_order) can't be bigger than ebuilds per package
+        # TASK #3: no duplicates of version_order per package
+        return true
     end
 end
 
 script = Script.new({
-    'max_threads' => 4,
-    'thread_code' => method(:process),
     'data_source' => method(:get_data),
     'sql_query' => 'UPDATE ebuilds SET version_order=? WHERE id=?;'
 })

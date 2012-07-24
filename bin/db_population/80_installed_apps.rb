@@ -6,34 +6,25 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # query
     results = []
 
     filename = '/var/lib/portage/world'
     return results unless File.exist?(filename)
 
-    # walk through all use lines in that file
     IO.foreach(filename) do |line|
-        # lets trim newlines and insert
-        line.chomp!()
+        next if line.chomp!().empty?
         category_name = line.split('/')[0]
         package_name = line.split('/')[1]
         results << [category_name, package_name]
     end
 
-    return results
-end
-
-def process(params)
-    Database.add_data4insert([params['value'][0], params['value'][1]])
+    results
 end
 
 script = Script.new({
-    'thread_code' => method(:process),
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO installed_apps

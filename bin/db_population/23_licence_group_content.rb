@@ -6,19 +6,16 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # name of the file to be processed
+    results = []
     filename = File.join(params['profiles2_home'], 'license_groups')
 
     # walk through all use flags in that file
-    IO.read(filename).split("\n").map do |line|
-        # skip comments
+    IO.foreach(filename) do |line|
         next if line.start_with?('#')
-        # skip empty lines
-        next unless line.match(/\S+/)
+        next if /^\s*$/ =~ line
 
         # TODO group names may contain (its only assumption)
         #   [a-zA-Z0-9],
@@ -27,39 +24,50 @@ def get_data(params)
         #   . (dot)
         #   + (plus sign).
         # lets split flag and its description
-        line
+        items = line.split()
+        group = items.delete_at(0)
+
+        line = []
+        items.each do |item|
+            licence = nil
+            sub_group = nil
+
+            if item.start_with?('@')
+                sub_group = item[1..-1]
+            else
+                licence = item
+            end
+
+            results << [group, sub_group, licence]
+        end
     end
+
+    results
 end
 
-def process(params)
-    items = params['value'].split()
-    group = items.delete_at(0)
+class Script
+    def get_shared_data()
+        sql_query = 'SELECT name, id FROM licence_groups;'
+        @shared_data['licence_groups@id'] = Hash[Database.select(sql_query)]
 
-    items.each do |item|
-        licence = nil
-        sub_group = nil
+        sql_query = 'SELECT name, id FROM licences;'
+        @shared_data['licences@id'] = Hash[Database.select(sql_query)]
+    end
 
-        if item.start_with?('@')
-            sub_group = item[1..-1]
-        else
-            licence = item
-        end
-
-        Database.add_data4insert([group, sub_group, licence])
+    def process(params)
+        Database.add_data4insert(@shared_data['licence_groups@id'][params[0]],
+                                 @shared_data['licence_groups@id'][params[1]],
+                                 @shared_data['licences@id'][params[2]]
+                                )
     end
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
     'sql_query' => <<-SQL
         INSERT INTO licence_group_content
         (group_id, sub_group_id, licence_id)
-        VALUES (
-            (SELECT id FROM licence_groups WHERE name=?),
-            (SELECT id FROM licence_groups WHERE name=?),
-            (SELECT id FROM licences WHERE name=?)
-        );
+        VALUES (?, ?, ?);
     SQL
 })
 

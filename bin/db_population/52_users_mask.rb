@@ -6,43 +6,23 @@
 # Initial Author: Vasyl Zuzyak, 02/01/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # results
     results = []
     sql_query = 'SELECT id FROM mask_states WHERE mask_state=?'
+    ['package.mask', 'package.unmask'].each do |file|
+        filename = File.join(Utils.get_portage_settings_home, file)
+        if File.exist?(filename) && File.file?(filename)
+            mask_state = File.extname(filename) == '.unmask' ? 'unmasked' : 'masked'
+            mask_state_id = Database.get_1value(sql_query, mask_state)
 
-    filename = File.join(Utils.get_portage_settings_home, 'package.mask')
-    if File.exist?(filename) && File.file?(filename)
-        mask_state_id = Database.get_1value(sql_query, 'masked')
+            IO.foreach(filename) do |line|
+                next if line.index('#') == 0
+                next if line.chomp!().empty?()
 
-        IO.foreach(filename) do |line|
-            # skip comments
-            next if line.index('#') == 0
-            # trim '\n'
-            line.chomp!()
-            # skip empty lines
-            next if line.empty?()
-
-            results << [line, mask_state_id]
-        end
-    end
-
-    filename = File.join(Utils.get_portage_settings_home, 'package.unmask')
-    if File.exist?(filename) && File.file?(filename)
-        mask_state_id = Database.get_1value(sql_query, 'unmasked')
-
-        IO.foreach(filename) do |line|
-            # skip comments
-            next if line.index('#') == 0
-            # trim '\n'
-            line.chomp!()
-            # skip empty lines
-            next if line.empty?()
-
-            results << [line, mask_state_id]
+                results << [line, mask_state_id]
+            end
         end
     end
 
@@ -102,71 +82,72 @@ def get_arch_id()
     )
 end
 
-def process(params)
-    line = params['value'][0]
+class Script
+    def process(params)
+        line = params[0]
 
-    result = parse_line(line)
+        result = parse_line(line)
 
-    result['package_id'] = Database.get_1value(
-        "\
-        SELECT packages.id \
-        FROM packages, categories \
-        WHERE \
-        categories.category_name=? and \
-        packages.package_name=? and \
-        packages.category_id = categories.id",
-        [result['category'], result['package']]
-    )
-
-    if result['package_id'].nil?
-        # means category/package that already does not exist in portage
-        PLogger.warn(
-            "File `package.keywords` contains package "\
-            "(#{result['category']}/#{result['package']}) "\
-            "that already is not present in portage"
+        result['package_id'] = Database.get_1value(
+            "\
+            SELECT packages.id \
+            FROM packages, categories \
+            WHERE \
+            categories.category_name=? and \
+            packages.package_name=? and \
+            packages.category_id = categories.id",
+            [result['category'], result['package']]
         )
 
-        return  
-    end
+        if result['package_id'].nil?
+            # means category/package that already does not exist in portage
+            PLogger.warn(
+                "File `package.keywords` contains package "\
+                "(#{result['category']}/#{result['package']}) "\
+                "that already is not present in portage"
+            )
 
-    result_set = nil
+            return  
+        end
 
-    if result['version'] == '*'
-        local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
-        result_set = Database.select(local_query, result['package_id']).flatten
-    elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
-        version_like = result['version'].sub('*', '')
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.select(local_query, result['package_id']).flatten
-    else
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
-        result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
-    end
+        result_set = nil
 
-    result['arch'] = get_arch_id()
+        if result['version'] == '*'
+            local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
+            result_set = Database.select(local_query, result['package_id']).flatten
+        elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
+            version_like = result['version'].sub('*', '')
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+            result_set = Database.select(local_query, result['package_id']).flatten
+        else
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
+            result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
+        end
 
-    if result_set.size() > 0
-        result_set.each { |version|
-            Database.add_data4insert([
-                version,
-                result['arch'],
-                params['value'][1]
-            ])
-        }
-    else
-        # means =category/atom-version that already does not exist in portage
-        PLogger.warn(
-            "File `package.keywords` contains atom "\
-            "(#{result["version_restrictions"]}"\
-            "#{result['category']}/#{result['package']}"\
-            "-#{result["version"]}) "\
-            "that already is not present in portage"
-        )
+        result['arch'] = get_arch_id()
+
+        if result_set.size() > 0
+            result_set.each { |version|
+                Database.add_data4insert([
+                    version,
+                    result['arch'],
+                    params[1]
+                ])
+            }
+        else
+            # means =category/atom-version that already does not exist in portage
+            PLogger.warn(
+                "File `package.keywords` contains atom "\
+                "(#{result["version_restrictions"]}"\
+                "#{result['category']}/#{result['package']}"\
+                "-#{result["version"]}) "\
+                "that already is not present in portage"
+            )
+        end
     end
 end
 
 script = Script.new({
-    'thread_code' => method(:process),
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO ebuild_masks

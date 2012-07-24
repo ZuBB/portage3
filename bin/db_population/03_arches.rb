@@ -6,37 +6,25 @@
 # Initial Author: Vasyl Zuzyak, 01/27/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # result here
-    arches = []
-    # name of the file to be processed
+    results = []
     filename = File.join(params['profiles2_home'], 'arch.list')
 
-    # walk through all use flags in that file
     IO.foreach(filename) do |line|
-        # lets trim newlines
-        line.chomp!()
-        # skip empty lines and comments
-        next if line.empty? or line.index('#') == 0
-        # lets split flag and its description
+        line.strip!
+        next if line.empty?
+        next if line.start_with?('#')
         arch_stuff = line.split('-')
-        # remember
-        arches << [line, arch_stuff[0], arch_stuff[1] || 'linux']
+        results << [line, arch_stuff[0], arch_stuff[1] || 'linux']
     end
 
-    return arches
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
+    results
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
     'sql_query' => <<SQL
 INSERT INTO arches
 (arch_name, architecture_id, platform_id)

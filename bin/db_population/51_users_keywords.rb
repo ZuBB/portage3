@@ -6,23 +6,20 @@
 # Initial Author: Vasyl Zuzyak, 02/02/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # results
     results = []
 
     filename = File.join(Utils.get_portage_settings_home, 'package.keywords')
-    return results if !File.exist?(filename) || File.directory?(filename)
+    # TODO we do not support 'package.keywords' as directories for now
+    if !File.exist?(filename) || File.directory?(filename)
+        return results
+    end
 
     IO.foreach(filename) do |line|
-        # skip comments
         next if line.index('#') == 0
-        # trim '\n'
-        line.chomp!()
-        # skip empty lines
-        next if line.empty?()
+        next if line.chomp!().empty?()
 
         results << line
     end
@@ -98,65 +95,66 @@ def parse_line(line)
     return result
 end
 
-def process(params)
-    result = parse_line(params['value'])
-    result['package_id'] = Database.select(
-        "SELECT p.id "\
-        "FROM packages p "\
-        "JOIN categories c on p.category_id=c.id "\
-        "WHERE c.category_name=? and p.package_name=?",
-        [result['category'], result['package']]
-    ).flatten()[0]
+class Script
+    def process(params)
+        result = parse_line(params)
+        result['package_id'] = Database.select(
+            "SELECT p.id "\
+            "FROM packages p "\
+            "JOIN categories c on p.category_id=c.id "\
+            "WHERE c.category_name=? and p.package_name=?",
+            [result['category'], result['package']]
+        ).flatten()[0]
 
-    if result['package_id'].nil?
-        # means category/package that already does not exist in portage
-        PLogger.warn(
-            "File `package.keywords` contains package "\
-            "(#{result['category']}/#{result['package']}) "\
-            "that already is not present in portage"
-        )
+        if result['package_id'].nil?
+            # means category/package that already does not exist in portage
+            PLogger.warn(
+                "File `package.keywords` contains package "\
+                "(#{result['category']}/#{result['package']}) "\
+                "that already is not present in portage"
+            )
 
-        return  
-    end
+            return  
+        end
 
-    result_set = nil
+        result_set = nil
 
-    if result['version'] == '*'
-        local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
-        result_set = Database.select(local_query, result['package_id']).flatten
-    elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
-        version_like = result['version'].sub('*', '')
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
-        result_set = Database.select(local_query, result['package_id']).flatten
-    else
-        local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
-        result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
-    end
+        if result['version'] == '*'
+            local_query = 'SELECT id FROM ebuilds WHERE package_id=?'
+            result_set = Database.select(local_query, result['package_id']).flatten
+        elsif result['version_restrictions'] == '=' && result['version'].end_with?('*')
+            version_like = result['version'].sub('*', '')
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version like '#{version_like}%'"
+            result_set = Database.select(local_query, result['package_id']).flatten
+        else
+            local_query = "SELECT id FROM ebuilds WHERE package_id=? AND version#{result['version_restrictions']}?"
+            result_set = Database.select(local_query, [result['package_id'], result['version']]).flatten
+        end
 
-    if result_set.size() > 0
-        result_set.each { |version|
-            result['arch'].each { |arch|
-                Database.add_data4insert([
-                    version,
-                    result['keyword'],
-                    arch
-                ])
+        if result_set.size() > 0
+            result_set.each { |version|
+                result['arch'].each { |arch|
+                    Database.add_data4insert([
+                        version,
+                        result['keyword'],
+                        arch
+                    ])
+                }
             }
-        }
-    else
-        # means =category/atom-version that already does not exist in portage
-        PLogger.warn(
-            "File `package.keywords` contains atom "\
-            "(#{result["version_restrictions"]}"\
-            "#{result['category']}/#{result['package']}"\
-            "-#{result["version"]}) "\
-            "that already is not present in portage"
-        )
+        else
+            # means =category/atom-version that already does not exist in portage
+            PLogger.warn(
+                "File `package.keywords` contains atom "\
+                "(#{result["version_restrictions"]}"\
+                "#{result['category']}/#{result['package']}"\
+                "-#{result["version"]}) "\
+                "that already is not present in portage"
+            )
+        end
     end
 end
 
 script = Script.new({
-    'thread_code' => method(:process),
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO ebuild_keywords

@@ -6,49 +6,36 @@
 # Initial Author: Vasyl Zuzyak, 01/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'envsetup'
-require 'script'
+require_relative 'envsetup'
 
 def get_data(params)
-    # result here
-    profiles = []
-    # name of the file to be processed
+    results = []
     filename = File.join(params['profiles2_home'], 'profiles.desc')
 
-    # walk through all use flags in that file
     IO.foreach(filename) do |line|
-        # stop if we face with header of 'prefix profiles'
         break if line.include?('Gentoo Prefix profiles')
         # skip comments
         next if line.start_with?('# uclibc')
+        # but do not skip uclibc stuff
         next if line.start_with?('#') && !line.include?('uclibc')
-        # skip empty lines
-        next unless line.match(/\S+/)
+        next if /^\s*$/ =~ line
 
-        # lets split flag and its description
-        profile_stuff = line.strip.sub('#', '').split()
-        # remember all
-        profiles << [profile_stuff[1], profile_stuff[0], profile_stuff[2]]
+        results << [*line.sub('#', '').strip.split]
     end
 
-    return profiles
-end
-
-def process(params)
-    Database.add_data4insert(params['value'])
+    results
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'thread_code' => method(:process),
-    'sql_query' => <<SQL
-INSERT INTO profiles
-(profile_name, arch_id, profile_status_id)
-VALUES (
-    ?,
-    (SELECT id FROM arches WHERE arch_name=?),
-    (SELECT id FROM profile_statuses WHERE profile_status=?)
-);
-SQL
+    'sql_query' => <<-SQL
+        INSERT INTO profiles
+        (arch_id, profile_name, profile_status_id)
+        VALUES (
+            (SELECT id FROM arches WHERE arch_name=?),
+            ?,
+            (SELECT id FROM profile_statuses WHERE profile_status=?)
+        );
+    SQL
 })
 
