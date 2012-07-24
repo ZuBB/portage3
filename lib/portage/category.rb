@@ -4,66 +4,81 @@
 # Initial Author: Vasyl Zuzyak, 04/02/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'category_module'
+require 'rubygems'
+require 'nokogiri'
+require 'repository'
 
-class Category
-    include CategoryModule
+class Category < Repository
+    ENTITY = self.name.downcase
+    PROP_SUFFIXES = ['description']
+    SQL = {
+        'category' => 'SELECT category_name FROM categories WHERE id=?',
+        'id' => 'SELECT id FROM categories WHERE category_name=?',
+        'all' => 'SELECT * FROM categories'
+    }
 
     def initialize(params)
-        # run init
-        self.category_init(params)
+        super(params)
+
+        @cur_entity = ENTITY
+        create_properties(PROP_SUFFIXES)
+        gp_initialize(params)
+        db_initialize(params)
+    end
+
+    def category()
+        @category ||= Database.get_1value(SQL["category"], @category_id)
+    end
+
+    def category_id()
+        @category_id ||= Database.get_1value(SQL["id"], @category)
+    end
+
+    def category_home()
+        File.join(repository_home, category)
+    end
+
+    def category_description()
+        return @category_description unless @category_description.nil?
+
+        metadata_path = File.join(category_home, "metadata.xml")
+
+        if File.exists?(metadata_path) && File.readable?(metadata_path)
+            xml_doc = Nokogiri::XML(IO.read(metadata_path))
+            @category_description = xml_doc.
+                # TODO hardcoded 'en'
+                xpath('//longdescription[@lang="en"]').
+                inner_text.gsub(/\s+/, ' ').strip()
+        else
+            @category_description = '0_DESCRIPTION_DEF'
+        end
+
+        @category_description
     end
 
     def self.get_categories(params = {})
-        categories = self.get_canonical_categories(params)
+        results = {}
 
-        return categories.map do |category|
-            { 'value' => category.first, 'parent_dir' => category.at(1) }
-        end.sort do |a, b|
-            a['value'] <=> b['value']
-        end
-    end
+        Database.select(Repository::SQL['all']).each do |repo_row|
+            repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
 
-    def self.get_canonical_categories(params)
-        # result here
-        categories = []
-        # name of the file with categories
-        filename = File.join(params['profiles2_home'], 'categories')
+            next unless File.exist?(repo_home)
+            next unless (filename = File.join(repo_home, 'profiles', 'categories'))
 
-        if File.exist?(filename)
-            # process all lines
-            IO.foreach(filename) do |line|
-                # skip empty line, trim spaces and add it
-                if line.match(/\S+/)
-                    categories << [line.strip(), params['tree_home']]
+            IO.read(filename).split("\n").each do |line|
+                next if (category = line.strip).empty?
+                unless results.has_key?(category)
+                    results[category] = {
+                        'category' => category,
+                        'repository' => repo_row[1],
+                        'repository_pd' => repo_row[2],
+                        'repository_fs' => repo_row[3] || repo_row[1]
+                    }
                 end
             end
         end
 
-        # and finally
-        return categories
-    end
-
-    def self.get_overlays_categories(params = {})
-        # result here
-        result = []
-
-		# NOTE external should exclude repo that locates in
-		# 	Utils::Settings['tree_home']
-        # get all external repos and theirs info
-        Database.select(Repository::SQL['external']) do |repo_row|
-            # get repo home
-            repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
-            # skip if we do not have this repo
-            next unless File.exist?(repo_home)
-            # get by pattern all categories are present in this repo
-            Dir.glob(File.join(repo_home, '*-*')).each do |category|
-                # and strip common FS path at start
-                category.sub!(repo_home + '/', '')
-                # and strip common FS path at start
-                result << [category, repo_home] if result.assoc(category).nil?
-            end
-        end
+        results.values
     end
 end
 
