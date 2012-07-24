@@ -1,43 +1,59 @@
 #
-# Library supporting analytics scripts running on CloudDB
+# A bit extended standart logger module
 #
 # Initial Author: Vasyl Zuzyak, 04/10/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'logger'
 
-class SimpleLog < Logger::Formatter
-    TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
-    # http://blog.grayproductions.net/articles/the_books_are_wrong_about_logger
-    def call(severity, time, program_name, message)
-        [
-            '[' + time.strftime(TIME_FORMAT) + ']',
-            (severity + ':').rjust(6, ' '),
-            message
-        ].join(" ") + "\n"
-    end
-end
-
 module PLogger
+    # blog.grayproductions.net/articles/the_books_are_wrong_about_logger
+    class SimpleLog < Logger::Formatter
+        TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
+        def call(severity, time, program_name, message)
+            [
+                '[' + time.strftime(TIME_FORMAT) + ']',
+                (severity + ':').rjust(6, ' '),
+                message
+            ].join(" ") + "\n"
+        end
+    end
+
+    LOGFILE_EXT = ".log"
+    @log_file = nil
     @logger = nil
-    @log_dir = nil
-    @logfile_ext = ".log"
 
     def self.init(params = {})
-        if !params["path"] || !params["dir"] || !params["file"]
+        if (@log_file = self.get_logfile(params)).nil?
             throw "Required parameters was not passed!"
         end
 
-        dir = File.basename(params["dir"])
-        dir = dir[0...dir.rindex('.')]
-        @log_dir = File.join(params["path"], dir)
-        Dir.mkdir(@log_dir) unless File.exist?(@log_dir)
-
-        file = File.basename(params["file"]) + @logfile_ext
-        @logger = Logger.new(File.join(@log_dir,  file))
+        @logger = Logger.new(@log_file)
         @logger.level = params["level"] || Logger::DEBUG
-
         @logger.formatter = SimpleLog.new
+    end
+
+    def self.get_logfile(params)
+        if params["path"] && params["dir"] && params["file"]
+            return nil unless File.exist?(params["path"])
+            return nil unless File.writable?(params["path"])
+
+            instance_dir = File.basename(params["dir"], '.sqlite')
+            log_dir = File.join(params["path"], instance_dir)
+            Dir.mkdir(log_dir) unless File.exist?(log_dir)
+
+            log_file = File.basename(params["file"], '.rb') + LOGFILE_EXT
+            return File.join(log_dir, log_file)
+        elsif params['logfile']
+            dir = File.dirname(params['logfile'])
+
+            return nil unless File.exist?(dir)
+            return nil unless File.writable?(dir)
+
+            return params['logfile']
+        else
+            return nil
+        end
     end
 
     def self.is_filename_valid?(db_filename)
