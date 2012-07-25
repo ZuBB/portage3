@@ -228,6 +228,15 @@ create table ebuild_homepages (
     PRIMARY KEY (id)
 );
 
+create table ebuilds_homepages (
+    id INTEGER,
+    ebuild_id INTEGER NOT NULL,
+    homepage_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (homepage_id) REFERENCES ebuild_homepages(id),
+    PRIMARY KEY (id)
+);
+
 create table ebuild_keywords (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
