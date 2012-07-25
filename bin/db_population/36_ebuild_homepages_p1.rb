@@ -19,7 +19,7 @@ class Script
                 PRIMARY KEY (id)
             );
 
-            CREATE INDEX ted on tmp_ebuild_homepages (description);
+            CREATE INDEX teh on tmp_ebuild_homepages (homepage);
         SQL
         Database.execute(sql_query)
     end
@@ -29,7 +29,7 @@ class Script
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
         ebuild.ebuild_homepage.split.each { |homepage|
-            Database.add_data4insert(homepage)
+            Database.add_data4insert(homepage, ebuild.ebuild_id)
         }
     end
 end

@@ -22,11 +22,11 @@ class Script
             SELECT eh.id, teh.ebuild_id
             FROM ebuild_homepages eh
             JOIN tmp_ebuild_homepages teh
-                ON eh.description = teh.homepage
-            WHERE eh.description=?
+                ON eh.homepage = teh.homepage
+            WHERE eh.homepage=?
         SQL
 
-        Database.select(sql_query, desc).each do |row|
+        Database.select(sql_query, homepage).each do |row|
             Database.add_data4insert(row[0], row[1])
         end
     end
@@ -40,7 +40,7 @@ class Script
 
         sql_query = <<-SQL
             SELECT COUNT(id)
-            FROM ebuild_descriptions
+            FROM ebuild_homepages
             WHERE id NOT IN (SELECT DISTINCT homepage_id from ebuilds_homepages)
         SQL
         if (tmp = Database.get_1value(sql_query).to_i) > 0
@@ -55,7 +55,7 @@ class Script
 end
 
 script = Script.new({
-    'data_source' => Ebuild.method(:get_ebuilds),
+    'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO ebuilds_homepages
         (homepage_id, ebuild_id)
