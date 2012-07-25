@@ -61,14 +61,14 @@ sql_home = File.join(File.dirname(__FILE__), options["sql_src_home"])
 sql_filename = Dir.glob(File.join(sql_home, '*sql'))[0]
 
 begin
-    db = SQLite3::Database.new(db_path)
-    db.execute_batch(IO.read(sql_filename))
+    Database.init(db_path)
+    Database.execute(IO.read(sql_filename))
 
     puts "Everything is OK. Database was created at:\n#{db_path}"
 rescue Exception => msg
     File.delete(db_path) if File.exists?(db_path)
     puts msg
 ensure
-    db.close() if db.closed? == false
+    Database.close
 end
 
