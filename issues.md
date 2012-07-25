@@ -1,5 +1,5 @@
 #### Short term tasks
-* ~~**ruby 1.9 with native threads**~~
+* **ruby 1.9 with native threads**
 * ~~**portage libs: one more refactoring**~~
 * ~~deal with pathes~~
     + ~~find nice way to do includes for all kind of scripts~~
@@ -30,7 +30,7 @@
     + calling script for all in theirs forlder
 * Logger
     + create log file on first log attempt
-    + before loggin issue itself, need to log source of the issue
+    + before loggin issue itself, need to log source of the issue in HRF
 * parser
     * fix bugs
     * light improvement
