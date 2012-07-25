@@ -46,6 +46,7 @@ class Script
 
         get_data()
         pre_insert_task() if defined?(pre_insert_task) == 'method'
+        @shared_data.freeze
 
         Database.prepare_bunch_insert
         run_workers
