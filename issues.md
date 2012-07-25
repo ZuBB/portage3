@@ -1,17 +1,18 @@
 #### Short term tasks
-* **ruby 1.9 with native threads**
+* ~~**ruby 1.9 with native threads**~~
 * ~~**portage libs: one more refactoring**~~
 * ~~deal with pathes~~
     + ~~find nice way to do includes for all kind of scripts~~
     + ~~"root_path" vs "root_folder" vs "portage_home"~~
     + ~~options["storage"]["root"] is not valid 'path'~~
 * database
+    + **db thread ends its work too early**
     + ~~thread pool for queries that insert/update data~~
     + ~~common statement for queries that insert/update data~~
     + ~~on exception log only error mesage and values~~
     + ~~cache statements~~
     + support insert via specified cached statement
-	+ issue with queries and specified params run from workers
+    + issue with queries and specified params run from workers
     + **SQL**: tables/colums naming
 * Script class
     + ~~use '$0' to get process name and get rid of 'script' param~~
@@ -20,10 +21,12 @@
     + ~~post processing hooks~~
     + keep in mind that need to have easy way to debug specified item(s)
 * 'tables population' scripts
+    + versions
     + wrong handling of homepages: ebuild may refer to 1+ homepage
     + use flags stuff
     + dependancies
     + installed stuff
+    + rework scripts that have size more than 2kB
     + find another way of getting available EAPIs
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
