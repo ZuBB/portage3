@@ -44,7 +44,7 @@ class Script
             WHERE id NOT IN (SELECT DISTINCT description_id from ebuilds)
         SQL
         if (tmp = Database.get_1value(sql_query).to_i) > 0
-            PLogger.error("Some descriptions(#{tmp} items) are is not being used")
+            PLogger.error("Some descriptions(#{tmp} items) are not being used")
             return
         end
 

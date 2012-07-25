@@ -34,7 +34,7 @@ end
 
 script = Script.new({
     'data_source' => Ebuild.method(:get_ebuilds),
-    "sql_query" => <<-SQL
+    'sql_query' => <<-SQL
         INSERT INTO tmp_ebuild_descriptions
         (description, ebuild_id)
         VALUES (?, ?);
