@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         sql_query = 'SELECT arch_name FROM arches'
         @shared_data['arche'] = Database.select(sql_query).flatten
     end

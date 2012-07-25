@@ -46,7 +46,7 @@ def get_data(params)
 end
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         sql_query = 'SELECT name, id FROM licence_groups;'
         @shared_data['licence_groups@id'] = Hash[Database.select(sql_query)]
 

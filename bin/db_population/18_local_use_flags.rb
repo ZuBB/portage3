@@ -26,7 +26,7 @@ def get_data(params)
 end
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         @shared_data['atom@id'] = {}
         sql_query = <<-SQL
             SELECT p.id, c.category_name, p.package_name

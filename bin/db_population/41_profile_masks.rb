@@ -103,7 +103,7 @@ def get_arch_id(file)
 end
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         sql_query = 'SELECT mask_state, id FROM mask_states'
         @shared_data['mask_state@id'] = Hash[Database.select(sql_query)]
     end

@@ -45,7 +45,7 @@ class Script
         @start_time = Time.now
 
         get_data()
-        get_shared_data() if defined?(get_shared_data) == 'method'
+        pre_insert_task() if defined?(pre_insert_task) == 'method'
 
         Database.prepare_bunch_insert
         run_workers

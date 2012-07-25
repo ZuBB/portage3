@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         sql_query = 'select homepage, id from ebuild_homepages;'
         @shared_data['homepages@id'] = Hash[Database.select(sql_query)]
     end

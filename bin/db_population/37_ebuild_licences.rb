@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
-    def get_shared_data()
+    def pre_insert_task()
         sql_query = 'select name, id from licences;'
         @shared_data['licences@id'] = Hash[Database.select(sql_query)]
     end
