@@ -48,8 +48,9 @@ class Script
             return
         end
 
+        # uncomment this after ..     :(
         #sql_query = 'DROP TABLE IF EXISTS tmp_ebuild_descriptions;'
-        #Database.select(sql_query)
+        #Database.execute(sql_query)
     end
 end
 
