@@ -9,11 +9,14 @@
 require_relative 'envsetup'
 
 def get_data(params)
-    sql_query = 'SELECT description FROM ebuild_descriptions'
-    Database.select(sql_query).flatten
+    Database.select('SELECT description FROM ebuild_descriptions').flatten
 end
 
 class Script
+    def pre_insert_task()
+        Database.execute('UPDATE ebuilds SET description_id=0;')
+    end
+
     def process(desc)
         sql_query = <<-SQL
             SELECT ed.id, td.ebuild_id
@@ -30,8 +33,7 @@ class Script
 
     def post_insert_task
         sql_query = 'SELECT COUNT(id) FROM ebuilds WHERE description_id=0'
-        tmp = Database.get_1value(sql_query).to_i
-        if tmp > 0
+        if (tmp = Database.get_1value(sql_query).to_i) > 0
             PLogger.error("Some ebuilds(#{tmp} items) miss its description")
             return
         end
@@ -41,9 +43,8 @@ class Script
             FROM ebuild_descriptions
             WHERE id NOT IN (SELECT DISTINCT description_id from ebuilds)
         SQL
-        tmp = Database.get_1value(sql_query).to_i
-        if tmp > 0
-            PLogger.error('Some descriptions(#{tmp} items) are is not being used')
+        if (tmp = Database.get_1value(sql_query).to_i) > 0
+            PLogger.error("Some descriptions(#{tmp} items) are is not being used")
             return
         end
 

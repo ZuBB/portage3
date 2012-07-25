@@ -10,6 +10,20 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
+    def pre_insert_task()
+        sql_query = <<-SQL
+            CREATE TABLE IF NOT EXISTS tmp_ebuild_descriptions (
+                id INTEGER,
+                description VARCHAR NOT NULL,
+                ebuild_id INTEGER NOT NULL,
+                PRIMARY KEY (id)
+            );
+
+            CREATE INDEX ted on tmp_ebuild_descriptions (description);
+        SQL
+        Database.execute(sql_query)
+    end
+
     def process(params)
         PLogger.info("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))

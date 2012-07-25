@@ -9,8 +9,14 @@
 require_relative 'envsetup'
 
 def get_data(params)
-	sql_query = 'SELECT distinct description FROM tmp_ebuild_descriptions'
-	Database.select(sql_query).flatten
+    sql_query = 'SELECT distinct description FROM tmp_ebuild_descriptions'
+    Database.select(sql_query).flatten
+end
+
+class Script
+    def pre_insert_task()
+        Database.execute('DELETE FROM ebuild_descriptions;')
+    end
 end
 
 script = Script.new({
