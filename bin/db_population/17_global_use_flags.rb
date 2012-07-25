@@ -10,23 +10,32 @@ require_relative 'envsetup'
 require 'useflag'
 
 def get_data(params)
-    results = []
-    # pattern for flag, its description
-    pattern = Regexp.new('([\\w\\+\\-]+)(?: - )(.*)')
-    flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'global')
-
-    IO.foreach(File.join(params['profiles2_home'], 'use.desc')) do |line|
-        line.chomp!
-        next if line.start_with?('#')
-        next if line.empty?
-        results << [*pattern.match(line).to_a.drop(1), flag_type_id]
-    end
-
-    results
+    filename = File.join(params['profiles2_home'], 'use.desc')
+    (IO.read(filename).split("\n") rescue []).select { |line|
+        !line.start_with?('#') && /\S+/ =~ line
+    }
 end
 
 class Script
-    def post_insert_task()
+    def pre_insert_task
+        flag_type = 'global'
+        flag_type_id = Database.get_1value(UseFlag::SQL['type'], flag_type)
+        @shared_data['use_flag_types'] = {
+            'global_flag_type_id' => flag_type_id
+        }
+    end
+
+    def process(line)
+        matches = UseFlag::Regexps['global'].match(line.strip)
+        flag_type_id = @shared_data['use_flag_types']['global_flag_type_id']
+        unless matches.nil?
+            Database.add_data4insert(*matches.to_a.drop(1), flag_type_id)
+        else
+            PLogger.error("Failed to parse next line\n#{line}")
+        end
+    end
+
+    def post_insert_task
         sql_query = <<-SQL
             SELECT COUNT(id)
             FROM use_flags

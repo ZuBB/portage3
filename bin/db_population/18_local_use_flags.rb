@@ -10,19 +10,10 @@ require_relative 'envsetup'
 require 'useflag'
 
 def get_data(params)
-    results = []
-    # pattern for flag, its description and package
-    pattern = Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?: - )(.*)")
-    flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'local')
-
-    IO.foreach(File.join(params['profiles2_home'], 'use.local.desc')) do |line|
-        line.chomp!()
-        next if line.start_with?('#')
-        next if line.empty?
-        results << [*pattern.match(line).to_a.drop(1), flag_type_id]
-    end
-
-    results
+    filename = File.join(params['profiles2_home'], 'use.local.desc')
+    (IO.read(filename).split("\n") rescue []).select { |line|
+        !line.start_with?('#') && /\S+/ =~ line
+    }
 end
 
 class Script
@@ -34,14 +25,27 @@ class Script
             JOIN categories c ON p.category_id = c.id;
         SQL
         Database.select(sql_query).each do |row|
-            @shared_data['atom@id'][row[1] + '/' + row[2]] = row[0]
+            @shared_data['atom@id'][row[1] + '/' + row[2] + ':'] = row[0]
         end
+
+        flag_type = 'local'
+        flag_type_id = Database.get_1value(UseFlag::SQL['type'], flag_type)
+        @shared_data['use_flag_types'] = {
+            'local_flag_type_id' => flag_type_id
+        }
     end
 
-    def process(params)
-        Database.add_data4insert(params[1], params[2], params[3],
-                                 @shared_data['atom@id'][params[0][0..-2]]
-                                )
+    def process(line)
+        matches = UseFlag::Regexps['local'].match(line.strip)
+        flag_type_id = @shared_data['use_flag_types']['local_flag_type_id']
+
+        unless matches.nil?
+            matches = matches.to_a.drop(1)
+            matches[0] = @shared_data['atom@id'][matches[0]]
+            Database.add_data4insert(*matches, flag_type_id)
+        else
+            PLogger.error("Failed to parse next line\n#{line}")
+        end
     end
 end
 
@@ -49,7 +53,7 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO use_flags
-        (flag_name, flag_description, flag_type_id, package_id)
+        (package_id, flag_name, flag_description, flag_type_id)
         VALUES (?, ?, ?, ?);
     SQL
 })

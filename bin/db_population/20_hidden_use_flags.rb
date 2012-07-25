@@ -11,33 +11,41 @@ require 'parser'
 require 'useflag'
 
 def get_data(params)
-    results = []
-    # pattern for flag, its description and package
-    pattern = Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)')
-    flag_type_id = Database.get_1value(UseFlag::SQL['type'], 'expand_hidden')
-    # items to construct ful path
-    path_items = [params['profiles2_home'], 'desc', '*desc']
-    # get exceptions
-    file = File.join(params['profiles2_home'], 'base', 'make.defaults')
-    exceptions = Parser.get_multi_line_ini_value(IO.read(file).split("\n"),
-                                                 'USE_EXPAND_HIDDEN'
-                                                ).split(' ')
+    filename = File.join(params['profiles2_home'], 'base', 'make.defaults')
+    content = IO.read(filename).split("\n")
+    exceptions = Parser.get_multi_line_ini_value(content, 'USE_EXPAND_HIDDEN').split
 
-    Dir.glob(File.join(*path_items)).each { |file|
+    Dir.glob(File.join(params['profiles2_home'], 'desc', '*desc')).select { |file|
+        exceptions.include?(File.basename(file, '.desc').upcase)
+    }
+end
+
+class Script
+    def pre_insert_task()
+        flag_type = 'expand_hidden'
+        flag_type_id = Database.get_1value(UseFlag::SQL['type'], flag_type)
+        @shared_data['use_flag_types'] = {
+            'expand_hidden_flag_type_id' => flag_type_id
+        }
+    end
+
+    def process(file)
         use_prefix = File.basename(file, '.desc')
-        next unless exceptions.include?(use_prefix.upcase())
-        IO.foreach(file) do |line|
-            line.chomp!()
-            next if line.start_with?('#')
-            next if line.empty?
+        flag_type_id = @shared_data['use_flag_types']['expand_hidden_flag_type_id']
 
-            unless (match = pattern.match(line)).nil?
-                results << [use_prefix, *match.to_a.drop(1), flag_type_id]
+        IO.foreach(file) do |line|
+            next if line.start_with?('#') || /^\s*$/ =~ line
+
+            matches = UseFlag::Regexps['hidden'].match(line.strip)
+            unless matches.nil?
+                matches = matches.to_a.drop(1)
+                matches[0] = use_prefix + '_' + matches[0]
+                Database.add_data4insert(*matches, flag_type_id)
+            else
+                PLogger.error("Failed to parse next line\n#{line}")
             end
         end
-    }
-
-    results.map { |row| row[0] += '_' + row.delete_at(1) ; row }
+    end
 end
 
 script = Script.new({
