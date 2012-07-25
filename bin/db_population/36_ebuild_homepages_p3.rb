@@ -3,7 +3,7 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 04/20/12
+# Initial Author: Vasyl Zuzyak, 07/25/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
