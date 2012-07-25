@@ -80,6 +80,10 @@ module Database
         @data4db << item
     end
 
+    def self.execute(sql_query, *values)
+        @database.execute_batch(sql_query, *values)
+    end
+
     def self.select(sql_query, *values)
         @database.execute(sql_query, *values)
     end
@@ -124,6 +128,6 @@ module Database
     end
 
     def self.close
-        @database.close
+        @database.close() unless @database.closed?
     end
 end
