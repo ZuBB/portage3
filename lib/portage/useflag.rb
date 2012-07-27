@@ -11,14 +11,14 @@ class UseFlag
 
     ENTITY = self.name.downcase[0..-7]
     PROP_SUFFIXES = ['name', 'description', 'type_id']
-    SQL = {
-        'type' => 'SELECT id FROM use_flag_types WHERE flag_type=?'
-    }
+    TYPES = ['global', 'local', 'expand', 'hidden']
+    SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
+    STATES = ['masked', 'disabled', 'enabled', 'forced']
     Regexps = {
-        'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
-        'expand' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
-        'hidden' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
-        'global' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)')
+        'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s-\\s)(.*)"),
+        'expand' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)'),
+        'hidden' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)'),
+        'global' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)')
     }
 end
 
