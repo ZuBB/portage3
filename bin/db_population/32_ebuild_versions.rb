@@ -12,7 +12,7 @@ require 'ebuild'
 def get_data(params)
     tmp_results = {}
 
-    Ebuild.list_ebuilds.each do |row|
+    Ebuild.get_ebuilds.each do |row|
         package_id = row[7]
         unless tmp_results.has_key?(package_id)
             tmp_results[package_id] = {
@@ -32,11 +32,12 @@ end
 
 class Script
     def process(params)
-        atom = params['category'] + '/' + params['package']
         versions = params['versions']
-        PLogger.debug("Package #{atom}")
+        atom = params['category'] + '/' + params['package']
+        ordered_versions = versions.sort { |a, b| Package.vercmp(a, b) }
 
-        ordered_versions = Package.get_package_versions(atom)
+        PLogger.info("Package #{atom}")
+        PLogger.info("versions #{ordered_versions.inspect}")
 
         versions.each_index do |index|
             ord_num = ordered_versions.index { |version|
@@ -47,7 +48,6 @@ class Script
                 Database.add_data4insert([ord_num + 1, params['ids'][index]])
             else
                 PLogger.warn("Version `#{versions[index]}` - 'cache miss'")
-                PLogger.info("versions #{versions.join(', ')}")
             end
         end
     end
