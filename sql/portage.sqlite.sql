@@ -81,27 +81,27 @@ create table mask_states (
     PRIMARY KEY (id)
 );
 
-create table use_flag_states (
+create table flag_types (
     id INTEGER,
-    flag_state VARCHAR NOT NULL UNIQUE,
-    PRIMARY KEY (id)
-);
-
-create table use_flag_types (
-    id INTEGER,
-    flag_type VARCHAR NOT NULL UNIQUE,
-    description VARCHAR NOT NULL UNIQUE,
+    type VARCHAR NOT NULL UNIQUE,
+    descr VARCHAR NOT NULL UNIQUE,
     source VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
-create table use_flags (
+create table flag_states (
     id INTEGER,
-    flag_name VARCHAR NOT NULL,
-    flag_description VARCHAR NOT NULL,
-    flag_type_id INTEGER NOT NULL,
+    state VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table flags (
+    id INTEGER,
+    name VARCHAR NOT NULL,
+    descr VARCHAR NOT NULL,
+    type_id INTEGER NOT NULL,
     package_id INTEGER,
-    FOREIGN KEY (flag_type_id) REFERENCES use_flag_types(id),
+    FOREIGN KEY (type_id) REFERENCES flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
@@ -269,18 +269,25 @@ create table ebuild_masks (
     PRIMARY KEY (id)
 );
 
-create table use_flags2ebuilds (
+create table ebuilds_flags (
     id INTEGER,
-    -- do we need package_id here
-    package_id INTEGER NOT NULL,
     ebuild_id INTEGER NOT NULL,
-    use_flag_id INTEGER NOT NULL,
-    flag_state INTEGER NOT NULL DEFAULT 0,
-    source_id INTEGER NOT NULL,
-    FOREIGN KEY (use_flag_id) REFERENCES use_flags(id),
-    FOREIGN KEY (package_id) REFERENCES packages(id),
+    flag_id INTEGER NOT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    CONSTRAINT idx1_unq UNIQUE (ebuild_id, use_flag_id, flag_state),
+    FOREIGN KEY (flag_id) REFERENCES flags(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, flag_id),
+    PRIMARY KEY (id)
+);
+
+create table flags_states (
+    id INTEGER,
+    flag_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL,
+    FOREIGN KEY (flag_id) REFERENCES flags(id),
+    FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id, source_id),
     PRIMARY KEY (id)
 );
 
