@@ -28,21 +28,17 @@ class Script
             @shared_data['atom@id'][row[1] + '/' + row[2] + ':'] = row[0]
         end
 
-        flag_type = 'local'
-        flag_type_id = Database.get_1value(UseFlag::SQL['type'], flag_type)
-        @shared_data['use_flag_types'] = {
-            'local_flag_type_id' => flag_type_id
-        }
+        type = 'local'
+        type_id = Database.get_1value(UseFlag::SQL['type'], type)
+        @shared_data['flag_type@id'] = { type => type_id }
     end
 
     def process(line)
-        matches = UseFlag::Regexps['local'].match(line.strip)
-        flag_type_id = @shared_data['use_flag_types']['local_flag_type_id']
-
-        unless matches.nil?
+        unless (matches = UseFlag::Regexps['local'].match(line)).nil?
             matches = matches.to_a.drop(1)
             matches[0] = @shared_data['atom@id'][matches[0]]
-            Database.add_data4insert(*matches, flag_type_id)
+            type_id = @shared_data['flag_type@id']['local']
+            Database.add_data4insert(*matches, type_id)
         else
             PLogger.error("Failed to parse next line\n#{line}")
         end
@@ -52,8 +48,8 @@ end
 script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
-        INSERT INTO use_flags
-        (package_id, flag_name, flag_description, flag_type_id)
+        INSERT INTO flags
+        (package_id, name, descr, type_id)
         VALUES (?, ?, ?, ?);
     SQL
 })

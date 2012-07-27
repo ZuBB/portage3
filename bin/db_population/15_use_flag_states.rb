@@ -7,11 +7,10 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-
-FLAG_STATES = ['masked', 'disabled', 'enabled', 'forced']
+require 'useflag'
 
 script = Script.new({
-    'data_source' => Proc.new { FLAG_STATES },
-    'sql_query' => 'INSERT INTO use_flag_states (flag_state) VALUES (?);'
+    'data_source' => Proc.new { UseFlag::STATES },
+    'sql_query' => 'INSERT INTO flag_states (state) VALUES (?);'
 })
 
