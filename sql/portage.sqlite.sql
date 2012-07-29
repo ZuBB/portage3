@@ -67,14 +67,6 @@ create table eapis (
     PRIMARY KEY (id)
 );
 
-/*create table restriction_types (
-    id INTEGER,
-    restriction VARCHAR NOT NULL UNIQUE,
-    -- sql_query VARCHAR NOT NULL UNIQUE,
-    -- CONSTRAINT idx1_unq UNIQUE (restriction, sql_query),
-    PRIMARY KEY (id)
-);*/
-
 create table mask_states (
     id INTEGER,
     mask_state VARCHAR NOT NULL UNIQUE,
@@ -129,41 +121,6 @@ create table licence_group_content (
         (licence_id IS NOT NULL OR sub_group_id IS NOT NULL),
     PRIMARY KEY (id)
 );
-
-/* create table persons (
-    id INTEGER,
-    name VARCHAR,
-    email VARCHAR NOT NULL UNIQUE,
-    nickname VARCHAR UNIQUE,
-    CONSTRAINT idx1_unq UNIQUE (name, email, nickname),
-    PRIMARY KEY (id)
-);
-
-create table roles (
-    id INTEGER,
-    role VARCHAR NOT NULL UNIQUE,
-    PRIMARY KEY (id)
-);
-
-create table persons2roles (
-    id INTEGER,
-    person_id INTEGER NOT NULL,
-    role_id INTEGER NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES persons(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id),
-    CONSTRAINT idx1_unq UNIQUE (person_id, role_id),
-    PRIMARY KEY (id)
-);
-
-create table person_roles2packages (
-    id INTEGER,
-    package_id INTEGER NOT NULL,
-    persons_role_id INTEGER NOT NULL,
-    FOREIGN KEY (persons_role_id) REFERENCES persons2roles(id),
-    FOREIGN KEY (package_id) REFERENCES packages(id),
-    CONSTRAINT idx1_unq UNIQUE (package_id, persons_role_id),
-    PRIMARY KEY (id)
-);*/
 
 create table repositories (
     id INTEGER,
