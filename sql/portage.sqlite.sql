@@ -73,6 +73,12 @@ create table mask_states (
     PRIMARY KEY (id)
 );
 
+create table content_item_types (
+    id INTEGER,
+    type VARCHAR NOT NULL,
+    PRIMARY KEY (id)
+);
+
 create table flag_types (
     id INTEGER,
     type VARCHAR NOT NULL UNIQUE,
@@ -253,22 +259,63 @@ create table ebuild_licences (
     PRIMARY KEY (id)
 );
 
-/*create table sets (
-    id INTEGER PRIMARY KEY,
-    set_name VARCHAR NOT NULL
+create table sets (
+    id INTEGER,
+    name VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
 );
 
-create table sets_content (
-    id INTEGER PRIMARY KEY,
-    set_id INTEGER NOT NULL,
-    package_id INTEGER NOT NULL
-);*/
-
-create table installed_apps (
+create table set_content (
     id INTEGER,
-    package_id INTEGER NOT NULL,
+    set_id INTEGER NOT NULL UNIQUE,
+    sub_set_id INTEGER,
+    package_id INTEGER,
+    FOREIGN KEY (set_id) REFERENCES sets(id),
+    FOREIGN KEY (sub_set_id) REFERENCES sets(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
+    CONSTRAINT idx1_unq CHECK
+        (sub_set_id IS NOT NULL OR package_id IS NOT NULL),
+    -- TODO slot?
+    PRIMARY KEY (id)
+);
+
+create table installed_packages (
+    id INTEGER,
+    ebuild_id INTEGER NOT NULL,
+    build_time INTEGER NOT NULL,
+    binpkgmd5 VARCHAR NOT NULL,
+    pkgsize INTEGER NOT NULL,
+    cflags VARCHAR /*NOT NULL*/,
+    cxxflags VARCHAR /*NOT NULL*/,
+    ldflags VARCHAR /*NOT NULL*/,
+    counter INTEGER /*NOT NULL*/,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    PRIMARY KEY (id)
+);
+
+create table package_content (
+    id INTEGER,
+    iebuild_id INTEGER NOT NULL,
+    type_id INTEGER NOT NULL,
+    item VARCHAR NOT NULL,
+    hash VARCHAR UNIQUE DEFAULT NULL,
+    itime INTEGER NOT NULL,
+    FOREIGN KEY (iebuild_id) REFERENCES installed_packages(id),
+    FOREIGN KEY (type_id) REFERENCES content_item_types(id),
+    CONSTRAINT idx1_unq UNIQUE (iebuild_id, type_id, item),
+    PRIMARY KEY (id)
+);
+
+create table package_flagstates (
+    id INTEGER,
+    iebuild_id INTEGER NOT NULL,
+    flag_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL,
+    FOREIGN KEY (flag_id) REFERENCES flags(id),
+    FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id),
     PRIMARY KEY (id)
 );
 
 COMMIT;
+
