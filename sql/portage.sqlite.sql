@@ -84,8 +84,6 @@ create table mask_states (
 create table flag_types (
     id INTEGER,
     type VARCHAR NOT NULL UNIQUE,
-    descr VARCHAR NOT NULL UNIQUE,
-    source VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -126,7 +124,8 @@ create table licence_group_content (
     FOREIGN KEY (group_id) REFERENCES licence_groups(id),
     FOREIGN KEY (sub_group_id) REFERENCES licence_groups(id),
     FOREIGN KEY (licence_id) REFERENCES licences(id),
-    CONSTRAINT idx3_unq CHECK
+    CONSTRAINT idx1_unq UNIQUE (group_id, licence_id),
+    CONSTRAINT idx2_unq CHECK
         (licence_id IS NOT NULL OR sub_group_id IS NOT NULL),
     PRIMARY KEY (id)
 );
@@ -201,16 +200,12 @@ create table ebuilds (
     slot VARCHAR /*NOT NULL*/,
     repository_id INTEGER NOT NULL,
     description_id INTEGER NOT NULL DEFAULT 0,
-    homepage_id INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
     FOREIGN KEY (repository_id) REFERENCES repositories (id),
     FOREIGN KEY (description_id) REFERENCES ebuild_descriptions (id),
-    FOREIGN KEY (homepage_id) REFERENCES ebuild_homepages (id),
     CONSTRAINT idx1_unq UNIQUE (package_id, version, repository_id),
     PRIMARY KEY (id)
-    -- inherit/manifest
-    -- data blob /*NOT NULL*/,
 );
 
 CREATE INDEX ebuilds_idx2 on ebuilds (package_id, version);
@@ -269,7 +264,7 @@ create table ebuild_masks (
     PRIMARY KEY (id)
 );
 
-create table ebuilds_flags (
+create table ebuild_flags (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     flag_id INTEGER NOT NULL,
@@ -279,7 +274,7 @@ create table ebuilds_flags (
     PRIMARY KEY (id)
 );
 
-create table flags_states (
+create table ebuilds_flagstates (
     id INTEGER,
     flag_id INTEGER NOT NULL,
     state_id INTEGER NOT NULL,
