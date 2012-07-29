@@ -20,32 +20,30 @@ require 'utils'
 class Script
     def initialize(params)
         @shared_data = {}
-        @start_time = nil
-        @end_time = nil
         @jobs = Queue.new
         @pool = nil
         @data = {}
 
         get_script_options(params)
 
-        Database.init(@data["db_filename"], @data["sql_query"])
+        Database.init(@data['db_filename'], @data['sql_query'])
 
-        # TODO debug level, debug device
-        # #@debug = data["debug"]
         PLogger.init({
-            "path" => Utils::get_log_home,
-            "dir" => @data["db_filename"],
-            "file" => $0
+            'level' => @data["debug"] ? Logger::DEBUG : Logger::INFO,
+            'path' => Utils::get_log_home,
+            'dir' => @data['db_filename'],
+            'file' => $0
         })
 
+        log_sql_queries
         fill_table_X
     end
 
     def fill_table_X()
-        @start_time = Time.now
+        stats = { 'start_time' => Time.now }
 
         get_data()
-        pre_insert_task() if defined?(pre_insert_task) == 'method'
+        pre_insert_task if defined?(pre_insert_task) == 'method'
         @shared_data.freeze
 
         Database.prepare_bunch_insert
@@ -53,15 +51,17 @@ class Script
         Database.set_workers_done
         Database.finalize_bunch_insert
 
-        post_insert_task() if defined?(post_insert_task) == 'method'
-
-        @end_time = Time.now
-
-        if defined?(timeout_handler) == 'method'
-            timeout_handler(@start_time, @end_time)
+        if defined?(post_insert_check) == 'method'
+            post_insert_check if @data['run_check']
         end
 
+        stats['end_time'] = Time.now
+        stats.merge!(Database.get_insert_stats)
+
+        handle_stats(stats)
+
         Database.close
+        PLogger.close
     end
 
     private
@@ -104,6 +104,29 @@ class Script
         end
 
         @pool.each { |thread| thread.join }
+    end
+
+    def log_sql_queries
+        PLogger.info('Passed queries:')
+        [@data['sql_query']].flatten.each  { |sql_query|
+            PLogger.info("#{'-' * 70}")
+            PLogger.info(sql_query)
+        }
+        PLogger.info("#{'-' * 70}")
+    end
+
+    def handle_stats(results)
+        if defined?(custom_stats_handler) == 'method'
+            custom_stats_handler(results)
+        else
+            elaped = results['end_time'] - results['start_time']
+            PLogger.group_log([
+                [1, "#{'=' * 35} SUMMARY #{'=' * 35}"],
+                [1, "Time elapsed: #{elaped} seconds"],
+                [1, "Successful inserts: #{results['passed']}"],
+                [1, "Faileddddd inserts: #{results['failed']}"]
+            ])
+        end
     end
 
     def self.get_cli_options(messages = {})
