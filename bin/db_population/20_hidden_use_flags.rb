@@ -35,7 +35,10 @@ class Script
             next if line.start_with?('#') || /^\s*$/ =~ line
 
             if /\s{2,}/ =~ line
-                PLogger.warn("Got 2+ spaces in `#{line}` line. Fixing..")
+                PLogger.group_log([
+                    [2, 'Got 2+ space chars in next line Fixing..'],
+                    [1, line]
+                ])
                 line.gsub!(/\s{2,}/, ' ')
             end
 
@@ -44,22 +47,12 @@ class Script
                 matches[0] = use_prefix + '_' + matches[0]
                 Database.add_data4insert(*matches, type_id)
             else
-                PLogger.error("Failed to parse next line\n#{line}")
+                PLogger.group_log([
+                    [3, 'Failed to parse next line'],
+                    [1, line]
+                ])
             end
         end
-    end
-
-    def post_insert_task
-        sql_query = <<-SQL
-            SELECT ft.type, f.name
-            FROM flags f
-            JOIN flag_types ft ON ft.id=f.type_id
-            WHERE f.descr='';
-        SQL
-
-        Database.get_1value(sql_query).each { |row|
-            PLogger.error("#{row[0]} use flag #{row[1]} don't have description")
-        }
     end
 end
 

@@ -35,7 +35,10 @@ class Script
             next if line.start_with?('#') || /^\s*$/ =~ line
 
             if /\s{2,}/ =~ line
-                PLogger.warn("Got 2+ spaces in next line. Fixing..\n`#{line}`")
+                PLogger.group_log([
+                    [2, 'Got 2+ space chars in next line Fixing..'],
+                    [1, line]
+                ])
                 line.gsub!(/\s{2,}/, ' ')
             end
 
@@ -44,7 +47,10 @@ class Script
                 matches[0] = use_prefix + '_' + matches[0]
                 Database.add_data4insert(*matches, type_id)
             else
-                PLogger.error("Failed to parse next line\n#{line}")
+                PLogger.group_log([
+                    [3, 'Failed to parse next line'],
+                    [1, line]
+                ])
             end
         end
     end

@@ -11,7 +11,7 @@ require 'ebuild'
 
 class Script
     def process(params)
-        PLogger.info("Ebuild: #{params}")
+        PLogger.debug("Ebuild: #{params}")
         ebuild = Ebuild.new(params)
 
         Database.add_data4insert(ebuild.package_id,

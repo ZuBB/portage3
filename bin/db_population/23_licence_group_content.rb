@@ -45,29 +45,16 @@ def get_data(params)
     results
 end
 
-class Script
-    def pre_insert_task()
-        sql_query = 'SELECT name, id FROM licence_groups;'
-        @shared_data['licence_groups@id'] = Hash[Database.select(sql_query)]
-
-        sql_query = 'SELECT name, id FROM licences;'
-        @shared_data['licences@id'] = Hash[Database.select(sql_query)]
-    end
-
-    def process(params)
-        Database.add_data4insert(@shared_data['licence_groups@id'][params[0]],
-                                 @shared_data['licence_groups@id'][params[1]],
-                                 @shared_data['licences@id'][params[2]]
-                                )
-    end
-end
-
 script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO licence_group_content
         (group_id, sub_group_id, licence_id)
-        VALUES (?, ?, ?);
+        VALUES (
+            (SELECT id FROM licence_groups WHERE name=?),
+            (SELECT id FROM licence_groups WHERE name=?),
+            (SELECT id FROM licences WHERE name=?)
+        );
     SQL
 })
 

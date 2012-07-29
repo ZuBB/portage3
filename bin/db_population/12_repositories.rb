@@ -11,7 +11,7 @@ require 'repository'
 
 class Script
     def process(params)
-        PLogger.info("Repository: #{params}")
+        PLogger.debug("Repository: #{params}")
         repository = Repository.new(params)
 
         Database.add_data4insert(repository.repository,

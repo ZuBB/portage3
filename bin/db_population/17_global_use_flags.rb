@@ -28,28 +28,10 @@ class Script
             type_id = @shared_data['flag_type@id']['global']
             Database.add_data4insert(*matches.to_a.drop(1), type_id)
         else
-            PLogger.error("Failed to parse next line\n#{line}")
-        end
-    end
-
-    def post_insert_task
-        sql_query = <<-SQL
-            SELECT COUNT(id)
-            FROM flags
-            WHERE type_id=(#{UseFlag::SQL['type']})
-        SQL
-
-        total_global_flags = Database.get_1value(sql_query, 'global')
-
-        sql_query = <<-SQL
-            SELECT COUNT(DISTINCT name)
-            FROM flags
-            WHERE type_id=(#{UseFlag::SQL['type']})
-        SQL
-        unique_global_flags = Database.get_1value(sql_query, 'global')
-
-        if total_global_flags != unique_global_flags
-            PLogger.error('Its very likely that global flags have duplicates')
+            PLogger.group_log([
+                [3, 'Failed to parse next line'],
+                [1, line]
+            ])
         end
     end
 end

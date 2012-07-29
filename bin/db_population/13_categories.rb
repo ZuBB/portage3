@@ -11,7 +11,7 @@ require 'category'
 
 class Script
     def process(params)
-        PLogger.info("Category: #{params}")
+        PLogger.debug("Category: #{params}")
         category = Category.new(params)
 
         Database.add_data4insert(category.category,

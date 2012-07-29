@@ -40,7 +40,10 @@ class Script
             type_id = @shared_data['flag_type@id']['local']
             Database.add_data4insert(*matches, type_id)
         else
-            PLogger.error("Failed to parse next line\n#{line}")
+            PLogger.group_log([
+                [3, 'Failed to parse next line'],
+                [1, line]
+            ])
         end
     end
 end

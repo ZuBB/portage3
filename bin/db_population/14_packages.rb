@@ -11,7 +11,7 @@ require 'package'
 
 class Script
     def process(params)
-        PLogger.info("Package: #{params}")
+        PLogger.debug("Package: #{params}")
         package = Package.new(params)
 
         Database.add_data4insert(package.category_id, package.package)
