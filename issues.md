@@ -1,6 +1,7 @@
 #### Short term tasks
 * ~~**ruby 1.9 with native threads**~~
 * ~~**portage libs: one more refactoring**~~
+* **early kill of db and logger threads**
 * ~~deal with pathes~~
     + ~~find nice way to do includes for all kind of scripts~~
     + ~~"root_path" vs "root_folder" vs "portage_home"~~
@@ -21,8 +22,8 @@
     + ~~post processing hooks~~
     + keep in mind that need to have easy way to debug specified item(s)
 * 'tables population' scripts
-    + versions
-    + wrong handling of homepages: ebuild may refer to 1+ homepage
+    + ~~versions~~, ~~ruby+python tools~~, verify scripts, check module
+    + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
     + use flags stuff
     + dependancies
     + installed stuff
@@ -32,7 +33,7 @@
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + calling script for all in theirs forlder
 * Logger
-    + create log file on first log attempt
+    + ~~create log file on first log attempt~~
     + before loggin issue itself, need to log source of the issue in HRF
 * parser
     * fix bugs
