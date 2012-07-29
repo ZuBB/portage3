@@ -5,21 +5,23 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'logger'
+require 'thread'
 
 module PLogger
     # blog.grayproductions.net/articles/the_books_are_wrong_about_logger
     class SimpleLog < Logger::Formatter
-        TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
+        TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
         def call(severity, time, program_name, message)
-            [
-                '[' + time.strftime(TIME_FORMAT) + ']',
-                (severity + ':').rjust(6, ' '),
-                message
-            ].join(" ") + "\n"
+            items = ['[' + time.strftime(TIME_FORMAT) + ']']
+            items << (severity + ':').rjust(6, ' ')
+            items << message + "\n"
+            items.join(' ')
         end
     end
 
     LOGFILE_EXT = ".log"
+    @log_tasks = Queue.new
+    @semaphore = Mutex.new
     @log_file = nil
     @logger = nil
 
@@ -29,8 +31,16 @@ module PLogger
         end
 
         @logger = Logger.new(@log_file)
-        @logger.level = params["level"] || Logger::DEBUG
+        @logger.level = params["level"] if params["level"]
         @logger.formatter = SimpleLog.new
+        @thread = Thread.new do
+            Thread.current.priority = 2
+            Thread.current["name"] = "log worker"
+            while true
+                severity, message = *@log_tasks.pop
+                @logger.add(severity, message)
+            end
+        end
     end
 
     def self.get_logfile(params)
@@ -43,7 +53,15 @@ module PLogger
             Dir.mkdir(log_dir) unless File.exist?(log_dir)
 
             log_file = File.basename(params["file"], '.rb') + LOGFILE_EXT
-            return File.join(log_dir, log_file)
+            log_file_path = File.join(log_dir, log_file)
+
+            if File.exist?(log_file_path)
+                log_file_path_bak = log_file_path.dup
+                log_file_path_bak << '.' + Time.now.to_i.to_s + '.bak'
+                File.rename(log_file_path, log_file_path_bak)
+            end
+
+            return log_file_path
         elsif params['logfile']
             dir = File.dirname(params['logfile'])
 
@@ -56,38 +74,43 @@ module PLogger
         end
     end
 
-    def self.is_filename_valid?(db_filename)
-        if db_filename.class != String || db_filename.empty?
-            return false
-        else
-            return File.exist?(db_filename)
-        end
+    def self.group_log(messages)
+        @semaphore.synchronize {
+            messages.each { |message|
+                @log_tasks << message
+            }
+        }
+    end
+
+    def self.unknown(message)
+        @log_tasks << [5, message]
     end
 
     def self.fatal(message)
-        @logger.fatal(message) unless message.nil? && message.empty?
+        @log_tasks << [4, message]
     end
 
     def self.error(message)
-        @logger.error(message) unless message.nil? && message.empty?
+        @log_tasks << [3, message]
     end
 
     def self.warn(message)
-        @logger.warn(message) unless message.nil? && message.empty?
+        @log_tasks << [2, message]
     end
 
     def self.info(message)
-        @logger.info(message) unless message.nil? && message.empty?
+        @log_tasks << [1, message]
     end
 
     def self.debug(message)
-        @logger.debug(message) unless message.nil? && message.empty?
+        @log_tasks << [0, message]
     end
 
-    def self.__log(severity, message)
-        # TODO?
-        unless message.nil? && message.empty?
-            #@logger.add(severity, message)
-        end
+    def self.close()
+        # TODO hacks
+        sleep(0.25) while @thread.status != 'sleep'
+        sleep(3)
+        @thread.terminate
+        @logger.close
     end
 end
