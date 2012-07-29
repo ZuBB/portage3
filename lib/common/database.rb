@@ -12,14 +12,16 @@ module Database
     @database = nil
     @sql_queries = []
     @statements = []
+    @totals = {}
     @data4db = Queue.new
     @workers_running = true
     @semaphore = Mutex.new
     Thread.abort_on_exception = true
     @thread = Thread.new do
         Thread.current.priority = 1
-        Thread.current['count'] = 0
-        Thread.current["name"] = "db filler"
+        Thread.current['passed'] = 0
+        Thread.current['failed'] = 0
+        Thread.current["name"] = "db worker"
 
         while (self.is_workers_running? ? true : @data4db.size > 0)
             data2insert = @data4db.pop()
@@ -27,11 +29,16 @@ module Database
             begin
                 # TODO full support of the multiple statements
                 @statements[0].execute(*data2insert)
+                Thread.current['passed'] += 1
             rescue SQLite3::Exception => exception
-                PLogger.error("Message: #{exception.message()}")
-                PLogger.error("Values: #{data2insert.inspect}")
+                PLogger.group_log([
+                    [3, "#{'>' * 20} database exception happened #{'>' * 20}"],
+                    [1, "Message: #{exception.message}"],
+                    [1, "Values: #{data2insert.inspect}"],
+                    [1, "#{'<' * 69}"]
+                ])
+                Thread.current['failed'] += 1
             end
-            Thread.current['count'] += 1
         end
     end
 
@@ -111,23 +118,29 @@ module Database
         @semaphore.synchronize { @workers_running = false }
     end
 
-    def self.close_statements
+    def self.finalize_bunch_insert
+        sleep(0.1) while @thread.stop? == false
+
+        @thread.terminate
+        @database.commit
         @sql_queries = nil
         @statements.each do |statement|
             statement.reset!
             statement.close
         end
+
+        @totals = {
+           'passed' => @thread['passed'],
+           'failed' => @thread['failed'],
+        }
     end
 
-    def self.finalize_bunch_insert
-        sleep(0.2) while @thread.stop? == false
-
-        self.close_statements
-        @database.commit
-        @thread['count']
+    def self.get_insert_stats
+        @totals
     end
 
     def self.close
         @database.close() unless @database.closed?
     end
 end
+
