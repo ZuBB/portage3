@@ -1,20 +1,20 @@
 #### Short term tasks
 * ~~**ruby 1.9 with native threads**~~
 * ~~**portage libs: one more refactoring**~~
-* **early kill of db and logger threads**
+* **early kill/end of db and logger threads**
 * ~~deal with pathes~~
     + ~~find nice way to do includes for all kind of scripts~~
     + ~~"root_path" vs "root_folder" vs "portage_home"~~
     + ~~options["storage"]["root"] is not valid 'path'~~
 * database
-    + **db thread ends its work too early**
     + ~~thread pool for queries that insert/update data~~
     + ~~common statement for queries that insert/update data~~
     + ~~on exception log only error mesage and values~~
     + ~~cache statements~~
-    + support insert via specified cached statement
-    + issue with queries and specified params run from workers
+    + separete API for batch_execute
     + **SQL**: tables/colums naming
+    + support insert via *specified* cached statement. __do we need this?__
+    + issue with queries and specified params run from workers. __do we need this?__
 * Script class
     + ~~use '$0' to get process name and get rid of 'script' param~~
     + ~~shared resources for workers~~
@@ -22,13 +22,13 @@
     + ~~post processing hooks~~
     + keep in mind that need to have easy way to debug specified item(s)
 * 'tables population' scripts
-    + ~~versions~~, ~~ruby+python tools~~, verify scripts, check module
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
-    + use flags stuff
+    + versions: ~~script~~, ~~compare method~~, ~~ruby+python tools~~, verify scripts, check module
+    + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, make.conf, users
     + dependancies
-    + installed stuff
+    + installed stuff: ~~db~~, scripts
     + rework scripts that have size more than 2kB
-    + find another way of getting available EAPIs
+    + find faster way of getting available EAPIs
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + calling script for all in theirs forlder
