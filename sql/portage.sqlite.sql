@@ -237,7 +237,7 @@ create table ebuild_flags (
     PRIMARY KEY (id)
 );
 
-create table ebuilds_flagstates (
+create table flags_states (
     id INTEGER,
     flag_id INTEGER NOT NULL,
     state_id INTEGER NOT NULL,
