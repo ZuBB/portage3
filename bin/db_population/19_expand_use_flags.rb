@@ -42,7 +42,7 @@ class Script
                 line.gsub!(/\s{2,}/, ' ')
             end
 
-            unless (matches = UseFlag::Regexps['expand'].match(line.strip)).nil?
+            unless (matches = UseFlag::REGEXPS['expand'].match(line.strip)).nil?
                 matches = matches.to_a.drop(1)
                 matches[0] = use_prefix + '_' + matches[0]
                 Database.add_data4insert(*matches, type_id)

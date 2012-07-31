@@ -24,7 +24,7 @@ class Script
     end
 
     def process(line)
-        unless (matches = UseFlag::Regexps['global'].match(line)).nil?
+        unless (matches = UseFlag::REGEXPS['global'].match(line)).nil?
             type_id = @shared_data['flag_type@id']['global']
             Database.add_data4insert(*matches.to_a.drop(1), type_id)
         else

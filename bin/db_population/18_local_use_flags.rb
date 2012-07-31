@@ -34,7 +34,7 @@ class Script
     end
 
     def process(line)
-        unless (matches = UseFlag::Regexps['local'].match(line)).nil?
+        unless (matches = UseFlag::REGEXPS['local'].match(line)).nil?
             matches = matches.to_a.drop(1)
             matches[0] = @shared_data['atom@id'][matches[0]]
             type_id = @shared_data['flag_type@id']['local']
