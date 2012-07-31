@@ -27,18 +27,8 @@ def get_data(params)
         items = line.split()
         group = items.delete_at(0)
 
-        line = []
         items.each do |item|
-            licence = nil
-            sub_group = nil
-
-            if item.start_with?('@')
-                sub_group = item[1..-1]
-            else
-                licence = item
-            end
-
-            results << [group, sub_group, licence]
+            results << [group, item[1..-1]] if item.start_with?('@')
         end
     end
 
@@ -49,11 +39,10 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO licence_group_content
-        (group_id, sub_group_id, licence_id)
+        (group_id, sub_group_id)
         VALUES (
             (SELECT id FROM licence_groups WHERE name=?),
-            (SELECT id FROM licence_groups WHERE name=?),
-            (SELECT id FROM licences WHERE name=?)
+            (SELECT id FROM licence_groups WHERE name=?)
         );
     SQL
 })
