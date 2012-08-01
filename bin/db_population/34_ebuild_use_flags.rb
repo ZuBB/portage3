@@ -7,35 +7,54 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
+require 'useflag'
 require 'ebuild'
 
 class Script
+    def pre_insert_task
+        source = 'ebuilds'
+        sql_query = 'select id from sources where source=?;'
+        @shared_data['source@is'] = {
+            source => Database.get_1value(sql_query, source)
+        }
+
+        sql_query = 'select state, id from flag_states;'
+        @shared_data['state@is'] = Hash[Database.select(sql_query)]
+    end
+
     def process(params)
         PLogger.info("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
-
         ebuild.ebuild_use_flags.split.each do |flag|
-            # app-doc/pms section 8.2
-            flag_state = flag[0].chr == '+' ? 1 : 0
-            flag_name = flag.sub(/^(-|\+)/, '')
-
-            Database.add_data4insert(
-                ebuild.package_id,
-                ebuild.ebuild_id,
-                flag_name,
-                flag_state,
-                1 # TODO source_id
-            )
+            flag_name = UseFlag.get_flag(flag)
+            flag_state = UseFlag.get_flag_state(flag)
+            Database.add_data4insert(flag_name,
+                                     @shared_data['state@is'][flag_state],
+                                     ebuild.ebuild_id,
+                                     @shared_data['source@is']['ebuilds']
+                                    )
         end
     end
+
 end
 
 script = Script.new({
     'data_source' => Ebuild.method(:get_ebuilds),
     'sql_query' => <<-SQL
-        INSERT INTO use_flags2ebuilds
-        (package_id, ebuild_id, use_flag_id, flag_state, source_id)
-        VALUES (?, ?, (SELECT id FROM use_flags WHERE flag_name=?), ?, ?);
+        INSERT INTO flags_states
+        (flag_id, state_id, ebuild_id, source_id)
+        VALUES (
+            (
+                SELECT id
+                FROM flags
+                WHERE name=?
+                ORDER BY type_id ASC
+                LIMIT 1
+            ),
+            ?,
+            ?,
+            ?
+        );
     SQL
 })
 
