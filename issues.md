@@ -19,9 +19,13 @@
     + ~~use '$0' to get process name and get rid of 'script' param~~
     + ~~shared resources for workers~~
     + ~~evaluate injecting of :get_data and :process methods into Script/Worker~~
-    + ~~post processing hooks~~
+    + ~~pre insert tasks~~
+    + ~~post processing checks~~
+    + on end cleanup
+    + ~~log queries~~
+    + ~~log stats~~
     + keep in mind that need to have easy way to debug specified item(s)
-* 'tables population' scripts
+* scripts
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
     + versions: ~~script~~, ~~compare method~~, ~~ruby+python tools~~, verify scripts, check module
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, make.conf, users
@@ -33,8 +37,11 @@
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + calling script for all in theirs forlder
 * Logger
-    + ~~create log file on first log attempt~~
-    + before loggin issue itself, need to log source of the issue in HRF
+    + ~~thread~~
+    + ~~groulog API~~
+    + ~~backup previous file~~
+    + ~~close log device~~
+    + before loggin db issue itself, need to log original data(in HRF format)
 * parser
     * fix bugs
     * light improvement
