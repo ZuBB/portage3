@@ -228,25 +228,19 @@ create table ebuild_masks (
     PRIMARY KEY (id)
 );
 
-create table ebuild_flags (
-    id INTEGER,
-    ebuild_id INTEGER NOT NULL,
-    flag_id INTEGER NOT NULL,
-    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (flag_id) REFERENCES flags(id),
-    CONSTRAINT idx1_unq UNIQUE (ebuild_id, flag_id),
-    PRIMARY KEY (id)
-);
-
 create table flags_states (
     id INTEGER,
+    package_id INTEGER,
+    ebuild_id INTEGER,
     flag_id INTEGER NOT NULL,
     state_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (flag_id) REFERENCES flags(id),
     FOREIGN KEY (state_id) REFERENCES flag_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id, source_id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id, ebuild_id),
     PRIMARY KEY (id)
 );
 
