@@ -3,10 +3,9 @@
 import sys
 
 try:
-    import sqlite3
     from portage.versions import *
 except ImportError:
-    print ""
+    print "Failed to import portage libs! Use Ruby version of this script"
     sys.exit(0)
 
 if len(sys.argv) == 1:
@@ -17,6 +16,12 @@ versions = []
 if len(sys.argv) == 2:
     versions = sys.argv[1].split(',')
 else:
+    try:
+        import sqlite3
+    except ImportError:
+        print "Failed to import sqlite bindings!"
+        sys.exit(0)
+
     conn = sqlite3.connect(sys.argv[1])
     cur = conn.cursor()
 
@@ -39,5 +44,5 @@ else:
 
     conn.close()
 
-print ', '.join(sorted(versions, cmp=vercmp))
+print ','.join(sorted(versions, cmp=vercmp))
 

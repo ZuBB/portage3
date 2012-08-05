@@ -6,16 +6,9 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, 01/06/12
 #
-def run_check(sql_query, message)
-    if (results = Database.select(sql_query)).size > 0
-        PLogger.error(message)
-        affected_by_max.each { |row| PLogger.info(row[0] + '/' + row[1]) }
-    end
-end
-
 class Script
     def post_insert_check
-        [
+        EbuildVersion.post_insert_check([
             {
                 'message' => 'Next packages have zeros in `version_order` column',
                 'sql_query' => <<-SQL
@@ -58,7 +51,7 @@ class Script
                     join categories c on p.category_id=c.id;
                 SQL
             }
-        ].each { |item| run_check(item['message'], item['sql_query']) }
+        ])
     end
 end
 
