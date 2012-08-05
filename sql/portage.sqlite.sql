@@ -293,8 +293,9 @@ create table package_content (
     iebuild_id INTEGER NOT NULL,
     type_id INTEGER NOT NULL,
     item VARCHAR NOT NULL,
-    -- get some answers why we forced not to use UNIQUE here
-    hash VARCHAR /*UNIQUE*/ DEFAULT NULL,
+    -- can't use UNIQUE as we have same objects in FS
+    --  under different names and/or packages
+    hash VARCHAR DEFAULT NULL,
     install_time INTEGER DEFAULT NULL,
     -- check if its possible to use some check for this
     symlinkto INTEGER DEFAULT NULL,
