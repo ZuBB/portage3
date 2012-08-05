@@ -38,6 +38,7 @@ class Script
             next unless line.start_with?('obj')
             parts = line.split
             parts[0] = @shared_data['itemtype@id'][parts[0]]
+            parts.insert(1, parts.slice!(1..-3).join(' ')) if parts.size > 4
             Database.add_data4insert(iebuild_id, *parts)
         end
     end
