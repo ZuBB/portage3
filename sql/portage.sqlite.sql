@@ -293,13 +293,19 @@ create table package_content (
     iebuild_id INTEGER NOT NULL,
     type_id INTEGER NOT NULL,
     item VARCHAR NOT NULL,
-    hash VARCHAR UNIQUE DEFAULT NULL,
-    itime INTEGER NOT NULL,
+    -- get some answers why we forced not to use UNIQUE here
+    hash VARCHAR /*UNIQUE*/ DEFAULT NULL,
+    install_time INTEGER DEFAULT NULL,
+    -- check if its possible to use some check for this
+    symlinkto INTEGER DEFAULT NULL,
     FOREIGN KEY (iebuild_id) REFERENCES installed_packages(id),
     FOREIGN KEY (type_id) REFERENCES content_item_types(id),
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, type_id, item),
+    -- any other check/constraint here?
     PRIMARY KEY (id)
 );
+
+CREATE INDEX package_content_idx3 on package_content(item);
 
 create table package_flagstates (
     id INTEGER,
@@ -308,7 +314,7 @@ create table package_flagstates (
     state_id INTEGER NOT NULL,
     FOREIGN KEY (flag_id) REFERENCES flags(id),
     FOREIGN KEY (state_id) REFERENCES flag_states(id),
-    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id),
+    CONSTRAINT idx1_unq UNIQUE (iebuild_id, flag_id, state_id),
     PRIMARY KEY (id)
 );
 
