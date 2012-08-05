@@ -11,10 +11,7 @@ require 'optparse'
 require 'utils'
 
 # hash with options
-options = {"run_all" => true}
-
-# lets merge stuff from tools lib
-options.merge!(Utils::OPTIONS)
+options = Hash.new.merge!(Utils::OPTIONS)
 # get last created database
 options["db_filename"] = Utils.get_database()
 
@@ -22,11 +19,6 @@ OptionParser.new do |opts|
     # help header
     opts.banner = " Usage: 03_fill_db [options]\n"
     opts.separator " A script that fills cache db with all data"
-
-    opts.on("-a", "--[no-]run-all-scripts",
-            "Run all scripts for populating db") do |value|
-        options["run_all"] = value
-    end
 
     opts.on("-f", "--database-file STRING",
             "Path to database file to fill") do |value|
@@ -45,8 +37,18 @@ OptionParser.new do |opts|
     end
 
     # parsing 'untill' option if present
+    opts.on("-r", "--from STRING", "Start from specified script") do |value|
+        options["from"] = value.to_i
+    end
+
+    # parsing 'untill' option if present
+    opts.on("-s", "--skip STRING", "Skip specified scripts") do |value|
+        options["skip"] = value.split(',').map { |i| i.strip.to_i }
+    end
+
+    # parsing 'untill' option if present
     opts.on("-u", "--run-untill STRING", "Run all scripts untill script with specified index") do |value|
-        options["until"] = value
+        options["until"] = value.to_i
     end
 
     # parsing 'help' option if present
@@ -60,16 +62,17 @@ options["db_filename"] = ARGV[0] if ARGV.size == 1
 
 scripts_dir = File.join(File.dirname(__FILE__), "db_population")
 
-if options["run_all"]
-    Dir.glob(File.join(scripts_dir, "/*")).sort.each do |script|
-        break if options["until"] && script.include?(options["until"])
+Dir.glob(File.join(scripts_dir, "/*.rb")).sort.each do |script|
+    next unless /\d\d_[\w_]+\.rb$/ =~ script
 
-        if (script.match(/\d\d_[a-z0-9_]+\.rb$/))
-            command = "./#{script} -f #{options["db_filename"]}"
-            command << " -m #{options["method"]}" if options["method"]
-            # TODO: output, error_output, exit status, timeouts
-            `#{command}`
-        end
-    end
+    number = File.basename(script).match(/^\d\d/).to_a[0].to_i
+    next if options["from"] && number < options["from"] 
+    break if options["until"] && number >= options["until"] 
+    next if options['skip'] && options['skip'].include?(number)
+
+    command = "./#{script} -f #{options["db_filename"]}"
+    command << " -m #{options["method"]}" if options["method"]
+    # TODO: output, error_output, exit status, timeouts
+    `#{command}`
 end
 
