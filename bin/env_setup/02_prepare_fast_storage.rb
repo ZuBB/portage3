@@ -104,7 +104,7 @@ if options["download_snapshot"] || Dir[snapshots_home].size == 0
     STDOUT.flush
 
     # get correct filename
-    filename = File.join(soft_link.sub("latest", Utils.get_timestamp()))
+    filename = File.join(soft_link.sub("latest", Utils.get_timestamp))
 
     # download new snapshot
     %x[wget -q -O #{filename} #{options['download_url']}]

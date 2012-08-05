@@ -21,7 +21,7 @@ module Utils
     # regexp to match version
     ATOM_VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 
-    def self.get_timestamp()
+    def self.get_timestamp
         Time.now.strftime(TIMESTAMP)
     end
 
