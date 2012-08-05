@@ -15,14 +15,14 @@ module Utils
     }
 
     # pattern for db files
-    TIMESTAMP = "%Y%m%d-%H%M%S"
+    TIMESTAMP = "%Y%m%d-%H%M%S-UTC"
     # atom prefix matcher
     RESTRICTION = Regexp.new("^[^\\w]+")
     # regexp to match version
     ATOM_VERSION = Regexp.new('((?:-)(\\d[^:]*))?(?:(?::)(\\d.*))?$')
 
     def self.get_timestamp
-        Time.now.strftime(TIMESTAMP)
+        Time.now.gmtime.strftime(TIMESTAMP)
     end
 
     def self.is_number?(string)

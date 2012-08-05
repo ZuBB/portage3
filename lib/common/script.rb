@@ -43,6 +43,7 @@ class Script
         stats = { 'start_time' => Time.now }
 
         get_data()
+        stats['total'] = @jobs.size
         pre_insert_task if defined?(pre_insert_task) == 'method'
         @shared_data.freeze
 
@@ -123,6 +124,7 @@ class Script
             PLogger.group_log([
                 [1, "#{'=' * 35} SUMMARY #{'=' * 35}"],
                 [1, "Time elapsed: #{elaped} seconds"],
+                [1, "Total amount of jobs for processing: #{results['total']}"],
                 [1, "Successful inserts: #{results['passed']}"],
                 [1, "Faileddddd inserts: #{results['failed']}"]
             ])

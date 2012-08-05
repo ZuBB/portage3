@@ -17,7 +17,7 @@ options = {
 }.merge!(Utils::OPTIONS)
 
 # db_filename
-db_filename = "test-#{Utils.get_timestamp}.sqlite"
+db_filename = "portage-cache-#{Utils.get_timestamp}.sqlite"
 
 OptionParser.new do |opts|
     # help header

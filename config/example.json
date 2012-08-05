@@ -15,7 +15,7 @@
         },
         "production": {
             "tree_home": "/usr/portage",
-            "log_home": "/var/log/portage/portage3",
+            "log_home": "/var/log/portage/cache",
             "db_home": "/var/cache"
         }
     }
