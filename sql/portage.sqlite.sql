@@ -278,7 +278,7 @@ create table installed_packages (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     build_time INTEGER NOT NULL,
-    binpkgmd5 VARCHAR NOT NULL,
+    binpkgmd5 VARCHAR,
     pkgsize INTEGER NOT NULL,
     cflags VARCHAR /*NOT NULL*/,
     cxxflags VARCHAR /*NOT NULL*/,

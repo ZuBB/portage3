@@ -37,7 +37,7 @@ class Script
 
         item_path  = File.join('/var/db/pkg', item)
         pkgsize    = IO.read(File.join(item_path, 'SIZE')).strip
-        binpkgmd5  = IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue '0'
+        binpkgmd5  = IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue nil
         build_time = IO.read(File.join(item_path, 'BUILD_TIME')).strip
 
         Database.add_data4insert(ebuild_id, build_time, binpkgmd5, pkgsize)
