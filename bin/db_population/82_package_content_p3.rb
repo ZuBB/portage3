@@ -21,11 +21,12 @@ def get_data(params)
 end
 
 class Script
+    ITEM_TYPE = 'sym'
+
     def pre_insert_task
-        type = 'sym'
         sql_query = 'SELECT id FROM content_item_types where type=?;'
         @shared_data['itemtype@id'] = {
-            type => Database.get_1value(sql_query, type)
+            ITEM_TYPE => Database.get_1value(sql_query, ITEM_TYPE)
         }
     end
 
@@ -35,25 +36,32 @@ class Script
         sql_query = 'select id from package_content where item=?'
         iebuild_id = param[0]
 
-        IO.foreach(File.join(dir, 'CONTENTS')) do |line|
-            next unless line.start_with?('sym')
-            parts = line.split
-            index = parts.index('->')
+        if !File.exist?(dir) || !File.directory?(dir)
+            PLogger.error("'#{dir}' dir missed in '/var/db/pkg'")
+        end
 
-            if index.nil? || parts.size != 5
+        IO.foreach(File.join(dir, 'CONTENTS')) do |line|
+            next unless /^#{ITEM_TYPE}\s+/ =~ line
+
+            type_id = @shared_data['itemtype@id'][ITEM_TYPE]
+            line.sub!(/^#{ITEM_TYPE}/, '')
+
+            line.sub!(/\d+\s*$/, '')
+            time = $&.to_i
+
+            parts = line.split('->').map { |i| i.strip }
+            if parts.size != 2
                 PLogger.group_log([
                     [3, 'Its something wrong with next item of type \'sym\''],
                     [1, line],
                 ])
-                return
+                next
             end
 
-            parts.delete_at(index)
-            item_dir = File.dirname(parts[index - 1])
-            symlink_target = File.expand_path(File.join(item_dir, parts[index]))
-            parts[0] = @shared_data['itemtype@id'][parts[0]]
-            parts[index] = Database.get_1value(sql_query, symlink_target)
-            Database.add_data4insert(iebuild_id, *parts)
+            item_dir = File.dirname(parts[0])
+            symlink_target = File.expand_path(File.join(item_dir, parts[1]))
+            symlinkto = Database.get_1value(sql_query, symlink_target)
+            Database.add_data4insert(iebuild_id, type_id, parts[0], symlinkto, time)
         end
     end
 end

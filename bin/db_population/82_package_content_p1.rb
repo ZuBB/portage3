@@ -21,11 +21,11 @@ def get_data(params)
 end
 
 class Script
+    ITEM_TYPE = 'dir'
     def pre_insert_task
-        type = 'dir'
         sql_query = 'SELECT id FROM content_item_types where type=?;'
         @shared_data['itemtype@id'] = {
-            type => Database.get_1value(sql_query, type)
+            ITEM_TYPE => Database.get_1value(sql_query, ITEM_TYPE)
         }
     end
 
@@ -34,11 +34,15 @@ class Script
         dir = File.join(path, param[1], param[2] + '-' + param[3])
         iebuild_id = param[0]
 
+        if !File.exist?(dir) || !File.directory?(dir)
+            PLogger.error("'#{dir}' dir missed in '/var/db/pkg'")
+        end
+
         IO.foreach(File.join(dir, 'CONTENTS')) do |line|
-            next unless line.start_with?('dir')
-            parts = line.split
-            parts[0] = @shared_data['itemtype@id'][parts[0]]
-            Database.add_data4insert(iebuild_id, *parts)
+            next unless /^#{ITEM_TYPE}\s+/ =~ line
+            type_id = @shared_data['itemtype@id'][ITEM_TYPE]
+            item = line.sub(/^#{ITEM_TYPE}/, '').strip
+            Database.add_data4insert(iebuild_id, type_id, item)
         end
     end
 end
