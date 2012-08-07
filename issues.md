@@ -42,7 +42,7 @@
     + ~~groulog API~~
     + ~~backup previous file~~
     + ~~close log device~~
-    + before loggin db issue itself, need to log original data(in HRF format)
+    + before loggin db issue itself, need to log original(using HRF) data
 * parser
     * fix bugs
     * light improvement
@@ -64,6 +64,8 @@
         - versions
         - portageq
     + find calls for install/uninstall actions
+* database
+    + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
 
 #### Blue-sky ideas
 * profiles
