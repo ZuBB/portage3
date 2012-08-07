@@ -33,15 +33,19 @@ class Script
         iebuild_id = param[0]
         useflags = []
 
+        # TODO what use files should be processed?
         ['IUSE', 'USE'].each do |file|
             next unless File.exist?(use_file = File.join(dir, file))
             useflags += IO.read(use_file).split
         end
 
-        useflags.uniq.each do |flag|
+        useflags.each do |flag|
             flag_name = UseFlag.get_flag(flag)
             flag_state = UseFlag.get_flag_state(flag)
-            Database.add_data4insert(iebuild_id, flag_name, flag_state)
+            Database.add_data4insert(iebuild_id,
+                                     flag_name,
+                                     @shared_data['state@id'][flag_state]
+                                    )
         end
     end
 end
