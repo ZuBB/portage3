@@ -277,7 +277,7 @@ create table set_content (
 
 create table installed_packages (
     id INTEGER,
-    ebuild_id INTEGER NOT NULL,
+    ebuild_id INTEGER NOT NULL UNIQUE,
     build_time INTEGER NOT NULL,
     binpkgmd5 VARCHAR,
     pkgsize INTEGER NOT NULL,
