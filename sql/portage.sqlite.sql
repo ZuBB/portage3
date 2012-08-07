@@ -94,9 +94,10 @@ create table flag_states (
 create table flags (
     id INTEGER,
     name VARCHAR NOT NULL,
-    descr VARCHAR NOT NULL,
+    descr VARCHAR DEFAULT NULL,
     type_id INTEGER NOT NULL,
-    package_id INTEGER,
+    live INTEGER NOT NULL DEFAULT 1,
+    package_id INTEGER DEFAULT NULL,
     FOREIGN KEY (type_id) REFERENCES flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)

@@ -31,21 +31,21 @@ class Script
         path = '/var/db/pkg'
         dir = File.join(path, param[1], param[2] + '-' + param[3])
         iebuild_id = param[0]
-        useflags = []
 
         # TODO what use files should be processed?
-        ['IUSE', 'USE'].each do |file|
-            next unless File.exist?(use_file = File.join(dir, file))
-            useflags += IO.read(use_file).split
-        end
+        # ['REQUIRED_USE', 'PKGUSE', 'IUSE', 'USE']
+        ['USE'].each do |file|
+            unless File.exist?(use_file = File.join(dir, file))
+                PLogger.info("USE file does not exist for '#{dir}'")
+                next
+            end
 
-        useflags.each do |flag|
-            flag_name = UseFlag.get_flag(flag)
-            flag_state = UseFlag.get_flag_state(flag)
-            Database.add_data4insert(iebuild_id,
-                                     flag_name,
-                                     @shared_data['state@id'][flag_state]
-                                    )
+            IO.read(use_file).split.each do |flag|
+                flag_name = UseFlag.get_flag(flag)
+                flag_state = UseFlag.get_flag_state(flag)
+                flag_state_id = @shared_data['state@id'][flag_state]
+                Database.add_data4insert(iebuild_id, flag_name, flag_state_id)
+            end
         end
     end
 end
