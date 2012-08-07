@@ -27,11 +27,12 @@
     + keep in mind that need to have easy way to debug specified item(s)
 * scripts
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
-    + versions: ~~script~~, ~~compare method~~, ~~ruby+python tools~~, verify scripts, check module
+    + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, make.conf, users
     + dependancies
-    + installed stuff: ~~db~~, scripts
-    + rework scripts that have size more than 2kB
+    + installed stuff: ~~db~~, ~~scripts~~
+    + after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts
+    + rework scripts that have size more than 2kB (constantly in background progress)
     + find faster way of getting available EAPIs
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
@@ -67,7 +68,7 @@
 #### Blue-sky ideas
 * profiles
 * database
-    + check if using WAL accees mode for sqlite will give some perf?
+    + check if using WAL accees mode will give some perf?
     + ```CREATE TABLE time_test (my_date timestamp)```
     + separate table for repos parent dir
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
