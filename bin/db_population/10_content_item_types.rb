@@ -7,11 +7,10 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-
-KEYWORDS = ['dir', 'obj', 'sym']
+require 'installed_package'
 
 script = Script.new({
-    'data_source' => Proc.new { KEYWORDS },
+    'data_source' => Proc.new { InstalledPackage::ITEM_TYPES.values },
     'sql_query' => 'INSERT INTO content_item_types (type) VALUES (?);'
 })
 
