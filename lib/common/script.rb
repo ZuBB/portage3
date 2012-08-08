@@ -30,7 +30,7 @@ class Script
 
         PLogger.init({
             'level' => @data["debug"] ? Logger::DEBUG : Logger::INFO,
-            'path' => Utils::get_log_home,
+            'path' => Utils.get_log_home,
             'dir' => @data['db_filename'],
             'file' => $0
         })
@@ -120,10 +120,10 @@ class Script
         if defined?(custom_stats_handler) == 'method'
             custom_stats_handler(results)
         else
-            elaped = results['end_time'] - results['start_time']
+            elapsed = results['end_time'] - results['start_time']
             PLogger.group_log([
                 [1, "#{'=' * 35} SUMMARY #{'=' * 35}"],
-                [1, "Time elapsed: #{elaped} seconds"],
+                [1, "Time elapsed: #{elapsed} seconds"],
                 [1, "Total amount of jobs for processing: #{results['total']}"],
                 [1, "Successful inserts: #{results['passed']}"],
                 [1, "Faileddddd inserts: #{results['failed']}"]
