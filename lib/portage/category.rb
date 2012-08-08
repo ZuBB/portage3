@@ -12,8 +12,8 @@ class Category < Repository
     ENTITY = self.name.downcase
     PROP_SUFFIXES = ['description']
     SQL = {
-        'category' => 'SELECT category_name FROM categories WHERE id=?',
-        'id' => 'SELECT id FROM categories WHERE category_name=?',
+        'category' => 'SELECT name FROM categories WHERE id=?',
+        'id' => 'SELECT id FROM categories WHERE name=?',
         'all' => 'SELECT * FROM categories'
     }
 

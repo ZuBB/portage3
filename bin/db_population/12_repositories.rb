@@ -25,7 +25,7 @@ script = Script.new({
     'data_source' => Repository.method(:get_repositories),
     'sql_query' => <<-SQL
         INSERT INTO repositories
-        (repository_name, parent_folder, repository_folder)
+        (name, parent_folder, repository_folder)
         VALUES (?, ?, ?);
     SQL
 })

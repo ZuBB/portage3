@@ -13,6 +13,6 @@ MASK_STATES = ['masked', 'unmasked']
 
 script = Script.new({
     'data_source' => Proc.new { MASK_STATES },
-    'sql_query' => 'INSERT INTO mask_states (mask_state) VALUES (?);'
+    'sql_query' => 'INSERT INTO mask_states (state) VALUES (?);'
 })
 

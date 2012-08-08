@@ -22,10 +22,6 @@ end
 
 script = Script.new({
     'data_source' => Category.method(:get_categories),
-    'sql_query' => <<-SQL
-        INSERT INTO categories
-        (category_name, description)
-        VALUES (?, ?);
-    SQL
+    'sql_query' => 'INSERT INTO categories (name, descr) VALUES (?, ?);'
 })
 

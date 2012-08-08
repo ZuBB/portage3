@@ -28,7 +28,7 @@ else
         from ebuilds e
         join packages p on p.id=e.package_id
         join categories c on c.id=p.category_id
-        where category_name=? and package_name=?
+        where c.name=? and p.name=?"""
     SQL
     if Utils.is_number?(ARGV[0])
         versions = Database.select(package_id_sql, ARGV[1])

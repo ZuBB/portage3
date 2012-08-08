@@ -14,7 +14,7 @@ class Package < Category
     SQL = {
         'all' => 'select * from packages',
         'all@c_id' => 'select * from packages where category_id=?',
-        'id' => 'SELECT id FROM packages WHERE package_name=? and category_id = ?'
+        'id' => 'SELECT id FROM packages WHERE name=? and category_id = ?'
     }
 
     def initialize(params)

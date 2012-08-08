@@ -19,6 +19,6 @@ end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO profile_statuses (profile_status) VALUES (?);'
+    'sql_query' => 'INSERT INTO profile_statuses (status) VALUES (?);'
 })
 

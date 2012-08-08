@@ -11,7 +11,7 @@ module EbuildVersion
     ALTERNATIVE_CHECK = [{
         'message' => "There are disparities in version orders for next packages",
         'sql_query' => <<-SQL
-            select c.category_name, p.package_name, p.id
+            select c.name, p.name, p.id
             from tmp_ebuild_versions e
             join packages p on e.package_id=p.id
             join categories c on p.category_id=c.id

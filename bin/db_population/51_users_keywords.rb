@@ -102,7 +102,7 @@ class Script
             "SELECT p.id "\
             "FROM packages p "\
             "JOIN categories c on p.category_id=c.id "\
-            "WHERE c.category_name=? and p.package_name=?",
+            "WHERE c.name=? and p.name=?",
             [result['category'], result['package']]
         ).flatten()[0]
 

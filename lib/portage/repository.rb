@@ -16,7 +16,7 @@ class Repository
         'all' => 'SELECT * FROM repositories;',
         'repository' => 'SELECT * FROM repositories WHERE id=?',
         'id@fs' => 'SELECT id FROM repositories WHERE parent_folder=? and repository_folder=?',
-        'external' => 'SELECT * FROM repositories WHERE repository_name!="gentoo"',
+        'external' => 'SELECT * FROM repositories WHERE name!="gentoo"',
         'any' => 'SELECT id FROM repositories limit 1'
     }
 

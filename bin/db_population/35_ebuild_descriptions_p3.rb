@@ -9,7 +9,7 @@
 require_relative 'envsetup'
 
 def get_data(params)
-    Database.select('SELECT description FROM ebuild_descriptions').flatten
+    Database.select('SELECT descr FROM ebuild_descriptions').flatten
 end
 
 class Script
@@ -21,9 +21,8 @@ class Script
         sql_query = <<-SQL
             SELECT ed.id, td.ebuild_id
             FROM ebuild_descriptions ed
-            JOIN tmp_ebuild_descriptions td
-                ON ed.description = td.description
-            WHERE ed.description=?
+            JOIN tmp_ebuild_descriptions td ON ed.descr = td.description
+            WHERE ed.descr=?
         SQL
 
         Database.select(sql_query, desc).each do |row|

@@ -21,6 +21,6 @@ end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO ebuild_descriptions (description) VALUES (?);'
+    'sql_query' => 'INSERT INTO ebuild_descriptions (descr) VALUES (?);'
 })
 

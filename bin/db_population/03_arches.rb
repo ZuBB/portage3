@@ -27,11 +27,11 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<SQL
 INSERT INTO arches
-(arch_name, architecture_id, platform_id)
+(name, architecture_id, platform_id)
 VALUES (
     ?,
-    (SELECT id FROM architectures WHERE architecture=?),
-    (SELECT id FROM platforms WHERE platform_name=?)
+    (SELECT id FROM architectures WHERE name=?),
+    (SELECT id FROM platforms WHERE name=?)
 );
 SQL
 })

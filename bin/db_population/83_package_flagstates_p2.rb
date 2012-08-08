@@ -21,8 +21,8 @@ class Script
     end
 
     def process(flag)
-		type_id = @shared_data['flag_type@id']['unknown']
-		Database.add_data4insert(flag, type_id, 0)
+        type_id = @shared_data['flag_type@id']['unknown']
+        Database.add_data4insert(flag, type_id, 0)
     end
 end
 

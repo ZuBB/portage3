@@ -12,7 +12,7 @@ class Script
             {
                 'message' => 'Next packages have zeros in `version_order` column',
                 'sql_query' => <<-SQL
-                    select c.category_name, p.package_name
+                    select c.name, p.name, p.id
                     from ebuilds e
                     join packages p on e.package_id=p.id
                     join categories c on p.category_id=c.id
@@ -23,7 +23,7 @@ class Script
             {
                 'message' => 'Next packages have version_order > count(ebuild_id)',
                 'sql_query' => <<-SQL
-                    select c.category_name, p.package_name
+                    select c.name, p.name, p.id
                     from (
                         select
                             package_id,
@@ -40,7 +40,7 @@ class Script
             {
                 'message' => 'Next packages have dups in `version_order` per same package_id',
                 'sql_query' => <<-SQL
-                    select c.category_name, p.package_name
+                    select c.name, p.name, p.id
                     from (
                         select distinct package_id, count(id) as counter
                         from ebuilds

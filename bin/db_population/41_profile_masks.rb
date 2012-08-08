@@ -85,7 +85,7 @@ def get_arch_id(file)
             SELECT id
             FROM arches
             WHERE architecture_id=
-                (SELECT id from architectures where architecture=?)
+                (SELECT id from architectures where name=?)
         SQL
         Database.select(sql_query, dir.split('/')[1]).flatten
     else
@@ -94,9 +94,9 @@ def get_arch_id(file)
             FROM arches
             WHERE
                 architecture_id=(
-                    SELECT id FROM architectures WHERe architecture=?
+                    SELECT id FROM architectures WHERe name=?
                 ) AND
-                platform_id=(SELECT id FROM platforms WHERe platform_name=?)
+                platform_id=(SELECT id FROM platforms WHERe name=?)
         SQL
         Database.select(sql_query, [dir.split('/')[1], dir.split('/')[2]]).flatten
     end
@@ -104,7 +104,7 @@ end
 
 class Script
     def pre_insert_task()
-        sql_query = 'SELECT mask_state, id FROM mask_states'
+        sql_query = 'SELECT state, id FROM mask_states'
         @shared_data['mask_state@id'] = Hash[Database.select(sql_query)]
     end
 
@@ -123,7 +123,7 @@ class Script
                 "SELECT p.id "\
                 "FROM packages p "\
                 "JOIN categories c on p.category_id=c.id "\
-                "WHERE c.category_name=? and p.package_name=?",
+                "WHERE c.name=? and p.name=?",
                  [result['category'], result['package']]
             ).flatten()[0]
 
@@ -182,7 +182,7 @@ script = Script.new({
     'data_source' => method(:get_data),
     "sql_query" => <<-SQL
         INSERT INTO ebuild_masks
-        (ebuild_id, arch_id, source_id, mask_state_id)
+        (ebuild_id, arch_id, source_id, state_id)
         VALUES (?, ?, ?, ?);
     SQL
 })

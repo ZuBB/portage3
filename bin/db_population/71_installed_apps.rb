@@ -33,7 +33,7 @@ script = Script.new({
             SELECT p.id
             FROM packages p
             JOIN categories c ON p.category_id=c.id
-            WHERE c.category_name=? and p.package_name=?
+            WHERE c.name=? and p.name=?
         ));
     SQL
 })

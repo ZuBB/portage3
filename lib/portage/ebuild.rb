@@ -16,7 +16,7 @@ class Ebuild < Package
         'iuse'
     ]
     SQL = {
-        "eapi_id" => "SELECT id FROM eapis WHERE eapi_version=?",
+        "eapi_id" => "SELECT id FROM eapis WHERE version=?",
         "id" => "SELECT id FROM ebuilds WHERE package_id=? AND version=?"
     }
 
@@ -314,7 +314,7 @@ class Ebuild < Package
     def self.list_ebuilds(params = {})
         results = []
         sql_query = <<-SQL
-            SELECT c.category_name, p.package_name, p.id
+            SELECT c.name, p.name, p.id
             FROM packages p
             JOIN categories c on p.category_id = c.id;
         SQL
@@ -350,11 +350,11 @@ class Ebuild < Package
     def self.get_ebuilds(params = {})
         Database.select(<<-SQL
             SELECT
-                repository_name,
+                r.name,
                 parent_folder,
                 repository_folder,
-                category_name,
-                package_name,
+                c.name,
+                p.name,
                 version,
                 e.id,
                 e.package_id

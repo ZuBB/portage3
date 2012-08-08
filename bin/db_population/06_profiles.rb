@@ -30,11 +30,11 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO profiles
-        (arch_id, profile_name, profile_status_id)
+        (arch_id, name, status_id)
         VALUES (
-            (SELECT id FROM arches WHERE arch_name=?),
+            (SELECT id FROM arches WHERE name=?),
             ?,
-            (SELECT id FROM profile_statuses WHERE profile_status=?)
+            (SELECT id FROM profile_statuses WHERE status=?)
         );
     SQL
 })

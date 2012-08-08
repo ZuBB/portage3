@@ -9,30 +9,30 @@ create table system_settings (
 
 create table architectures (
     id INTEGER,
-    architecture VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table platforms (
     id INTEGER,
-    platform_name VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table arches (
     id INTEGER,
-    arch_name VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL UNIQUE,
     architecture_id INTEGER NOT NULL,
     platform_id INTEGER NOT NULL,
     FOREIGN KEY (architecture_id) REFERENCES architectures(id),
     FOREIGN KEY (platform_id) REFERENCES platforms(id),
-    CONSTRAINT idx1_unq UNIQUE (arch_name, architecture_id, platform_id),
+    CONSTRAINT idx1_unq UNIQUE (name, architecture_id, platform_id),
     PRIMARY KEY (id)
 );
 
 create table keywords (
     id INTEGER,
-    keyword VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL UNIQUE,
     -- symbol VARCHAR NOT NULL UNIQUE, /*really not null?*/
     PRIMARY KEY (id)
 );
@@ -40,18 +40,18 @@ create table keywords (
 create table profiles (
     -- profile is any dir from 'base' basedir that has 'eapi' file inside
     id INTEGER,
-    profile_name VARCHAR NOT NULL,
+    name VARCHAR NOT NULL,
     arch_id INTEGER NOT NULL,
-    profile_status_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
     FOREIGN KEY (arch_id) REFERENCES arches(id),
-    FOREIGN KEY (profile_status_id) REFERENCES profile_statuses(id),
-    CONSTRAINT idx1_unq UNIQUE (profile_name, arch_id, profile_status_id),
+    FOREIGN KEY (status_id) REFERENCES profile_statuses(id),
+    CONSTRAINT idx1_unq UNIQUE (name, arch_id, status_id),
     PRIMARY KEY (id)
 );
 
 create table profile_statuses (
     id INTEGER,
-    profile_status VARCHAR NOT NULL UNIQUE,
+    status VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -63,13 +63,13 @@ create table sources (
 
 create table eapis (
     id INTEGER,
-    eapi_version INTEGER NOT NULL UNIQUE,
+    version INTEGER NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
 create table mask_states (
     id INTEGER,
-    mask_state VARCHAR NOT NULL UNIQUE,
+    state VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -94,10 +94,10 @@ create table flag_states (
 create table flags (
     id INTEGER,
     name VARCHAR NOT NULL,
-    descr VARCHAR DEFAULT NULL,
+    descr VARCHAR,
     type_id INTEGER NOT NULL,
     live INTEGER NOT NULL DEFAULT 1,
-    package_id INTEGER DEFAULT NULL,
+    package_id INTEGER,
     FOREIGN KEY (type_id) REFERENCES flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
@@ -132,7 +132,7 @@ create table licence_group_content (
 
 create table repositories (
     id INTEGER,
-    repository_name VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL UNIQUE,
     parent_folder VARCHAR NOT NULL,
     repository_folder VARCHAR,
     PRIMARY KEY (id)
@@ -140,16 +140,16 @@ create table repositories (
 
 create table categories (
     id INTEGER,
-    category_name VARCHAR NOT NULL UNIQUE,
-    description VARCHAR NOT NULL,
+    name VARCHAR NOT NULL UNIQUE,
+    descr VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
 create table packages (
     id INTEGER,
+    name VARCHAR NOT NULL,
     category_id INTEGER NOT NULL,
-    package_name VARCHAR NOT NULL,
-    CONSTRAINT idx1_unq UNIQUE (category_id, package_name),
+    CONSTRAINT idx1_unq UNIQUE (category_id, name),
     FOREIGN KEY (category_id) REFERENCES categories(id),
     PRIMARY KEY (id)
 );
@@ -159,12 +159,12 @@ create table ebuilds (
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
     version_order INTEGER NOT NULL DEFAULT 0,
-    mtime INTEGER /*NOT NULL*/,
-    mauthor VARCHAR /*NOT NULL*/,
-    eapi_id INTEGER /*NOT NULL*/,
-    slot VARCHAR /*NOT NULL*/,
-    repository_id INTEGER NOT NULL,
-    description_id INTEGER NOT NULL DEFAULT 0,
+    mtime INTEGER,
+    mauthor VARCHAR,
+    eapi_id INTEGER,
+    slot VARCHAR,
+    repository_id INTEGER,
+    description_id INTEGER,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
     FOREIGN KEY (repository_id) REFERENCES repositories (id),
@@ -178,7 +178,7 @@ CREATE INDEX ebuilds_idx3 on ebuilds (package_id);
 
 create table ebuild_descriptions (
     id INTEGER,
-    description VARCHAR NOT NULL UNIQUE,
+    descr VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -217,14 +217,14 @@ create table ebuild_masks (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
-    mask_state_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
-    FOREIGN KEY (mask_state_id) REFERENCES mask_states(id),
+    FOREIGN KEY (state_id) REFERENCES mask_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CONSTRAINT idx1_unq UNIQUE (
-        ebuild_id, arch_id, mask_state_id, source_id
+        ebuild_id, arch_id, state_id, source_id
     ),
     PRIMARY KEY (id)
 );
@@ -296,10 +296,10 @@ create table package_content (
     item VARCHAR NOT NULL,
     -- can't use UNIQUE as we have same objects in FS
     --  under different names and/or packages
-    hash VARCHAR DEFAULT NULL,
-    install_time INTEGER DEFAULT NULL,
+    hash VARCHAR,
+    install_time INTEGER,
     -- check if its possible to use some check for this
-    symlinkto INTEGER DEFAULT NULL,
+    symlinkto INTEGER,
     FOREIGN KEY (iebuild_id) REFERENCES installed_packages(id),
     FOREIGN KEY (type_id) REFERENCES content_item_types(id),
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, type_id, item),

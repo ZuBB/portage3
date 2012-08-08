@@ -26,6 +26,6 @@ end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO architectures (architecture) VALUES (?);'
+    'sql_query' => 'INSERT INTO architectures (name) VALUES (?);'
 })
 

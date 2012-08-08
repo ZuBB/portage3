@@ -31,7 +31,7 @@ else:
     from ebuilds e
     join packages p on p.id=e.package_id
     join categories c on c.id=p.category_id
-    where category_name=? and package_name=?"""
+    where c.name=? and p.name=?"""
 
     if sys.argv[2].isdigit():
         cur.execute(package_id_sql, (int(sys.argv[2]), ))

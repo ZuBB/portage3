@@ -13,6 +13,6 @@ KEYWORDS = ['not work', 'not known', 'unstable', 'stable']
 
 script = Script.new({
     'data_source' => Proc.new { KEYWORDS },
-    'sql_query' => 'INSERT INTO keywords (keyword) VALUES (?);'
+    'sql_query' => 'INSERT INTO keywords (name) VALUES (?);'
 })
 

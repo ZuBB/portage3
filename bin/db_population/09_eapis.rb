@@ -25,6 +25,6 @@ end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO eapis (eapi_version) VALUES (?);'
+    'sql_query' => 'INSERT INTO eapis (version) VALUES (?);'
 })
 

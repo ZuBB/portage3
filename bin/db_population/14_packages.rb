@@ -20,6 +20,6 @@ end
 
 script = Script.new({
     'data_source' => Package.method(:get_packages),
-    'sql_query' => 'INSERT INTO packages (category_id, package_name) VALUES (?, ?);'
+    'sql_query' => 'INSERT INTO packages (category_id, name) VALUES (?, ?);'
 })
 

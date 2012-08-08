@@ -21,7 +21,7 @@ class Script
     def pre_insert_task
         @shared_data['atom@id'] = {}
         sql_query = <<-SQL
-            SELECT e.id, c.category_name, p.package_name, e.version
+            SELECT e.id, c.name, p.name, e.version
             FROM ebuilds e
             JOIN packages p ON e.package_id = p.id
             JOIN categories c ON p.category_id = c.id;

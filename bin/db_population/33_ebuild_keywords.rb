@@ -11,7 +11,7 @@ require 'ebuild'
 
 class Script
     def pre_insert_task()
-        sql_query = 'SELECT arch_name FROM arches'
+        sql_query = 'SELECT name FROM arches'
         @shared_data['arche'] = Database.select(sql_query).flatten
     end
 
@@ -70,8 +70,8 @@ script = Script.new({
         (ebuild_id, keyword_id, arch_id, source_id)
         VALUES (
             ?,
-            (SELECT id FROM keywords WHERE keyword=?),
-            (SELECT id FROM arches WHERE arch_name=?),
+            (SELECT id FROM keywords WHERE name=?),
+            (SELECT id FROM arches WHERE name=?),
             ?
         );
     SQL

@@ -11,7 +11,7 @@ require 'useflag'
 
 def get_data(params)
     sql_query = <<-SQL
-        SELECT ip.id, c.category_name, p.package_name, e.version
+        SELECT ip.id, c.name, p.name, e.version
         FROM installed_packages ip
         JOIN ebuilds e ON e.id = ip.ebuild_id
         JOIN packages p ON e.package_id = p.id
@@ -39,19 +39,15 @@ class Script
         dir = File.join(path, param[1], param[2] + '-' + param[3])
         iebuild_id = param[0]
 
-        # TODO what use files should be processed?
-        # ['REQUIRED_USE', 'PKGUSE', 'IUSE', 'USE']
-        ['USE'].each do |file|
-            unless File.exist?(use_file = File.join(dir, file))
-                PLogger.info("USE file does not exist for '#{dir}'")
-                next
-            end
+        unless File.exist?(use_file = File.join(dir, 'USE'))
+            PLogger.info("USE file does not exist for '#{dir}'")
+            next
+        end
 
-            IO.read(use_file).split.each do |flag|
-                flag_name = UseFlag.get_flag(flag)
-                next if @shared_data['flags'].include?(flag_name)
-                Database.add_data4insert(flag_name)
-            end
+        IO.read(use_file).split.each do |flag|
+            flag_name = UseFlag.get_flag(flag)
+            next if @shared_data['flags'].include?(flag_name)
+            Database.add_data4insert(flag_name)
         end
     end
 end

@@ -10,7 +10,7 @@ require_relative 'envsetup'
 
 def get_data(params)
     results = []
-    sql_query = 'SELECT id FROM mask_states WHERE mask_state=?'
+    sql_query = 'SELECT id FROM mask_states WHERE state=?'
     ['package.mask', 'package.unmask'].each do |file|
         filename = File.join(Utils.get_portage_settings_home, file)
         if File.exist?(filename) && File.file?(filename)
@@ -93,8 +93,8 @@ class Script
             SELECT packages.id \
             FROM packages, categories \
             WHERE \
-            categories.category_name=? and \
-            packages.package_name=? and \
+            categories.name=? and \
+            packages.name=? and \
             packages.category_id = categories.id",
             [result['category'], result['package']]
         )
@@ -151,7 +151,7 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO ebuild_masks
-        (ebuild_id, arch_id, mask_state_id, source_id)
+        (ebuild_id, arch_id, state_id, source_id)
         VALUES (
             ?, ?, ?, (SELECT id FROM sources WHERE source='/etc/portage/')
         );

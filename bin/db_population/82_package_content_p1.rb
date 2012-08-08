@@ -10,7 +10,7 @@ require_relative 'envsetup'
 
 def get_data(params)
     sql_query = <<-SQL
-        SELECT ip.id, c.category_name, p.package_name, e.version
+        SELECT ip.id, c.name, p.name, e.version
         FROM installed_packages ip
         JOIN ebuilds e ON e.id = ip.ebuild_id
         JOIN packages p ON e.package_id = p.id

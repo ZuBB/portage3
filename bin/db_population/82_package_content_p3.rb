@@ -10,7 +10,7 @@ require_relative 'envsetup'
 
 def get_data(params)
     sql_query = <<-SQL
-        SELECT ip.id, c.category_name, p.package_name, e.version
+        SELECT ip.id, c.name, p.name, e.version
         FROM installed_packages ip
         JOIN ebuilds e ON e.id = ip.ebuild_id
         JOIN packages p ON e.package_id = p.id
@@ -37,7 +37,7 @@ class Script
         iebuild_id = param[0]
 
         if !File.exist?(dir) || !File.directory?(dir)
-            PLogger.error("'#{dir}' dir missed in '/var/db/pkg'")
+            PLogger.error("'#{dir}' dir missed in '#{path}'")
         end
 
         IO.foreach(File.join(dir, 'CONTENTS')) do |line|

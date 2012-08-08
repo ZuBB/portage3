@@ -25,10 +25,10 @@ def get_data(params)
     arch_name = accept_keywords.sub(/^~/, '')
     return [
         ['arch', Database.get_1value(
-            'SELECT id FROM arches WHERE arch_name=?', arch_name
+            'SELECT id FROM arches WHERE name=?', arch_name
         ).to_s],
         ['keyword', Database.get_1value(
-            'SELECT id FROM keywords WHERE keyword=?', keyword_name
+            'SELECT id FROM keywords WHERE name=?', keyword_name
         ).to_s]
     ]
 end
