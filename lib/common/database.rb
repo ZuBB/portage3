@@ -115,11 +115,12 @@ module Database
     end
 
     def self.set_workers_done
+        sleep(0.1) while @thread.status != 'sleep'
         @semaphore.synchronize { @workers_running = false }
     end
 
     def self.finalize_bunch_insert
-        sleep(0.1) while @thread.stop? == false
+        sleep(0.2) while @thread.status != 'sleep' && @data4db.size > 0
 
         @thread.terminate
         @database.commit
