@@ -108,10 +108,8 @@ module PLogger
         @log_tasks << [0, message]
     end
 
-    def self.close()
-        # TODO hacks
-        sleep(0.25) while @thread.status != 'sleep'
-        sleep(3)
+    def self.close
+        sleep(0.1) while @thread.status != 'sleep' && @log_tasks.size > 0
         @thread.terminate
         @logger.close
     end
