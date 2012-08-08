@@ -57,7 +57,9 @@ module PLogger
 
             if File.exist?(log_file_path)
                 log_file_path_bak = log_file_path.dup
-                log_file_path_bak << '.' + Time.now.to_i.to_s + '.bak'
+                mtime = File.mtime(log_file_path_bak)
+                mtime_str = mtime.strftime(Utils::TIMESTAMP)
+                log_file_path_bak << '.' + mtime_str + '.bak'
                 File.rename(log_file_path, log_file_path_bak)
             end
 
