@@ -253,14 +253,19 @@ module EbuildVersion
         return rval
     end
 
-    def post_insert_check(checks, suffix = '')
+    def self.post_insert_check(checks, suffix = '')
         checks.each do |item|
-            sql_query = item['sql_query'].sub!('SUFFIX', suffix)
-            next if (results = Database.select(sql_query)).size == 0
-            PLogger.error(item['message'])
-            results.each { |row|
-                PLogger.info("#{row[0]}/#{row[1]} (#{row[2]})")
-            }
+            sql_query = item['sql_query'].sub('SUFFIX', suffix)
+            results = Database.select(sql_query)
+            PLogger.info("#{'-' * 72}")
+            if results.size == 0
+                PLogger.info("Passed")
+            else
+                PLogger.error(item['message'])
+                results.each { |row|
+                    PLogger.info("#{row[0]}/#{row[1]} (#{row[2]})")
+                }
+            end
         end
     end
 end

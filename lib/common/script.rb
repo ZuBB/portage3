@@ -53,7 +53,10 @@ class Script
         Database.finalize_bunch_insert
 
         if defined?(post_insert_check) == 'method'
-            post_insert_check if @data['run_check']
+            if @data['run_check']
+                PLogger.info("#{'=' * 35} CHECKS #{'=' * 35}")
+                post_insert_check
+            end
         end
 
         stats['end_time'] = Time.now

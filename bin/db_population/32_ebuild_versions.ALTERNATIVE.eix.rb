@@ -41,7 +41,7 @@ class Script
     end
 
     def post_insert_check
-        EbuildVersion.post_insert_check(EbuildVersion.ALTERNATIVE_CHECK, 'eix')
+        EbuildVersion.post_insert_check(EbuildVersion::ALTERNATIVE_CHECK, 'eix')
     end
 end
 
