@@ -6,34 +6,30 @@
     + ~~find nice way to do includes for all kind of scripts~~
     + ~~"root_path" vs "root_folder" vs "portage_home"~~
     + ~~options["storage"]["root"] is not valid 'path'~~
-* database
+* ~~database~~
     + ~~thread pool for queries that insert/update data~~
     + ~~common statement for queries that insert/update data~~
     + ~~on exception log only error mesage and values~~
     + ~~cache statements~~
-    + separete API for batch_execute
-    + **SQL**: tables/colums naming
-    + support insert via *specified* cached statement. __do we need this?__
-    + issue with queries and specified params run from workers. __do we need this?__
-* Script class
+    + ~~tables/colums naming~~
+* ~~Script class~~
     + ~~use '$0' to get process name and get rid of 'script' param~~
     + ~~shared resources for workers~~
     + ~~evaluate injecting of :get_data and :process methods into Script/Worker~~
-    + ~~pre insert tasks~~
+    + ~~pre/post insert tasks~~
     + ~~post processing checks~~
-    + on end cleanup
     + ~~log queries~~
     + ~~log stats~~
-    + keep in mind that need to have easy way to debug specified item(s)
+* profiles
+	+ `No such file or directory - /dev/shm/portage/profiles2/arch.list (Errno::ENOENT)`
 * scripts
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, make.conf, users
     + dependancies
-    + installed stuff: ~~db~~, ~~scripts~~
+    + installed stuff: ~~db~~, ~~scripts~~, except #81
     + after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts
     + rework scripts that have size more than 2kB (constantly in background progress)
-    + find faster way of getting available EAPIs
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + calling script for all in theirs forlder
@@ -54,6 +50,16 @@
 * installation
     * gemfile
     * setup instructions
+* conditional (**if have free time**)
+	+ database
+		- issue with queries and specified params run from workers.
+		- support insert via *specified* cached statement. __do we need this?__
+	+ Script class
+		- keep in mind that need to have easy way to debug specified item(s)
+		- make database module injectable into Script/Worker class
+		- make logger module injectable into Script/Worker class
+	+ scripts
+		- find faster way of getting available EAPIs
 
 #### Long term tasks
 * Python
