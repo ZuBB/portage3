@@ -18,6 +18,23 @@ At some moment I decided to improve my knowledge of SQL. To make this process mo
 
 For now its a JFF project but if it will look solid and fast, it would be nice to have it as addition to PM in Gentoo
 
+Requirements
+-----
+
+#### Mandatory
+
+    Ruby 1.9 ( `>dev-lang/ruby-1.9.3` )
+    SQLite 3.7.x and above ( `>dev-db/sqlite-3.7` )
+    http://rubygems.org/
+    http://sqlite-ruby.rubyforge.org/
+    http://json-jruby.rubyforge.org/
+    http://nokogiri.org/
+
+#### Optional
+
+    >dev-python/pysqlite-2.6
+    >=app-portage/eix-0.25.5
+
 Installation
 -----------
 
@@ -25,16 +42,6 @@ Something like this
 <pre>
 git clone git://github.com/zvasyl/portage3.git /opt/portage-next
 </pre>
-
-
-Requirements
------
-
-    Ruby 1.9
-    http://rubygems.org/
-    http://sqlite-ruby.rubyforge.org/
-    http://nokogiri.org/
-	explicit ACCEPT_KEYWORDS in /etc/make.conf
 
 
 Testing
