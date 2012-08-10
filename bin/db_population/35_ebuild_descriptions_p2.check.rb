@@ -8,7 +8,7 @@
 #
 class Script
     def post_insert_check
-        sql_query = 'SELECT COUNT(id) FROM ebuilds WHERE description_id=0'
+        sql_query = 'SELECT COUNT(id) FROM ebuilds WHERE description_id=0;'
         if (tmp = Database.get_1value(sql_query).to_i) > 0
             PLogger.error("Some ebuilds(#{tmp} items) miss its description")
             return
@@ -17,16 +17,12 @@ class Script
         sql_query = <<-SQL
             SELECT COUNT(id)
             FROM ebuild_descriptions
-            WHERE id NOT IN (SELECT DISTINCT description_id from ebuilds)
+            WHERE id NOT IN (SELECT DISTINCT description_id from ebuilds);
         SQL
         if (tmp = Database.get_1value(sql_query).to_i) > 0
             PLogger.error("Some descriptions(#{tmp} items) are not being used")
             return
         end
-
-        # uncomment this after ..     :(
-        #sql_query = 'DROP TABLE IF EXISTS tmp_ebuild_descriptions;'
-        #Database.execute(sql_query)
     end
 end
 

@@ -3,25 +3,41 @@
 #
 # Here should go some comment
 #
-# Initial Author: Vasyl Zuzyak, 04/20/12
+# Initial Author: Vasyl Zuzyak, 07/25/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-require 'ebuild'
 
 def get_data(params)
-    sql_query = 'SELECT distinct homepage FROM tmp_ebuild_homepages'
-    Database.select(sql_query).flatten
+    Database.select('SELECT homepage FROM ebuild_homepages').flatten
 end
 
 class Script
-    def pre_insert_task()
-        Database.execute('DELETE FROM ebuild_homepages;')
+    def process(homepage)
+        sql_query = <<-SQL
+            SELECT eh.id, teh.ebuild_id
+            FROM ebuild_homepages eh
+            JOIN tmp_ebuild_homepages teh
+                ON eh.homepage = teh.homepage
+            WHERE eh.homepage=?
+        SQL
+
+        Database.select(sql_query, homepage).each do |row|
+            Database.add_data4insert(row[0], row[1])
+        end
+    end
+
+    def post_insert_task
+        Database.execute('DROP TABLE IF EXISTS tmp_ebuild_homepages;')
     end
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO ebuild_homepages (homepage) VALUES (?);'
+    'sql_query' => <<-SQL
+        INSERT INTO ebuilds_homepages
+        (homepage_id, ebuild_id)
+        VALUES (?, ?);
+    SQL
 })
 

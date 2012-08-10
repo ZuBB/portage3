@@ -59,6 +59,12 @@ class Script
             end
         end
 
+        if defined?(post_insert_task) == 'method'
+            PLogger.info("#{'=' * 30} post_insert_task #{'=' * 30}")
+            message = post_insert_task
+            PLogger.info(message) unless message.nil?
+        end
+
         stats['end_time'] = Time.now
         stats.merge!(Database.get_insert_stats)
 

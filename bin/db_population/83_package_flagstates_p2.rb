@@ -7,27 +7,49 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
+require 'installed_package'
 require 'useflag'
-
-def get_data(params)
-    Database.select('SELECT distinct name FROM tmp_dropped_flgas').flatten
-end
 
 class Script
     def pre_insert_task
-        type = 'unknown'
-        type_id = Database.get_1value(UseFlag::SQL['type'], type)
-        @shared_data['flag_type@id'] = { type => type_id }
+        sql_query = 'select state, id from flag_states;'
+        @shared_data['state@id'] = Hash[Database.select(sql_query)]
     end
 
-    def process(flag)
-        type_id = @shared_data['flag_type@id']['unknown']
-        Database.add_data4insert(flag, type_id, 0)
+    def process(param)
+        iebuild_id = param[0]
+
+        return unless (file = InstalledPackage.get_file(param, 'USE'))
+
+        IO.read(file).split.each do |flag|
+            flag_name = UseFlag.get_flag(flag)
+            flag_state = UseFlag.get_flag_state(flag)
+            flag_state_id = @shared_data['state@id'][flag_state]
+            Database.add_data4insert(iebuild_id, flag_name, flag_state_id)
+        end
+    end
+
+    def post_insert_task
+        Database.execute('DROP TABLE IF EXISTS tmp_dropped_flags;')
     end
 end
 
 script = Script.new({
-    'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO flags (name, type_id, live) VALUES (?, ?, ?);'
+    'data_source' => InstalledPackage.method(:get_data),
+    'sql_query' => <<-SQL
+        INSERT INTO package_flagstates
+        (iebuild_id, flag_id, state_id)
+        VALUES (
+            ?,
+            (
+                SELECT id
+                FROM flags
+                WHERE name=?
+                ORDER BY type_id ASC
+                LIMIT 1
+            ),
+            ?
+        );
+    SQL
 })
 

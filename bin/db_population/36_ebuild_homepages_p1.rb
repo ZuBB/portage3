@@ -32,6 +32,22 @@ class Script
             Database.add_data4insert(homepage, ebuild.ebuild_id)
         }
     end
+
+    def post_insert_task
+        count_query = 'select count(id) from ebuild_homepages;'
+        sql_query = <<-SQL
+            INSERT INTO ebuild_homepages
+            (homepage)
+            SELECT distinct homepage
+            FROM tmp_ebuild_homepages;
+        SQL
+
+        tb = Database.get_1value(count_query)
+        Database.execute(sql_query)
+        ta  = Database.get_1value(count_query)
+
+        "#{ta - tb} successful inserts has beed done"
+    end
 end
 
 script = Script.new({
