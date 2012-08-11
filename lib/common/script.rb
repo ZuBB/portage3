@@ -21,6 +21,7 @@ class Script
     def initialize(params)
         @shared_data = {}
         @jobs = Queue.new
+        @stats = {}
         @pool = nil
         @data = {}
 
@@ -40,10 +41,9 @@ class Script
     end
 
     def fill_table_X()
-        stats = { 'start_time' => Time.now }
+        @stats['start_time'] = Time.now
 
-        get_data()
-        stats['total'] = @jobs.size
+        get_data
         pre_insert_task if defined?(pre_insert_task) == 'method'
         @shared_data.freeze
 
@@ -65,10 +65,10 @@ class Script
             PLogger.info(message) unless message.nil?
         end
 
-        stats['end_time'] = Time.now
-        stats.merge!(Database.get_insert_stats)
+        @stats['end_time'] = Time.now
+        @stats.merge!(Database.get_insert_stats)
 
-        handle_stats(stats)
+        handle_stats
 
         Database.close
         PLogger.close
@@ -83,10 +83,11 @@ class Script
         @data.merge!(Script.get_cli_options())
     end
 
-    def get_data()
+    def get_data
         if [Method, Proc].include?(@data["data_source"].class)
             result = @data["data_source"].call(Utils.get_pathes)
             result.each { |item| @jobs << item } if result.is_a?(Array)
+            @stats['total'] = @jobs.size
             result = nil
         else
             throw 'No data passed'
@@ -114,6 +115,7 @@ class Script
         end
 
         @pool.each { |thread| thread.join }
+        @pool.each { |thread| @stats[thread['name']] = thread['count'] }
     end
 
     def log_sql_queries
@@ -125,18 +127,23 @@ class Script
         PLogger.info("#{'-' * 70}")
     end
 
-    def handle_stats(results)
+    def handle_stats
         if defined?(custom_stats_handler) == 'method'
-            custom_stats_handler(results)
+            custom_stats_handler(@stats)
         else
-            elapsed = results['end_time'] - results['start_time']
-            PLogger.group_log([
-                [1, "#{'=' * 35} SUMMARY #{'=' * 35}"],
-                [1, "Time elapsed: #{elapsed} seconds"],
-                [1, "Total amount of jobs for processing: #{results['total']}"],
-                [1, "Successful inserts: #{results['passed']}"],
-                [1, "Faileddddd inserts: #{results['failed']}"]
-            ])
+            elapsed = @stats['end_time'] - @stats['start_time']
+            logs = [
+                ["#{'=' * 35} SUMMARY #{'=' * 35}"],
+                ["Time elapsed: #{elapsed} seconds"],
+                ["Total amount of jobs for processing: #{@stats['total']}"],
+                ["Successful inserts: #{@stats['passed']}"],
+                ["Faileddddd inserts: #{@stats['failed']}"]
+            ]
+            @stats.each { |key, value|
+                next unless key.start_with?('worker')
+                logs.insert(3, ["Thread '#{key}' processed #{value} items"])
+            }
+            PLogger.group_log(logs.each { |log| log.insert(0, 1) })
         end
     end
 
