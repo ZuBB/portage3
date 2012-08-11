@@ -8,7 +8,7 @@ module EbuildVersion
     VER_REGEXP = Regexp.new("^(cvs\\.)?(\\d+)((\\.\\d+)*)([a-z]?)((_(pre|p|beta|alpha|rc)\\d*)*)(-r(\\d+))?$")
     SUFFIX_REGEXP = Regexp.new("^(alpha|beta|rc|pre|p)(\\d*)$")
     SUFFIX_VALUE = {"pre"=> -2, "p"=> 0, "alpha"=> -4, "beta"=> -3, "rc"=> -1}
-    MAIN_CHECK = [{
+    MAIN_CHECK = [
         {
             'message' => 'Next packages have zeros in `version_order` column',
             'sql_query' => <<-SQL
