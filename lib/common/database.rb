@@ -115,12 +115,20 @@ module Database
     end
 
     def self.set_workers_done
+        # FIXME this is ugly hacks
+        print (@thread['passed'] + @thread['failed']).to_s + "\n"
+        print "#{@data4db.size}\n"
+        sleep(1)
         sleep(0.1) while @thread.status != 'sleep'
+        # NOTE - end of hacks
         @semaphore.synchronize { @workers_running = false }
     end
 
     def self.finalize_bunch_insert
+        # FIXME this is ugly hacks
         sleep(0.2) while @thread.status != 'sleep' && @data4db.size > 0
+        sleep(2)
+        # NOTE - end of hacks
 
         @thread.terminate
         @database.commit

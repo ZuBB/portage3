@@ -109,7 +109,12 @@ module PLogger
     end
 
     def self.close
+        # FIXME this is ugly hacks
+        sleep(3)
         sleep(0.1) while @thread.status != 'sleep' && @log_tasks.size > 0
+        #t = Time.now.to_i.to_s
+        #puts "in logger close: #{t}"
+        # NOTE - end of hacks
         @thread.terminate
         @logger.close
     end

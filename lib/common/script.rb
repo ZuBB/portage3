@@ -44,6 +44,7 @@ class Script
         @stats['start_time'] = Time.now
 
         get_data
+        #print @stats['total'].to_s+"\n"
         pre_insert_task if defined?(pre_insert_task) == 'method'
         @shared_data.freeze
 
@@ -51,6 +52,8 @@ class Script
         run_workers
         Database.set_workers_done
         Database.finalize_bunch_insert
+        #pr = Database.finalize_bunch_insert
+        #p pr
 
         if defined?(post_insert_check) == 'method'
             if @data['run_check']
@@ -131,6 +134,8 @@ class Script
         if defined?(custom_stats_handler) == 'method'
             custom_stats_handler(@stats)
         else
+            #t = Time.now.to_i.to_s
+            #puts "in handle_stats: #{t}"
             elapsed = @stats['end_time'] - @stats['start_time']
             logs = [
                 ["#{'=' * 35} SUMMARY #{'=' * 35}"],
