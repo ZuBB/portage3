@@ -48,9 +48,8 @@ module Utils
         data
     end
 
-    def self.get_pathes()
-        deploy_type = SETTINGS['deploy_type']
-        portage_home = SETTINGS['deployments'][deploy_type]['tree_home']
+    def self.get_pathes
+        portage_home = SETTINGS['tree_home']
         profiles_home = File.join(portage_home, "profiles")
         new_profiles_home = File.join(portage_home, SETTINGS['new_profiles'])
 
@@ -62,39 +61,30 @@ module Utils
         }
     end
 
-    def self.get_tree_home()
-        # TODO fix this for case when deploy_type is not defined
-        deploy_type = SETTINGS['deploy_type']
-        SETTINGS['deployments'][deploy_type]['tree_home']
+    def self.get_tree_home
+        SETTINGS['tree_home']
     end
 
-    def self.get_profiles2_home()
-        # TODO fix this for case when deploy_type is not defined
-        deploy_type = SETTINGS['deploy_type']
-        tree_home = SETTINGS['deployments'][deploy_type]['tree_home']
+    def self.get_profiles2_home
         File.join(tree_home, SETTINGS['new_profiles'])
     end
 
-    def self.get_db_home()
-        # TODO fix this for case when deploy_type is not defined
-        deploy_type = SETTINGS['deploy_type']
-        SETTINGS['deployments'][deploy_type]['db_home']
+    def self.get_db_home
+        SETTINGS['db_home']
     end
 
-    def self.get_log_home()
-        # TODO fix this for case when deploy_type is not defined
-        deploy_type = SETTINGS['deploy_type']
-        SETTINGS['deployments'][deploy_type]['log_home']
+    def self.get_log_home
+        SETTINGS['log_home']
     end
 
-    def self.get_portage_settings_home()
+    def self.get_portage_settings_home
         SETTINGS['settings_home']
     end
 
-    def self.get_database()
-        Dir.glob(File.join(self.get_db_home(), '*.sqlite')).sort.last
+    def self.get_database
+        Dir.glob(File.join(self.get_db_home, '*.sqlite')).sort.last
     end
 
-    SETTINGS = Utils.get_settings() unless $0.end_with?('01_generate_config.rb')
+    SETTINGS = Utils.get_settings unless $0.end_with?('01_generate_config.rb')
 end
 
