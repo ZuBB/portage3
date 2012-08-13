@@ -7,12 +7,10 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-
-# TODO symbols
-KEYWORDS = ['not work', 'not known', 'unstable', 'stable']
+require 'keyword'
 
 script = Script.new({
-    'data_source' => Proc.new { KEYWORDS },
+    'data_source' => Proc.new { Keyword::LABELS },
     'sql_query' => 'INSERT INTO keywords (name) VALUES (?);'
 })
 
