@@ -93,15 +93,20 @@ create table flag_states (
 
 create table flags (
     id INTEGER,
+    type_id INTEGER NOT NULL,
     name VARCHAR NOT NULL,
     descr VARCHAR,
-    type_id INTEGER NOT NULL,
-    live INTEGER NOT NULL DEFAULT 1,
     package_id INTEGER,
+    source_id INTEGER NOT NULL,
+    repository_id INTEGER,
     FOREIGN KEY (type_id) REFERENCES flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    FOREIGN KEY (repository_id) REFERENCES repositories(id),
     PRIMARY KEY (id)
 );
+
+CREATE INDEX flag_name_idx1 on flags(name);
 
 create table licences (
     id INTEGER,
@@ -242,7 +247,6 @@ create table flags_states (
     FOREIGN KEY (state_id) REFERENCES flag_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
-    CONSTRAINT idx1_unq UNIQUE (flag_id, state_id, ebuild_id),
     PRIMARY KEY (id)
 );
 
