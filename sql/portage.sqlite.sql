@@ -197,7 +197,7 @@ create table ebuilds_homepages (
     PRIMARY KEY (id)
 );
 
-create table ebuild_keywords (
+create table ebuilds_keywords (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
@@ -213,7 +213,7 @@ create table ebuild_keywords (
     PRIMARY KEY (id)
 );
 
-create table ebuild_masks (
+create table ebuilds_masks (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     arch_id INTEGER NOT NULL,
@@ -245,7 +245,7 @@ create table flags_states (
     PRIMARY KEY (id)
 );
 
-create table ebuild_licences (
+create table ebuilds_licences (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
     licence_id INTEGER NOT NULL,
@@ -289,7 +289,7 @@ create table installed_packages (
     PRIMARY KEY (id)
 );
 
-create table package_content (
+create table ipackage_content (
     id INTEGER,
     iebuild_id INTEGER NOT NULL,
     type_id INTEGER NOT NULL,
@@ -307,9 +307,9 @@ create table package_content (
     PRIMARY KEY (id)
 );
 
-CREATE INDEX package_content_idx3 on package_content(item);
+CREATE INDEX package_content_idx3 on ipackage_content(item);
 
-create table package_flagstates (
+create table ipackage_flagstates (
     id INTEGER,
     iebuild_id INTEGER NOT NULL,
     flag_id INTEGER NOT NULL,
