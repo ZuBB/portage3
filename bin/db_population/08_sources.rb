@@ -8,8 +8,12 @@
 #
 require_relative 'envsetup'
 
+SOURCES = [
+    'ebuilds', 'profiles', '/etc/make.conf', '/etc/portage/', 'CLI', '/var/db/pkg'
+]
+
 def get_data(params)
-    results = []
+    results = Array.new + SOURCES[0..1]
 
     Dir[File.join(params['profiles2_home'], '**/*/')].each do |dir|
         next unless dir.include?('/base/')
@@ -17,7 +21,7 @@ def get_data(params)
         results << dir.sub(params['profiles2_home'] + '/', '')
     end
 
-    results.unshift('ebuilds') + ['/etc/make.conf', '/etc/portage/', 'CLI']
+    results += SOURCES[2..-1]
 end
 
 script = Script.new({
