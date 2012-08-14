@@ -19,10 +19,9 @@ class Script
         PLogger.info("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
-        ebuild.ebuild_licences().split().each { |licence|
-            Database.add_data4insert(ebuild.ebuild_id,
-                                     @shared_data['licences@id'][licence]
-                                    )
+        ebuild.ebuild_licences.split.each { |licence|
+            licence_id = @shared_data['licences@id'][licence]
+            Database.add_data4insert(ebuild.ebuild_id, licence_id)
         }
     end
 end
@@ -30,7 +29,7 @@ end
 script = Script.new({
     'data_source' => Ebuild.method(:get_ebuilds),
     'sql_query' => <<-SQL
-        INSERT INTO ebuild_licences
+        INSERT INTO ebuilds_licences
         (ebuild_id, licence_id)
         VALUES (?, ?);
     SQL

@@ -181,7 +181,7 @@ end
 script = Script.new({
     'data_source' => method(:get_data),
     "sql_query" => <<-SQL
-        INSERT INTO ebuild_masks
+        INSERT INTO ebuilds_masks
         (ebuild_id, arch_id, source_id, state_id)
         VALUES (?, ?, ?, ?);
     SQL

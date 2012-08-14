@@ -37,7 +37,7 @@ end
 script = Script.new({
     'data_source' => InstalledPackage.method(:get_data),
     'sql_query' => <<-SQL
-        INSERT INTO package_flagstates
+        INSERT INTO ipackage_flagstates
         (iebuild_id, flag_id, state_id)
         VALUES (
             ?,

@@ -39,7 +39,7 @@ end
 script = Script.new({
     'data_source' => Ebuild.method(:get_ebuilds),
     'sql_query' => <<-SQL
-        INSERT INTO ebuild_keywords
+        INSERT INTO ebuilds_keywords
         (ebuild_id, keyword_id, arch_id, source_id)
         VALUES (?, ?, ?, ?);
     SQL

@@ -54,7 +54,7 @@ end
 script = Script.new({
     'data_source' => InstalledPackage.method(:get_data),
     'sql_query' => <<-SQL
-        INSERT INTO package_content
+        INSERT INTO ipackage_content
         (iebuild_id, type_id, item, symlinkto, install_time)
         VALUES (?, ?, ?, ?, ?);
     SQL
