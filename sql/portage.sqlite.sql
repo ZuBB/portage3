@@ -161,6 +161,7 @@ create table ebuilds (
     version_order INTEGER NOT NULL DEFAULT 0,
     mtime INTEGER,
     mauthor VARCHAR,
+    raw_eapi VARCHAR,
     eapi_id INTEGER,
     slot VARCHAR,
     repository_id INTEGER,

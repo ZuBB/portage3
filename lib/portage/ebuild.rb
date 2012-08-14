@@ -29,29 +29,26 @@ class Ebuild < Package
         db_initialize(params)
 
         # TODO make this ondemand
-        load_ebuild_content()
+        load_ebuild_content
         @ebuild_parse_method = params['method'] || 'parse'
         @curr_prop = nil
     end
 
-    def ebuild_id()
-        @ebuild_id ||= Database.get_1value(SQL["id"],
-										   package_id,
-										   ebuild_version
-										  )
+    def ebuild_id
+        @ebuild_id ||= Database.get_1value(SQL["id"], package_id, ebuild_version)
     end
 
-    def ebuild_version()
+    def ebuild_version
         @ebuild_version ||= @ebuild[@package.size + 1..-8]
     end
 
-    def ebuild_mtime()
+    def ebuild_mtime
         @mtime ||= Time.parse(
             Parser.get_value_from_cvs_header(@ebuild_text, 'mtime')
         ).to_i rescue 'NAN_MTIME_DEF'
     end
 
-    def ebuild_author()
+    def ebuild_author
         @author ||= Parser.get_value_from_cvs_header(@ebuild_text, "author")
     end
 
@@ -83,14 +80,16 @@ class Ebuild < Package
 
     def ebuild_eapi(method = nil)
         # http://devmanual.gentoo.org/ebuild-writing/eapi/index.html
-        get_value('eapi', method)
+        # Important EAPI must only be defined in ebuild files, not eclasses
+        # (eclasses may have EAPI-conditional code)
+        get_value('eapi')
     end
 
-    def ebuild_eapi_id()
-        @ebuild_eapi_id ||= get_eapi_id()
+    def ebuild_eapi_id
+        @ebuild_eapi_id ||= get_eapi_id
     end
 
-    def load_ebuild_content()
+    def load_ebuild_content
         set_prop(IO.read(File.join(package_home, @ebuild)).split("\n"), 'text')
     end
 
@@ -113,7 +112,7 @@ class Ebuild < Package
         end
     end
 
-    def get_value(prop_name, method)
+    def get_value(prop_name, method = nil)
         # get method
         method ||= @ebuild_parse_method
         # get value of the processed property
@@ -134,21 +133,13 @@ class Ebuild < Package
         return prop_value
     end
 
-    def get_ini_value()
+    def get_ini_value
         # copy ebuild content
         ebuild_text = @ebuild_text.clone
 
         begin
-            # lets try plain parse
-            prop_value = Parser.get_multi_line_ini_value(ebuild_text,
-														 @curr_prop
-														)
-
-            # check for subvalues and if so - try to replace them
-            prop_value = Parser.extract_sub_value(ebuild_text,
-												  prop_value,
-												  create_predefined_vars
-												 )
+            prop_value = Parser.get_multi_line_ini_value(ebuild_text, @curr_prop)
+            prop_value = Parser.extract_sub_value(ebuild_text, prop_value, create_predefined_vars)
 
             # if we did not find anything
             if prop_value.start_with?('0_')
@@ -156,27 +147,30 @@ class Ebuild < Package
                 prop_value = get_inherited_value(prop_value)
             end
 
-            # if we still have '_DEF' at the end (this means smth wrong)
-            if prop_value.end_with?('_DEF')
+            # if we still have '_DEF' at the end
+            if prop_value.end_with?('_DEF') && @curr_prop != 'EAPI'
                 # lets get data from via portageq command
                 prop_value = get_portageq_value(prop_value)
             end
         rescue Exception => exception
             PLogger.fatal("Got runtime error while parsing ebuild")
-            PLogger.fatal("Message: #{exception.message()}")
+            PLogger.fatal("Message: #{exception.message}")
             PLogger.fatal("Backtrace: \n#{exception.backtrace.join("\n")}")
         end
 
-        # store this "error"
         if prop_value.include?(@curr_prop + '_DEF')
-            PLogger.warn("Failed to find correct value (#{prop_value}) for #{@curr_prop}")
+            if @curr_prop != 'EAPI'
+                message = "Found next value (#{prop_value}) for #{@curr_prop}"
+                PLogger.warn(message)
+            else
+                #prop_value = '0' 
+            end
         end
 
-        # cleanup value
         cleanup_value(prop_value)
     end
 
-    def create_predefined_vars()
+    def create_predefined_vars
         # list of predefined variables
         # http://devmanual.gentoo.org/ebuild-writing/variables/index.html
 
@@ -214,7 +208,7 @@ class Ebuild < Package
         return prop_value
     end
 
-    def get_inherited_eclasses()
+    def get_inherited_eclasses
         @ebuild_eclasses = []
 
         # lets find line with "inherit" keyword
@@ -225,25 +219,25 @@ class Ebuild < Package
             # lets get all items(eclasses) that is inherited
             inherit_items = line.split(' ')
             # drop inherit keyword
-            inherit_items.shift()
+            inherit_items.shift
             @ebuild_eclasses += inherit_items
         end
     end
 
-    def inherit_exception?()
+    def inherit_exception?
         forbidden_inheritance = ['eapi']
-        forbidden_inheritance.include?(@curr_prop.downcase())
+        forbidden_inheritance.include?(@curr_prop.downcase)
     end
 
     def get_inherited_value(old_value)
         # lets process exceptions
-        return old_value if inherit_exception?()
+        return old_value if inherit_exception?
 
         # lets get all eclasses that is inherited
-        get_inherited_eclasses() if @ebuild_eclasses.nil?
+        get_inherited_eclasses if @ebuild_eclasses.nil?
 
         # lets find eclass that is most related to this category&package
-        inherit_items = find_related_eclass()
+        inherit_items = find_related_eclass
 
         # TODO ugly hack
         inherit_items = ["gst-plugins10"] if @package.index("gst-plugins") == 0
@@ -258,9 +252,9 @@ class Ebuild < Package
         return result || old_value
     end
 
-    def find_related_eclass()
+    def find_related_eclass
         # clone original array
-        eclasses = @ebuild_eclasses.clone()
+        eclasses = @ebuild_eclasses.clone
 
         blacklisted_eclasses = [
             "eutils", "multilib", "toolchain-funcs", "versionator",
@@ -302,12 +296,11 @@ class Ebuild < Package
         command = "portageq metadata / ebuild #{atom} #{@curr_prop}"
         PLogger.warn("Running portageq to get a #{@curr_prop} for #{atom}")
         # run && get output && return it
-        return %x[#{command}].strip()
+        return %x[#{command}].strip
     end
 
-    def get_eapi_id()
-        # TODO store_real_eapi(ebuild_obj)
-        @ebuild_eapi = 0 if ebuild_eapi().end_with?('_DEF')
+    def get_eapi_id
+        @ebuild_eapi = 0 if ebuild_eapi.end_with?('_DEF')
         Database.get_1value(SQL["eapi_id"], @ebuild_eapi)
     end
 

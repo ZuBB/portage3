@@ -13,8 +13,8 @@ module Parser
     def self.get_value_from_cvs_header(file_content, keyword)
         const = nil
 
-        self.constants().each do |constant|
-            if constant.downcase.include?(keyword)
+        self.constants.each do |constant|
+            if constant.downcase.to_s.include?(keyword)
                 const = self.const_get(constant)
                 break
             end
@@ -23,8 +23,7 @@ module Parser
         return  "0_" + keyword.upcase + "_REGEXP_DEF" if const.nil?
 
         file_content.each { |line|
-            if line.include?('# $Header:') # TODO: or index == 0 ?
-                # https://bugs.gentoo.org/show_bug.cgi?id=398567
+            if line.start_with?('# $Header:')
                 match = const.match(line)
                 if match.nil?
                     return  "X_" + keyword.upcase + "_REGEXP"
