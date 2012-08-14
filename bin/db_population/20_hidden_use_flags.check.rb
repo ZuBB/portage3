@@ -15,7 +15,13 @@ class Script
             WHERE f.descr='';
         SQL
 
-        Database.get_1value(sql_query).each { |row|
+        results = Database.select(sql_query)
+        if results.empty?
+            PLogger.info("Passed")
+            return
+        end
+
+        results.each { |row|
             PLogger.error("#{row[0]} use flag #{row[1]} don't have description")
         }
     end

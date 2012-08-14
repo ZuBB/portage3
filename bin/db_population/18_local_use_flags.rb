@@ -17,7 +17,11 @@ def get_data(params)
 end
 
 class Script
-    def pre_insert_task()
+    TYPE = 'local'
+
+    def pre_insert_task
+        @shared_data.merge!(UseFlag.pre_insert_task(TYPE))
+
         @shared_data['atom@id'] = {}
         sql_query = <<-SQL
             SELECT p.id, c.name, p.name
@@ -27,18 +31,16 @@ class Script
         Database.select(sql_query).each do |row|
             @shared_data['atom@id'][row[1] + '/' + row[2] + ':'] = row[0]
         end
-
-        type = 'local'
-        type_id = Database.get_1value(UseFlag::SQL['type'], type)
-        @shared_data['flag_type@id'] = { type => type_id }
     end
 
     def process(line)
-        unless (matches = UseFlag::REGEXPS['local'].match(line)).nil?
-            matches = matches.to_a.drop(1)
-            matches[0] = @shared_data['atom@id'][matches[0]]
-            type_id = @shared_data['flag_type@id']['local']
-            Database.add_data4insert(*matches, type_id)
+        unless (matches = UseFlag::REGEXPS[TYPE].match(line)).nil?
+            params = matches.to_a.drop(1)
+            params << @shared_data['flag_type@id'][TYPE]
+            params << @shared_data['source@id']['profiles']
+            params << @shared_data['repo@id']['gentoo']
+            params[0] = @shared_data['atom@id'][params[0]]
+            Database.add_data4insert(*params)
         else
             PLogger.group_log([
                 [3, 'Failed to parse next line'],
@@ -52,8 +54,8 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO flags
-        (package_id, name, descr, type_id)
-        VALUES (?, ?, ?, ?);
+        (package_id, name, descr, type_id, source_id, repository_id)
+        VALUES (?, ?, ?, ?, ?, ?);
     SQL
 })
 

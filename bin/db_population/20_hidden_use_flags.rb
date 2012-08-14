@@ -21,15 +21,15 @@ def get_data(params)
 end
 
 class Script
-    def pre_insert_task()
-        type = 'hidden'
-        type_id = Database.get_1value(UseFlag::SQL['type'], type)
-        @shared_data['flag_type@id'] = { type => type_id }
+    TYPE = 'hidden'
+
+    def pre_insert_task
+        @shared_data.merge!(UseFlag.pre_insert_task(TYPE))
     end
 
     def process(file)
         use_prefix = File.basename(file, '.desc')
-        type_id = @shared_data['flag_type@id']['hidden']
+        type_id = @shared_data['flag_type@id'][TYPE]
 
         IO.foreach(file) do |line|
             next if line.start_with?('#') || /^\s*$/ =~ line
@@ -42,10 +42,13 @@ class Script
                 line.gsub!(/\s{2,}/, ' ')
             end
 
-            unless (matches = UseFlag::REGEXPS['hidden'].match(line.strip)).nil?
-                matches = matches.to_a.drop(1)
-                matches[0] = use_prefix + '_' + matches[0]
-                Database.add_data4insert(*matches, type_id)
+            unless (matches = UseFlag::REGEXPS[TYPE].match(line.strip)).nil?
+                params = matches.to_a.drop(1)
+                params << type_id
+                params << @shared_data['source@id']['profiles']
+                params << @shared_data['repo@id']['gentoo']
+                params[0] = use_prefix + '_' + params[0]
+                Database.add_data4insert(*params)
             else
                 PLogger.group_log([
                     [3, 'Failed to parse next line'],
@@ -58,6 +61,10 @@ end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO flags (name, descr, type_id) VALUES (?, ?, ?);'
+    'sql_query' => <<-SQL
+        INSERT INTO flags
+        (name, descr, type_id, source_id, repository_id)
+        VALUES (?, ?, ?, ?, ?);
+    SQL
 })
 

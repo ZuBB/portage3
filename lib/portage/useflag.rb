@@ -17,6 +17,25 @@ class UseFlag
         'state' => Regexp.new('^[^\\w]?')
     }
 
+    def self.pre_insert_task(type)
+        result = {}
+        repo = 'gentoo'
+        source = 'profiles'
+
+        type_id = Database.get_1value(UseFlag::SQL['type'], type)
+        result['flag_type@id'] = { type => type_id }
+
+        sql_query = 'select id from sources where source=?;'
+        source_id = Database.get_1value(sql_query, source)
+        result['source@id'] = { source => source_id }
+
+        sql_query = 'SELECT id FROM repositories WHERE name=?;'
+        repo_id = Database.get_1value(sql_query, repo)
+        result['repo@id'] = { repo => repo_id }
+
+        result
+    end
+
     def self.get_flag(flag)
         flag.sub(REGEXPS['state'], '')
     end
