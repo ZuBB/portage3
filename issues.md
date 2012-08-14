@@ -18,17 +18,17 @@
     + ~~evaluate injecting of :get_data and :process methods into Script/Worker~~
     + ~~pre/post insert tasks~~
     + ~~post processing checks~~
-    + ~~log queries~~
-    + ~~log stats~~
+    + ~~log queries and stats~~
 * profiles
 	+ `No such file or directory - /dev/shm/portage/profiles2/arch.list (Errno::ENOENT)`
+	+ find solution for use flags & profiles
 * scripts
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
-    + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, make.conf, users
-    + dependancies
-    + installed stuff: ~~db~~, ~~scripts~~, except #81
-    + after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts
+    + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, users
+    + dependancies: db, scripts
+    + installed stuff: ~~db~~, ~~scripts~~
+    + ~~after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts~~
     + rework scripts that have size more than 2kB (constantly in background progress)
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
@@ -40,6 +40,7 @@
     + ~~close log device~~
     + before loggin db issue itself, need to log original(using HRF) data
 * parser
+    * **fast parse**
     * fix bugs
     * light improvement
 * examples:
@@ -52,12 +53,12 @@
     * setup instructions
 * conditional (**if have free time**)
 	+ database
+		- separate statements for read/write
 		- issue with queries and specified params run from workers.
 		- support insert via *specified* cached statement. __do we need this?__
 	+ Script class
 		- keep in mind that need to have easy way to debug specified item(s)
-		- make database module injectable into Script/Worker class
-		- make logger module injectable into Script/Worker class
+		- make database and logger modules injectable into Script/Worker class
 	+ scripts
 		- find faster way of getting available EAPIs
 
