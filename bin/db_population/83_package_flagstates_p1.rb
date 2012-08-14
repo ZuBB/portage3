@@ -36,20 +36,22 @@ class Script
     end
 
     def post_insert_task
+        sql_query = 'select id from sources where source=?;'
+        source_id = Database.get_1value(sql_query, '/var/db/pkg')
+        type_id = Database.get_1value(UseFlag::SQL['type'], 'unknown')
+
         count_query = 'select count(id) from flags;'
         sql_query = <<-SQL
             INSERT INTO flags
-            (name, type_id, live)
+            (name, type_id, source_id)
             SELECT
-                distinct name,
-                #{Database.get_1value(UseFlag::SQL['type'], 'unknown')},
-                0
+                distinct name, #{type_id}, #{source_id}
             FROM tmp_dropped_flags;
         SQL
 
-        tb = Database.get_1value(sql_query)
+        tb = Database.get_1value(count_query)
         Database.execute(sql_query)
-        ta  = Database.get_1value(sql_query)
+        ta = Database.get_1value(count_query)
 
         PLogger.info("#{ta - tb} successful insert has beed done")
     end
