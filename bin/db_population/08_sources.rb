@@ -9,7 +9,7 @@
 require_relative 'envsetup'
 
 SOURCES = [
-    'ebuilds', 'profiles', '/etc/make.conf', '/etc/portage/', 'CLI', '/var/db/pkg'
+    'ebuilds', 'profiles', '/etc/make.conf', '/etc/portage', 'CLI', '/var/db/pkg'
 ]
 
 def get_data(params)
