@@ -40,18 +40,18 @@ module Parser
         # get value
         value = line.split('=', 2)[1] || ''
         # strip spaces at start
-        value.lstrip!()
+        value.lstrip!
         # get quote char
-        #quote = value[0].chr rescue ''
-        quote = (value.slice!(0)).chr rescue ''
-        if quote && (quote == '"' || quote == "'")
+        #quote = (value.slice(0)).chr rescue ''
+        quote = value[0].chr rescue ''
+        if quote && (quote == '"' || quote == '\'')
             # strip quotes at start
-            #pattern = Regexp.new(quote + "([^" + quote + "]*)" + quote)
-            pattern = Regexp.new("((\\" + quote + "|[^" + quote + "])*)" + quote)
+            #pattern = Regexp.new("((\\" + quote + "|[^" + quote + "])*)" + quote)
+            pattern = Regexp.new(quote + "([^" + quote + "]*)" + quote)
             # strip quotes at start
-            pattern.match(value)[1].strip() rescue ''
+            pattern.match(value)[1].strip rescue ''
         elsif value.size > 1
-            value.sub(/\s+#.*$/, '').strip()
+            value.sub(/\s+#.*$/, '').strip
         else
             quote
         end
