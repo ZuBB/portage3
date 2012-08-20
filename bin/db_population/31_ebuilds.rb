@@ -18,7 +18,7 @@ class Script
     def process(params)
         PLogger.debug("Ebuild: #{params}")
         ebuild = Ebuild.new(params)
-        eapi = ebuild.ebuild_eapi
+        eapi = ebuild.ebuild_eapi('parse')
         eapi = eapi == '0_EAPI_DEF' ? '0' : eapi
 
         Database.add_data4insert(
