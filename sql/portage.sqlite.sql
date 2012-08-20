@@ -97,7 +97,9 @@ create table flags (
     name VARCHAR NOT NULL,
     descr VARCHAR,
     package_id INTEGER,
+    -- what happens if flags are defined in overlay
     source_id INTEGER NOT NULL,
+    -- do we need this?
     repository_id INTEGER,
     FOREIGN KEY (type_id) REFERENCES flag_types(id),
     FOREIGN KEY (package_id) REFERENCES packages(id),
