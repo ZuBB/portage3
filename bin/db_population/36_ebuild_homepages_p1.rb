@@ -10,8 +10,10 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
-    def pre_insert_task()
+    def pre_insert_task
         sql_query = <<-SQL
+            DROP TABLE IF EXISTS tmp_ebuild_homepages;
+
             CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
                 id INTEGER,
                 homepage VARCHAR NOT NULL,
@@ -25,7 +27,7 @@ class Script
     end
 
     def process(params)
-        PLogger.info("Ebuild: #{params[3, 3].join('-')}")
+        PLogger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
         ebuild.ebuild_homepage.split.each { |homepage|
