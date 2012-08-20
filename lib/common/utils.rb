@@ -66,7 +66,7 @@ module Utils
     end
 
     def self.get_profiles2_home
-        File.join(tree_home, SETTINGS['new_profiles'])
+        File.join(SETTINGS['tree_home'], SETTINGS['new_profiles'])
     end
 
     def self.get_db_home
