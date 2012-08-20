@@ -27,9 +27,9 @@ class Script
                                                  @shared_data['arches']
                                                 )
 
-        keywords.each do |keyword_ojb|
-            params = [@shared_data['keywords@id'][keyword_ojb[1]]]
-            params << @shared_data['arches@id'][keyword_ojb[0]]
+        keywords.each do |keyword_obj|
+            params = [@shared_data['keywords@id'][keyword_obj[1]]]
+            params << @shared_data['arches@id'][keyword_obj[0]]
             params << @shared_data['sources@id']['ebuilds']
             Database.add_data4insert(ebuild.ebuild_id, *params)
         end
