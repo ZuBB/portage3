@@ -18,10 +18,10 @@ def get_data(params)
         break if line.include?('# Prefix keywords')
         next if line.start_with?('#')
         next if /^\s*$/ =~ line
-        results << line.strip()
+        results << line.strip.split('-')[0]
     end
 
-    results
+    results.uniq
 end
 
 script = Script.new({
@@ -29,3 +29,4 @@ script = Script.new({
     'sql_query' => 'INSERT INTO architectures (name) VALUES (?);'
 })
 
+#amd64-fbsd
