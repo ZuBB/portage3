@@ -23,7 +23,7 @@ class Script
     end
 
     def process(params)
-        PLogger.info("Ebuild: #{params[3, 3].join('-')}")
+        PLogger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
         ebuild.ebuild_use_flags.split.each do |flag|
             flag_name = UseFlag.get_flag(flag)
