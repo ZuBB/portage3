@@ -11,7 +11,7 @@ class UseFlag
     SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s-\\s)(.*)"),
-        'expand' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)'),
+        'expand' => Regexp.new('([\\w\\+\\-@]+)(?:\\s-\\s)(.*)'),
         'hidden' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)'),
         'global' => Regexp.new('([\\w\\+\\-]+)(?:\\s-\\s)(.*)'),
         'state' => Regexp.new('^[^\\w]?')
