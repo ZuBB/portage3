@@ -19,6 +19,7 @@
     + ~~pre/post insert tasks~~
     + ~~post processing checks~~
     + ~~log queries and stats~~
+    + add '-1' option for max_threads
 * profiles
     + `No such file or directory - /dev/shm/portage/profiles2/arch.list (Errno::ENOENT)`
     + find solution for use flags & profiles
@@ -27,7 +28,8 @@
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
     + dependancies: db, scripts
-    + installed stuff: ~~db~~, ~~scripts~~
+    + ebuild licence: conditional licences
+    + installed stuff: ~~db~~, ~~scripts~~, 'missed' ebuilds
     + ~~after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts~~
     + rework scripts that have size more than 2kB (constantly in background progress)
 * setup scripts
@@ -40,7 +42,7 @@
     + ~~close log device~~
     + before loggin db issue itself, need to log original(using HRF) data
 * parser
-    * **fast parse**
+    * ~~**fast parse**~~
     * fix bugs
     * light improvement
 * examples:
