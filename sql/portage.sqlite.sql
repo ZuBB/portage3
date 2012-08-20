@@ -146,7 +146,9 @@ create table repositories (
 create table categories (
     id INTEGER,
     name VARCHAR NOT NULL UNIQUE,
-    descr VARCHAR NOT NULL,
+    source_id INTEGER NOT NULL,
+    descr VARCHAR,
+    FOREIGN KEY (source_id) REFERENCES sources(id),
     PRIMARY KEY (id)
 );
 
@@ -154,8 +156,10 @@ create table packages (
     id INTEGER,
     name VARCHAR NOT NULL,
     category_id INTEGER NOT NULL,
-    CONSTRAINT idx1_unq UNIQUE (category_id, name),
+    source_id INTEGER NOT NULL,
     FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    CONSTRAINT idx1_unq UNIQUE (category_id, name),
     PRIMARY KEY (id)
 );
 
