@@ -65,7 +65,6 @@ class Script
 end
 
 script = Script.new({
-    'max_threads' => 1,
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO flags_states
