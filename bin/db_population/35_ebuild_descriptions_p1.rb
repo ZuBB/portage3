@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
-    def pre_insert_task()
+    def pre_insert_task
         sql_query = <<-SQL
             DROP TABLE IF EXISTS tmp_ebuild_descriptions;
 
@@ -27,7 +27,7 @@ class Script
     end
 
     def process(params)
-        PLogger.info("Ebuild: #{params[3, 3].join('-')}")
+        PLogger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
         Database.add_data4insert(ebuild.ebuild_description, ebuild.ebuild_id)
