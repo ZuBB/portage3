@@ -52,25 +52,18 @@ class Repository
     end
 
     def self.get_repositories(params = {})
-        repos = [{
+        repo_file = File.join(params['profiles2_home'], 'repo_name')
+        self.get_layman_repositories.unshift({
             'repository_pd' => File.dirname(params['tree_home']),
             'repository_fs' => File.basename(params['tree_home']),
-            'repository' => IO.read(File.join(params['profiles2_home'],
-                                              'repo_name'
-                                             )
-                                   ).strip
-        }]
-
-        if Utils::SETTINGS['overlay_support']
-            repos =+ self.get_layman_repositories()
-        end
-
-        repos
+            'repository' => IO.read(repo_file).strip
+        })
     end
 
     def self.get_layman_repositories()
         repos = []
         layman_config = '/etc/layman/layman.cfg'
+        return repos unless Utils::SETTINGS['overlay_support']
         return repos unless File.exist?(layman_config)
 
         layman_storage = %x[grep ^storage #{layman_config}]
