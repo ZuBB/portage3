@@ -83,7 +83,7 @@ class Script
         @data = {"max_threads" => File.basename($0).start_with?('3') ? 4 : 2}
         @data.merge!(Utils::OPTIONS)
         @data.merge!(params)
-        @data.merge!(Script.get_cli_options())
+        @data.merge!(Script.get_cli_options)
     end
 
     def get_data
@@ -170,6 +170,10 @@ class Script
 
             opts.on("--log-device STRING", "Your custom log device") do |value|
                 options["method"] = value
+            end
+
+            opts.on("-1", "--one-thread", "Use 1 thread for processing") do
+                options["max_threads"] = 1
             end
 
             opts.on("-m", "--method STRING", "Parse method") do |value|
