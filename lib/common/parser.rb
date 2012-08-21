@@ -120,7 +120,7 @@ module Parser
 
         if lines.size == 1
             # if there is (') or (") at the end of string ...
-            if lines[0].match(/[^=]["']\n$/) || keyword == 'EAPI'
+            if lines[0].match(/[^=]["']$/) || keyword == 'EAPI'
                 # ... lets get value
                 result = get_value1(lines[0])
                 # ... and delete that line from source
@@ -133,7 +133,7 @@ module Parser
                 begin
                     lines2delete << (index += 1)
                     line = file_content[index]
-                    result << line
+                    result << "\n" + line
 
                     checks = []
                     # TODO: this is checked in 1 line case
@@ -152,7 +152,7 @@ module Parser
                 end while !checks.include?(false)
 
                 lines2delete.each { |index| file_content.delete_at(index) }
-                result.gsub!(/\\?\n/, ' ')
+                result.gsub!(/[\\\n]+/, ' ')
 
                 result = get_value1(result)
             end
