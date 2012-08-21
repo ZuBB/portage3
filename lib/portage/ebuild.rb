@@ -5,6 +5,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'package'
+require_relative '../common/utils'
 
 class Ebuild < Package
     ENTITY = self.name.downcase
