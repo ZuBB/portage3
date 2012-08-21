@@ -8,6 +8,7 @@
 #
 require_relative 'envsetup'
 
+# http://www.gentoo.org/proj/en/qa/pms.xml
 def get_data(params)
     results = []
     search_path = "#{params['tree_home']}/*/*/*ebuild"
