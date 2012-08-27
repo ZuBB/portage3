@@ -7,42 +7,36 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
+require 'repository'
 
 def get_data(params)
-    results = []
-    filename = File.join(params['profiles2_home'], 'license_groups')
-
-    # walk through all use flags in that file
-    IO.foreach(filename) do |line|
-        next if line.start_with?('#')
-        next if /^\s*$/ =~ line
-
-        # TODO group names may contain (its only assumption)
-        #   [a-zA-Z0-9],
-        #   _ (underscore),
-        #   - (dash),
-        #   . (dot)
-        #   + (plus sign).
-        # lets split flag and its description
-        items = line.split()
-        group = items.delete_at(0)
-
-        items.each do |item|
-            results << [group, item[1..-1]] if item.start_with?('@')
-        end
+    items = []
+    Database.select(Repository::SQL['all']).each do |row|
+        groups_file = File.join(row[2], row[3], 'profiles', 'license_groups')
+        next unless File.size?(groups_file)
+        items += IO.read(groups_file).split("\n")
+            .reject { |line| /^\s*$/ =~ line }
+            .reject { |line| /^\s*#/ =~ line }
+            .map { |line|
+                licenses = line.split
+                group = licenses.delete_at(0)
+                licenses = licenses.select { |item| item.start_with?('@') }
+                licenses.map { |item| [group, item[1..-1]] }
+            }
+            .reject { |array| array.empty? }
     end
 
-    results
+    items.flatten(1)
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
-        INSERT INTO licence_group_content
+        INSERT INTO license_group_content
         (group_id, sub_group_id)
         VALUES (
-            (SELECT id FROM licence_groups WHERE name=?),
-            (SELECT id FROM licence_groups WHERE name=?)
+            (SELECT id FROM license_groups WHERE name=?),
+            (SELECT id FROM license_groups WHERE name=?)
         );
     SQL
 })

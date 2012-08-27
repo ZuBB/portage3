@@ -7,29 +7,31 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
+require 'repository'
+require 'license'
 
 def get_data(params)
-    # name of the file to be processed
-    filename = File.join(params['profiles2_home'], 'license_groups')
+    groups = []
+    Database.select(Repository::SQL['all']).each do |row|
+        groups_file = File.join(row[2], row[3], 'profiles', 'license_groups')
+        next unless File.size?(groups_file)
+        groups += IO.read(groups_file).split("\n")
+            .reject { |line| /^\s*$/ =~ line }
+            .reject { |line| /^\s*#/ =~ line }
+            .map { |line| line.split[0] }
+            .select { |item| License.is_group_valid?(item) }
+            .map { |item| [item, row[0]] }
+    end
 
-    # walk through all use flags in that file
-    IO.read(filename).split("\n").map() do |line|
-        line = nil if line.start_with?('#')
-        line = nil if /^\s*$/ =~ line
-
-        # TODO group names may contain
-        #   [a-zA-Z0-9],
-        #   _ (underscore),
-        #   - (dash),
-        #   . (dot)
-        #   + (plus sign).
-        # lets split flag and its description
-        line.nil?() ? nil : line.split()[0]
-    end .compact
+    groups
 end
 
 script = Script.new({
     'data_source' => method(:get_data),
-    'sql_query' => 'INSERT INTO licence_groups (name) VALUES (?);'
+    'sql_query' => <<-SQL
+        INSERT OR IGNORE INTO license_groups
+        (name, repository_id)
+        VALUES (?, ?);
+    SQL
 })
 
