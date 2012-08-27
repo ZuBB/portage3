@@ -110,30 +110,35 @@ create table flags (
 
 CREATE INDEX flag_name_idx1 on flags(name);
 
-create table licences (
+create table licenses (
     id INTEGER,
     name VARCHAR NOT NULL UNIQUE,
+    repository_id INTEGER NOT NULL,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id),
     PRIMARY KEY (id)
 );
 
-create table licence_groups (
+create table license_groups (
     id INTEGER,
     name VARCHAR NOT NULL UNIQUE,
+    repository_id INTEGER NOT NULL,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id),
     PRIMARY KEY (id)
 );
 
-create table licence_group_content (
+create table license_group_content (
     id INTEGER,
     group_id INTEGER NOT NULL,
     sub_group_id INTEGER,
-    licence_id INTEGER,
-    FOREIGN KEY (group_id) REFERENCES licence_groups(id),
-    FOREIGN KEY (sub_group_id) REFERENCES licence_groups(id),
-    FOREIGN KEY (licence_id) REFERENCES licences(id),
-    CONSTRAINT idx1_unq UNIQUE (group_id, licence_id),
-    CONSTRAINT idx1_unq UNIQUE (group_id, sub_group_id),
-    CONSTRAINT idx2_unq CHECK
-        (licence_id IS NOT NULL OR sub_group_id IS NOT NULL),
+    license_id INTEGER,
+    FOREIGN KEY (group_id) REFERENCES license_groups(id),
+    FOREIGN KEY (sub_group_id) REFERENCES license_groups(id),
+    FOREIGN KEY (license_id) REFERENCES licenses(id),
+    CONSTRAINT idx1_unq UNIQUE (group_id, license_id),
+    CONSTRAINT idx2_unq UNIQUE (group_id, sub_group_id),
+    CONSTRAINT chk1 CHECK
+        (license_id IS NOT NULL OR sub_group_id IS NOT NULL),
+    CONSTRAINT chk2 CHECK (group_id != sub_group_id),
     PRIMARY KEY (id)
 );
 
@@ -256,13 +261,26 @@ create table flags_states (
     PRIMARY KEY (id)
 );
 
-create table ebuilds_licences (
+create table ebuilds_licenses_deps (
+    id INTEGER,
+    flag_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL,
+    -- check if its possible to use some check for this
+    dependency_id INTEGER,
+    FOREIGN KEY (flag_id) REFERENCES flags(id),
+    FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    PRIMARY KEY (id)
+);
+
+create table ebuilds_licenses (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
-    licence_id INTEGER NOT NULL,
+    license_id INTEGER NOT NULL,
+    dependency_id INTEGER,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (licence_id) REFERENCES licences(id),
-    CONSTRAINT idx1_unq UNIQUE (licence_id, ebuild_id),
+    FOREIGN KEY (license_id) REFERENCES licenses(id),
+    FOREIGN KEY (dependency_id) REFERENCES ebuild_license_deps(id),
+    CONSTRAINT idx1_unq UNIQUE (license_id, ebuild_id),
     PRIMARY KEY (id)
 );
 
