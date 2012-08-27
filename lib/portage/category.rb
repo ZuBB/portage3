@@ -61,9 +61,10 @@ class Category < Repository
 
         Database.select(Repository::SQL['all']).each do |repo_row|
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
-
             next unless File.exist?(repo_home)
-            next unless (filename = File.join(repo_home, 'profiles', 'categories'))
+
+            filename = File.join(repo_home, 'profiles', 'categories')
+            next unless File.size?(filename)
 
             IO.read(filename).split("\n").each do |line|
                 next if (category = line.strip).empty?
