@@ -14,6 +14,7 @@ def get_data(params)
     licenses = []
     Database.select(Repository::SQL['all']).each do |row|
         licenses_home = File.join(row[2], row[3], 'licenses')
+        next unless File.exist?(licenses_home)
         licenses += Dir[File.join(licenses_home, '*')]
             .select { |item| File.size?(item) }
             .map { |item| item.slice(licenses_home.size + 1..-1) }
