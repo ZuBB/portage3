@@ -39,19 +39,12 @@ class License
     end
 
     def self.get_0dep_licenses(licenses)
-        if /\n/ =~ licenses
-            PLogger.warn("newline")
-        end
+        PLogger.warn("newline") if /\n/ =~ licenses
 
-        if licenses.include?('?')
-            self.extract_0dep_licenses(licenses)
-        else
-            licenses
-        end
-    end
-
-    def self.extract_0dep_licenses(licenses)
-        ''
+        # no control chars
+        return licenses unless licenses.include?('(')
+        # FIXME ugly hack
+        return ''
     end
 end
 
