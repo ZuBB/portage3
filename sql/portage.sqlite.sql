@@ -315,7 +315,7 @@ create table sets (
 
 create table set_content (
     id INTEGER,
-    set_id INTEGER NOT NULL UNIQUE,
+    set_id INTEGER NOT NULL,
     sub_set_id INTEGER,
     package_id INTEGER,
     FOREIGN KEY (set_id) REFERENCES sets(id),
