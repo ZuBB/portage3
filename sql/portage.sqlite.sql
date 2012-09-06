@@ -79,6 +79,12 @@ create table content_item_types (
     PRIMARY KEY (id)
 );
 
+create table switch_types (
+    id INTEGER,
+    type VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
 create table flag_types (
     id INTEGER,
     type VARCHAR NOT NULL UNIQUE,
@@ -272,14 +278,9 @@ create table ebuilds_license_specs (
 
 create table license_specs (
     id INTEGER,
-    spec_type_id INTEGER NOT NULL,
+    switch_type_id INTEGER NOT NULL,
     spec_dep_id INTEGER,
-    PRIMARY KEY (id)
-);
-
-create table license_spec_types (
-    id INTEGER,
-    spec_type VARCHAR NOT NULL UNIQUE,
+    FOREIGN KEY (switch_type_id) REFERENCES switch_types(id),
     PRIMARY KEY (id)
 );
 
