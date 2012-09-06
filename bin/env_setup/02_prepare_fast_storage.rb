@@ -16,8 +16,9 @@ options = {
     # TODO replace with /tmp
     "snapshots_home" => '../../misc/snapshots',
     "snapshot_name" => 'portage-latest.tar.bz2',
+    "required_space" => 700,
     "recreate_tree" => false,
-    "required_space" => 700
+    "remove_changelogs" => true
 }
 
 # lets merge stuff from tools lib
@@ -41,6 +42,10 @@ OptionParser.new do |opts|
 
     opts.on("-s", "--[no-]sync-tree", "Sync downloaded tree with system's one (default is true)") do |value|
         options["sync_tree"] = value
+    end
+
+    opts.on("-c", "--[no-]drop-logs", "Remove changelog files") do |value|
+        options["drop_logs"] = value
     end
 
     opts.on("-u", "--url STRING", "URL for downloading custom portage snapshot") do |value|
@@ -119,6 +124,13 @@ if options["download_snapshot"] || Dir[snapshots_home].size == 0
     `ln -fs #{File.basename(filename)} #{soft_link}`
 end
 
+if portage_size > 0 && !options["recreate_tree"] && !options['sync_tree']
+    puts "Portage dir already present"
+    puts "It has #{Dir.glob(portage_home + '/*/').size} subdirectories inside"
+    puts "Its size equals to #{portage_size / 1024} Mb"
+    puts "HINT: use '-h' option to see help"
+end
+
 if options["recreate_tree"] || !File.exist?(portage_home)
     print "Starting exctact portage snapshot.. "
     FileUtils.rm_r(portage_home) if File.exist?(portage_home)
@@ -131,16 +143,18 @@ if options['sync_tree']
     print "Starting syncing portage snapshot with system tree.. "
     STDOUT.flush
 	command = 'rsync -a --delete'
-	['metadata', 'distfiles', 'packages'].each { |item|
-		command << " --exclude=#{item}"
-	}
-	command << " #{settings['sys_tree_home']} #{portage_home}"
+	command << " --exclude=distfiles"
+	command << " --exclude=packages"
+	command << " #{settings['sys_tree_home']} #{root_path}"
+	%x[#{command}]
     puts "Done"
 end
 
-if !options["recreate_tree"] && !options['sync_tree']
-    puts "Portage dir already present"
-    puts "It has #{Dir.glob(portage_home + '/*/').size} subdirectories inside"
-    puts "Its size equals to #{portage_size / 1024} Mb"
-    puts "HINT: use '-h' option to see help"
+if options["drop_logs"]
+    print "Finding and deleting `Changelog` files.. "
+    STDOUT.flush
+	command = "find #{portage_home} -name ChangeLog -exec rm -f {} \\;"
+	%x[#{command}]
+    puts "Done"
 end
+
