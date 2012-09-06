@@ -261,26 +261,49 @@ create table flags_states (
     PRIMARY KEY (id)
 );
 
-create table ebuilds_licenses_deps (
+create table ebuilds_license_specs (
     id INTEGER,
-    flag_id INTEGER NOT NULL,
-    state_id INTEGER NOT NULL,
-    -- check if its possible to use some check for this
-    dependency_id INTEGER,
-    FOREIGN KEY (flag_id) REFERENCES flags(id),
-    FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    ebuild_id INTEGER NOT NULL,
+    license_spec_id INTEGER NOT NULL,
+    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (license_spec_id) REFERENCES licenses_specs(id),
     PRIMARY KEY (id)
 );
 
-create table ebuilds_licenses (
+create table license_specs (
     id INTEGER,
-    ebuild_id INTEGER NOT NULL,
+    spec_type_id INTEGER NOT NULL,
+    spec_dep_id INTEGER,
+    PRIMARY KEY (id)
+);
+
+create table license_spec_types (
+    id INTEGER,
+    spec_type VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table license_spec_switches (
+    id INTEGER,
+    license_spec_id INTEGER NOT NULL,
+    flag_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL,
+    FOREIGN KEY (license_spec_id) REFERENCES licenses_specs(id),
+    FOREIGN KEY (flag_id) REFERENCES flags(id),
+    FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    CONSTRAINT idx1_unq UNIQUE (license_spec_id, flag_id, state_id),
+    -- check if its possible to use some check for this
+    PRIMARY KEY (id)
+);
+
+create table license_spec_content (
+    id INTEGER,
+    license_spec_id INTEGER NOT NULL,
     license_id INTEGER NOT NULL,
-    dependency_id INTEGER,
-    FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
+    FOREIGN KEY (license_spec_id) REFERENCES licenses_specs(id),
     FOREIGN KEY (license_id) REFERENCES licenses(id),
-    FOREIGN KEY (dependency_id) REFERENCES ebuild_license_deps(id),
-    CONSTRAINT idx1_unq UNIQUE (license_id, ebuild_id),
+    CONSTRAINT idx1_unq UNIQUE (license_spec_id, license_id),
+    -- check if its possible to use some check for this
     PRIMARY KEY (id)
 );
 
