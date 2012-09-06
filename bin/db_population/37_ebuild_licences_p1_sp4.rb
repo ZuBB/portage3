@@ -18,6 +18,12 @@ def get_data(params)
     Database.select(sql_query)
 end
 
+class Script
+    def post_insert_task
+        Database.execute('DROP TABLE IF EXISTS tmp_ebuild_licenses_p1;')
+    end
+end
+
 script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
