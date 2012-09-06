@@ -19,7 +19,7 @@
     + ~~pre/post insert tasks~~
     + ~~post processing checks~~
     + ~~log queries and stats~~
-    + add '-1' option for max_threads
+    + ~~add '-1' option for max_threads~~
 * profiles
     + `No such file or directory - /dev/shm/portage/profiles2/arch.list (Errno::ENOENT)`
     + find solution for use flags & profiles
@@ -37,14 +37,12 @@
     + calling script for all in theirs forlder
 * Logger
     + ~~thread~~
-    + ~~groulog API~~
+    + ~~grouplog API~~
     + ~~backup previous file~~
     + ~~close log device~~
     + before loggin db issue itself, need to log original(using HRF) data
 * parser
     * ~~**fast parse**~~
-    * fix bugs
-    * light improvement
 * examples:
     + example(s) for use flags stuff
     + example(s) for dependancies
@@ -85,6 +83,8 @@
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
 * Script class
     + check dependant tables before filling current one
+* parser
+    * do we need it?
 * put portage tree to the faster location
 
 #### Useful links
