@@ -7,7 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 class Script
-    def post_insert_task
+    def post_insert_check
         sql_query = <<-SQL
             SELECT ft.type, f.name
             FROM flags f
