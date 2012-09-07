@@ -80,7 +80,8 @@ class Script
     private
     def get_script_options(params)
         # TODO find best value for 'max_threads'
-        @data = {"max_threads" => File.basename($0).start_with?('3') ? 4 : 2}
+        @data['run_check'] = true
+        @data['max_threads'] = File.basename($0).start_with?('3') ? 4 : 2
         @data.merge!(Utils::OPTIONS)
         @data.merge!(params)
         @data.merge!(Script.get_cli_options)
