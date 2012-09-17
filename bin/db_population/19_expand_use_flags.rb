@@ -34,20 +34,21 @@ class Script
         IO.foreach(file) do |line|
             next if line.start_with?('#') || /^\s*$/ =~ line
 
-            if /\s{2,}/ =~ line
-                PLogger.group_log([
-                    [2, 'Got 2+ space chars in next line Fixing..'],
-                    [1, line]
-                ])
-                line.gsub!(/\s{2,}/, ' ')
-            end
-
             unless (matches = UseFlag::REGEXPS[TYPE].match(line.strip)).nil?
                 params = matches.to_a.drop(1)
                 params << type_id
                 params << @shared_data['source@id']['profiles']
                 params << @shared_data['repo@id']['gentoo']
                 params[0] = use_prefix + '_' + params[0]
+
+                if /\s{2,}/ =~ params[1]
+                    PLogger.group_log([
+                        [2, 'Got 2+ space chars in next line Fixing..'],
+                        [1, params[1]]
+                    ])
+                    params[1].gsub!(/\s{2,}/, ' ')
+                end
+
                 Database.add_data4insert(*params)
             else
                 PLogger.group_log([
