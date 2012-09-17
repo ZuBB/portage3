@@ -73,6 +73,7 @@
     + find calls for install/uninstall actions
 * database
     + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
+	* reuse license_spec
 
 #### Blue-sky ideas
 * profiles
