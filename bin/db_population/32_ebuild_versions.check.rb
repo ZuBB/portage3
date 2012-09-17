@@ -8,7 +8,7 @@
 #
 class Script
     def post_insert_check
-        EbuildVersion.post_insert_check(MAIN_CHECK)
+        EbuildVersion.post_insert_check(EbuildVersion::MAIN_CHECK)
     end
 end
 
