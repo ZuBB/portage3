@@ -31,7 +31,7 @@ OptionParser.new do |opts|
     opts.separator " Default is a shared memory (tmpfs), mounted at /dev/shm"
     opts.separator "\n Command line options"
 
-    opts.on("-d", "--download-snapshot", "(Re)download latest snapshot (implies -r)") do |value|
+    opts.on("-d", "--download-snapshot", "Download latest snapshot (implies -r)") do |value|
         # if we dowloading new snapshot, we need to recreate tree
         options["download_snapshot"] = options["recreate_tree"] = true
     end
