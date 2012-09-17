@@ -142,19 +142,19 @@ end
 if options['sync_tree']
     print "Starting syncing portage snapshot with system tree.. "
     STDOUT.flush
-	command = 'rsync -a --delete'
-	command << " --exclude=distfiles"
-	command << " --exclude=packages"
-	command << " #{settings['sys_tree_home']} #{root_path}"
-	%x[#{command}]
+    command = 'rsync -a --delete'
+    command << " --exclude=distfiles"
+    command << " --exclude=packages"
+    command << " #{settings['sys_tree_home']} #{root_path}"
+    %x[#{command}]
     puts "Done"
 end
 
 if options["drop_logs"]
     print "Finding and deleting `Changelog` files.. "
     STDOUT.flush
-	command = "find #{portage_home} -name ChangeLog -exec rm -f {} \\;"
-	%x[#{command}]
+    command = "rm #{portage_home}/*-*/*/ChangeLog"
+    %x[#{command}]
     puts "Done"
 end
 
