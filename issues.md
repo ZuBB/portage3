@@ -26,15 +26,14 @@
 * scripts
     + ~~wrong handling of homepages: ebuild may refer to 1+ homepage~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
+    + ebuild licences: ~~licences without deps~~, licences with logical or, conditional licences
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
     + dependancies: db, scripts
-    + ebuild licence: conditional licences
     + installed stuff: ~~db~~, ~~scripts~~, 'missed' ebuilds
-    + ~~after 'on end cleanup' will be implemented - merge *p1.rb and *p2.rb scripts~~
     + rework scripts that have size more than 2kB (constantly in background progress)
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
-    + calling script for all in theirs forlder
+    + ~~calling scripts for all in theirs forlder~~
 * Logger
     + ~~thread~~
     + ~~grouplog API~~
@@ -42,11 +41,9 @@
     + ~~close log device~~
     + before loggin db issue itself, need to log original(using HRF) data
 * parser
-    * ~~**fast parse**~~
+    * ~~**new parse method: simple and fast**~~
 * examples:
-    + example(s) for use flags stuff
-    + example(s) for dependancies
-    + example(s) for installed stuff
+    + examples for use flags stuff, dependancies, installed stuff
     + statistics on what is in db
 * installation
     * gemfile
@@ -73,7 +70,7 @@
     + find calls for install/uninstall actions
 * database
     + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
-	* reuse license_spec
+    + find a way to reuse license_spec records
 
 #### Blue-sky ideas
 * profiles
