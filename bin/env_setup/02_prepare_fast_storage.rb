@@ -9,6 +9,7 @@
 require_relative 'envsetup'
 require 'fileutils'
 require 'optparse'
+require 'parser'
 
 options = {
     "download_snapshot" => false,
@@ -18,7 +19,7 @@ options = {
     "snapshot_name" => 'portage-latest.tar.bz2',
     "required_space" => 700,
     "recreate_tree" => false,
-	"sync_tree" => true
+    "sync_tree" => true
 }
 
 # lets merge stuff from tools lib
