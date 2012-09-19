@@ -139,18 +139,22 @@ if options["recreate_tree"] || !File.exist?(portage_home)
     puts "Done"
 end
 
-if options['sync_tree'] && root_path != settings['sys_tree_home']
+sys_tree_home = Parser.get_multi_line_ini_value(
+    Utils::SETTINGS['emerge --info'], 'PORTDIR'
+)
+
+if options['sync_tree'] && root_path != sys_tree_home
     print "Starting syncing portage snapshot with system tree.. "
     STDOUT.flush
     command = 'rsync -a --delete'
     command << " --exclude=distfiles"
     command << " --exclude=packages"
-    command << " #{settings['sys_tree_home']} #{root_path}"
+    command << " #{sys_tree_home} #{root_path}"
     %x[#{command}]
     puts "Done"
 end
 
-if options["drop_logs"] && root_path != settings['sys_tree_home']
+if options["drop_logs"] && root_path != sys_tree_home
     print "Finding and deleting `Changelog` files.. "
     STDOUT.flush
     command = "rm #{portage_home}/*-*/*/ChangeLog"
