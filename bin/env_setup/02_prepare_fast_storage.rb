@@ -18,7 +18,7 @@ options = {
     "snapshot_name" => 'portage-latest.tar.bz2',
     "required_space" => 700,
     "recreate_tree" => false,
-    "remove_changelogs" => true
+	"sync_tree" => true
 }
 
 # lets merge stuff from tools lib
@@ -42,10 +42,6 @@ OptionParser.new do |opts|
 
     opts.on("-s", "--[no-]sync-tree", "Sync downloaded tree with system's one (default is true)") do |value|
         options["sync_tree"] = value
-    end
-
-    opts.on("-c", "--[no-]drop-logs", "Remove changelog files") do |value|
-        options["drop_logs"] = value
     end
 
     opts.on("-u", "--url STRING", "URL for downloading custom portage snapshot") do |value|
@@ -151,14 +147,8 @@ if options['sync_tree'] && root_path != sys_tree_home
     command << " --exclude=packages"
     command << " #{sys_tree_home} #{root_path}"
     %x[#{command}]
-    puts "Done"
-end
-
-if options["drop_logs"] && root_path != sys_tree_home
-    print "Finding and deleting `Changelog` files.. "
-    STDOUT.flush
-    command = "rm #{portage_home}/*-*/*/ChangeLog"
-    %x[#{command}]
+    # deleting `Changelog` files..
+    %x[rm #{portage_home}/*-*/*/ChangeLog]
     puts "Done"
 end
 
