@@ -7,40 +7,35 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
+require 'parser'
 
-def get_users_deploy_type(data)
-    message_part = ''
-    deployments = data['deployments'].keys
+def get_deploy_type(deployments, deploy_type)
+    message_parts = ['Select deployment type']
+    deployments = deployments.keys.sort
     deployments.each { |depl|
-        idx = (deployments.index(depl) + 1).to_s
-        message_part += "[#{idx}] #{depl}\n"
+        message_parts << "[#{(deployments.index(depl) + 1).to_s}] #{depl}"
     }
 
-    message = "Select deployment type\n"\
-        "#{message_part}"\
-        "Default one (#{data['deploy_type']}) is highly recommended: "
-
-    print(message)
-    deployment = gets.strip.to_i == 2 ? 'production' : 'debug'
-
-    data['deployments'][deployment].each { |key, value|
-        data[key] = value
-    }
-    data.delete('deployments')
-    data.delete('deploy_type')
-
-    data
+    message_parts << "Default one (#{deploy_type}) is highly recommended: "
+    print(message_parts.join("\n"))
+    reply = Integer(gets.strip) rescue 1
+    reply = 1 if reply < 1 || reply > deployments.size
+    deployments[reply - 1]
 end
 
-def get_users_overlay_support(data)
-    mp = data['overlay_support'] ? 'yes' : 'no'
-    message = "\nEnable overlay support (recommended is #{mp})? Y[es]/N[o]: "
-    print(message)
+def get_overlay_support(overlay_support)
+    message_parts = ['Enable overlay support']
+    unless overlay_support.nil?
+        default_value = overlay_support ? 'Yes' : 'No'
+        message_parts << " (recommended is '#{default_value}')"
+    end
+    message_parts << "? Yes/No: "
+    print(message_parts.join)
     ['yes', 'y'].include?(gets.strip.downcase)
 end
 
-def checks(settings_file, example_file, settings_dir)
-    unless File.size?(settings_file)
+def run_checks(settings_dir, example_file, settings_file)
+    unless File.size?(settings_file).nil?
         puts('Settings already generated')
         exit(0)
     end
@@ -56,28 +51,55 @@ def checks(settings_file, example_file, settings_dir)
     end
 end
 
+def gentoo_os?
+    output = `whereis emerge`.strip
+    output.split.drop(1).any? { |item| item.eql?('/usr/bin/emerge') }
+end
+
+def get_emerge_info
+    `emerge --info`.strip
+end
+
+def get_profile
+    `eselect --brief profile show`.strip
+end
+
 config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'config']
 settings_dir = File.expand_path(File.join(*config_path_parts))
 settings_file = File.join(settings_dir, 'settings.json')
 example_file = File.join(settings_dir, 'example.json')
-
-checks(settings_file, example_file, settings_dir)
-file_content = IO.read(example_file)
+run_checks(settings_dir, example_file, settings_file)
 
 begin
-    data = JSON.parse(file_content)
+    data = JSON.parse(IO.read(example_file))
 rescue
     puts('Failed to parse settings example')
     exit(1)
 end
 
-data = get_users_deploy_type(data)
-data['overlay_support'] = get_users_overlay_support(data)
-data['uuid'] = `cat /proc/sys/kernel/random/uuid`.strip()
+if data['gentoo_os'] = gentoo_os?
+    emerge_info = (get_emerge_info + "\nPROFILE=#{get_profile}").split("\n")
 
-# TODO: recheck all values that might be different on target PC
+    data['emerge --info'] = emerge_info
+    data['overlay_support'] = get_overlay_support(data['overlay_support'])
 
-File.open(settings_file, 'w') do |file|
-    file.write(JSON.pretty_generate(data))
+    sys_tree_home = Parser.get_multi_line_ini_value(emerge_info, 'PORTDIR')
+    unless File.exist?(sys_tree_home) && File.directory?(sys_tree_home)
+        sys_tree_home = "/usr/portage"
+    end
+
+    data['deployments']['gentoo production']['tree_home'] = sys_tree_home
+else
+    data['emerge --info'] = nil
+    data['overlay_support'] = false
 end
+
+deploy_type = get_deploy_type(data['deployments'], data['deploy_type'])
+data['deployments'][deploy_type].each { |key, value| data[key] = value }
+['deployments', 'deploy_type'].each { |item| data.delete(item) }
+data['uuid'] = `cat /proc/sys/kernel/random/uuid`.strip
+
+File.open(settings_file, 'w') { |file|
+    file.write(JSON.pretty_generate(data))
+}
 
