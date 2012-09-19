@@ -90,7 +90,7 @@
 * [devmanual](http://devmanual.gentoo.org)
 * http://dev.gentoo.org/~zmedico/portage/doc/portage.html
 * http://blog.flameeyes.eu/2009/09/the-size-of-the-gentoo-tree
-* http://blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data (protected with password for some reason), [copy in Google's cache](http://webcache.googleusercontent.com/search?q=cache:dZiCptS9UdwJ:blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data+&cd=1&hl=en&ct=clnk&client=ubuntu), [cc at gdrive](http://goo.gl/9JHh3)
+* http://blog.flameeyes.eu/2009/10/and-finally-the-portage-tree-overhead-data
 * [some notes on portage and dbs](http://www.linux-archive.org/gentoo-alt/582446-rfc-changing-sys-apps-portage-python-api-use-eroot-instead-root-keys-portage-db-similar-map-objects.html)
 * [portage on non Gentoo Linux distro](http://xanda.org/index.php?page=install-gentoo-portage-on-non-gentoo-distribution)
 * http://www.computerra.ru/interactive/694037/ (russian)
@@ -103,8 +103,9 @@
     + http://stackoverflow.com/questions/3199790
 
 #### Source code of some reworked PMs.
+* git://github.com/akozumpl/dnf.git
 * git://git.debian.org/users/jak/apt2.git
-* svn://anonsvn.gentoo.org/portage/main/trunk
+* git://git.overlays.gentoo.org/proj/portage.git
 * git://yum.baseurl.org/yum.git
 * git://git.etoilebsd.net/pkgng
 
