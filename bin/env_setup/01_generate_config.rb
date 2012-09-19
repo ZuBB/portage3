@@ -80,7 +80,7 @@ end
 if data['gentoo_os'] = gentoo_os?
     emerge_info = (get_emerge_info + "\nPROFILE=#{get_profile}").split("\n")
 
-    data['emerge --info'] = emerge_info
+    data['emerge --info'] = emerge_info.clone
     data['overlay_support'] = get_overlay_support(data['overlay_support'])
 
     sys_tree_home = Parser.get_multi_line_ini_value(emerge_info, 'PORTDIR')
