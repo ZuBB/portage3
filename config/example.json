@@ -4,7 +4,6 @@
     "gentoo_os": true,
     "new_profiles": "profiles2",
     "overlay_support": false,
-    "sys_tree_home": "/usr/portage",
     "settings_home": "/etc/portage",
     "uuid": "",
     "deployments": {
@@ -13,8 +12,8 @@
             "log_home": "/dev/shm",
             "db_home": "/dev/shm"
         },
-        "production": {
-            "tree_home": "/usr/portage",
+        "gentoo production": {
+            "tree_home": "${PORTDIR}",
             "log_home": "/var/log/portage/cache",
             "db_home": "/var/cache"
         }
