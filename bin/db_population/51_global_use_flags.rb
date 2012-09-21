@@ -12,27 +12,35 @@ require 'parser'
 
 def get_data(params)
     file_content = IO.read('/etc/make.conf').split("\n")
-    Parser.get_multi_line_ini_value(file_content, 'USE').split
+    Parser.get_multi_line_ini_value(file_content, 'USE').split.uniq
 end
 
 class Script
     SOURCE = '/etc/make.conf'
+	TYPE = 'global'
 
     def pre_insert_task
         sql_query = 'select id from sources where source=?;'
         source_id = Database.get_1value(sql_query, SOURCE)
         @shared_data['source@id'] = { SOURCE => source_id }
 
+        type_id = Database.get_1value(UseFlag::SQL['type'], TYPE)
+        @shared_data['type@id'] = { TYPE => type_id }
+
         sql_query = 'select state, id from flag_states;'
         @shared_data['state@id'] = Hash[Database.select(sql_query)]
+
+        sql_query = 'select name, id from flags where type_id = ?;'
+        @shared_data['flag@id'] = {TYPE => Hash[Database.select(sql_query, type_id)]}
     end
 
-    def process(flag)
-        flag_id = UseFlag.get_flag(flag)
-        flag_name = UseFlag.get_flag(flag)
-        flag_state = @shared_data['state@id'][UseFlag.get_flag_state(flag)]
+    def process(flag_spec)
+        flag = UseFlag.get_flag(flag_spec)
+        flag_id = @shared_data['flag@id'][TYPE][flag]
+        flag_state = UseFlag.get_flag_state(flag_spec)
+        flag_state_id = @shared_data['state@id'][flag_state]
         source_id = @shared_data['source@id'][SOURCE]
-        Database.add_data4insert(flag_name, flag_state, source_id)
+        Database.add_data4insert(flag_id, flag_state_id, source_id)
     end
 end
 
@@ -41,11 +49,7 @@ script = Script.new({
     'sql_query' => <<-SQL
         INSERT INTO flags_states
         (flag_id, state_id, source_id)
-        VALUES (
-            (SELECT id FROM flags WHERE name=? ORDER BY type_id ASC LIMIT 1),
-            ?,
-            ?
-        );
+        VALUES (?, ?, ?);
     SQL
 })
 
