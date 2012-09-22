@@ -176,6 +176,8 @@ create table packages (
     PRIMARY KEY (id)
 );
 
+CREATE INDEX packages_idx0 on packages(name);
+
 create table ebuilds (
     id INTEGER,
     package_id INTEGER NOT NULL,
@@ -273,6 +275,7 @@ create table ebuilds_license_specs (
     license_spec_id INTEGER NOT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (license_spec_id) REFERENCES licenses_specs(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, license_spec_id),
     PRIMARY KEY (id)
 );
 
