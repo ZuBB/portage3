@@ -78,19 +78,19 @@ rescue
 end
 
 if data['gentoo_os'] = gentoo_os?
-    emerge_info = (get_emerge_info + "\nPROFILE=#{get_profile}").split("\n")
+    emerge_info = get_emerge_info + "\nPROFILE=#{get_profile}"
+    File.open(File.join(settings_dir, 'emerge_info'), 'w') { |file|
+        file.write(emerge_info)
+    }
 
-    data['emerge --info'] = emerge_info.clone
-    data['overlay_support'] = get_overlay_support(data['overlay_support'])
-
-    sys_tree_home = Parser.get_multi_line_ini_value(emerge_info, 'PORTDIR')
+    sys_tree_home = Parser.get_multi_line_ini_value(emerge_info.split("\n"), 'PORTDIR')
     unless File.exist?(sys_tree_home) && File.directory?(sys_tree_home)
         sys_tree_home = "/usr/portage"
     end
 
     data['deployments']['gentoo production']['tree_home'] = sys_tree_home
+    data['overlay_support'] = get_overlay_support(data['overlay_support'])
 else
-    data['emerge --info'] = nil
     data['overlay_support'] = false
 end
 
