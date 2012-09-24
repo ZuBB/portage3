@@ -10,6 +10,7 @@ module EmergeSearch
     PackageData = {
         "CATEGORY" => [],
         "PACKAGE" => [],
+        "IVERSIONS" => [],
         "VERSIONS" => [],
         "HOMEPAGE" => [],
         "DESCRIPTION" => [],
@@ -81,6 +82,14 @@ TXTBLOCK
         WHERE e.package_id = ?;
     SQL
 
+    # installed
+    QUERY_L2_INST = <<-SQL
+        SELECT e.version
+        FROM ebuilds e
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        WHERE e.package_id = ?;
+    SQL
+
     # case when we do search on name and on descr
     QUERY_L2_BASE = <<-SQL
         SELECT
@@ -101,21 +110,20 @@ TXTBLOCK
 
     def self.print_ebuild_specs(local_data)
         template = TEMPLATE.clone
-        versions = []
-
-        local_data['HOMEPAGE'].uniq!
-        local_data['LICENSE'].uniq!
 
         local_data['VERSIONS'].each_index do |index|
+            versions = []
             keyword = Keyword::SYMBOLS[local_data['keywords'][index] - 1]
-            keyword = '(' + keyword + ')' if keyword.size > 0
             mask_state = local_data['mask_states'][index].nil? ? '' : '[M]'
             versions << keyword + local_data['VERSIONS'][index] + mask_state
+            local_data['VERSIONS'][index] = versions
         end
 
-        local_data.keys.each do |key|
+        local_data.keys.sort.each do |key|
             next if key.match(/[[:lower:]]/)
-            template.sub!(key, local_data[key].join(' '))
+            dest = local_data[key].join(' ')
+            dest = '[Not installed]' if key == 'IVERSIONS' and dest.empty?
+            template.sub!(key, dest)
         end
 
         puts template
@@ -160,8 +168,8 @@ TXTBLOCK
 
         # check if we have category pattern
         if package_pattern.include?('/')
-            package_pattern.slice!(0)
-            category_pattern = package_pattern.slice(0, pattern.index('/') - 1)
+            package_pattern.sub!(/^@/, '')
+            category_pattern, package_pattern = package_pattern.split('/')
         end
 
         category_pattern = self.prepare_sql_pattern(category_pattern, regexp_pattern)
@@ -196,21 +204,29 @@ TXTBLOCK
             local_data = PackageData.clone
             local_data['CATEGORY'] = [prow[1]]
             local_data['PACKAGE'] = [prow[2]]
+            # WTF? FIXME
+            local_data['VERSIONS'] = []
+            local_data['IVERSIONS'] = []
+            local_data['keywords'] = []
+            local_data['mask_states'] = []
 
             local_data['DESCRIPTION'] =
-                Database.select(QUERY_L2_DESCR, package_id)
+                Database.select(QUERY_L2_DESCR, package_id).flatten
 
             local_data['HOMEPAGE'] =
-                Database.select(QUERY_L2_WWW, package_id)
+                Database.select(QUERY_L2_WWW, package_id).flatten
 
             local_data['LICENSE'] =
-                Database.select(QUERY_L2_LICS, package_id)
+                Database.select(QUERY_L2_LICS, package_id).flatten
 
             Database.select(QUERY_L2_BASE, package_id).each do |erow|
                 local_data['VERSIONS'] << erow[0]
                 local_data['keywords'] << erow[1]
                 local_data['mask_states'] << erow[2]
             end
+
+            local_data['IVERSIONS'] =
+                Database.select(QUERY_L2_INST, package_id).flatten
 
             self.print_ebuild_specs(local_data)
         end
