@@ -121,7 +121,7 @@ TXTBLOCK
         puts template
     end
 
-    def self.prepare_sql_pattern!(pattern, regexp_pattern)
+    def self.prepare_sql_pattern(pattern, regexp_pattern)
         return nil if pattern.nil?
 
         if regexp_pattern
@@ -139,6 +139,8 @@ TXTBLOCK
         else
             pattern = '%' + pattern + '%'
         end
+
+        pattern
     end
 
     def self.prepare_params(raw_pattern, also_desc)
@@ -162,8 +164,8 @@ TXTBLOCK
             category_pattern = package_pattern.slice(0, pattern.index('/') - 1)
         end
 
-        self.prepare_sql_pattern!(category_pattern, regexp_pattern)
-        self.prepare_sql_pattern!(package_pattern, regexp_pattern)
+        category_pattern = self.prepare_sql_pattern(category_pattern, regexp_pattern)
+        package_pattern = self.prepare_sql_pattern(package_pattern, regexp_pattern)
 
         unless category_pattern.nil?
             operator = /[_%]/ =~ category_pattern ? 'like' : '='
