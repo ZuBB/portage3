@@ -149,6 +149,8 @@ create table license_group_content (
 );
 
 create table repositories (
+    -- TODO find best way to handle repos
+    --   that used to be in use but are removed now
     id INTEGER,
     name VARCHAR NOT NULL UNIQUE,
     parent_folder VARCHAR NOT NULL,
@@ -183,16 +185,17 @@ create table ebuilds (
     package_id INTEGER NOT NULL,
     version VARCHAR NOT NULL,
     version_order INTEGER NOT NULL DEFAULT 0,
+    repository_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL,
     mtime INTEGER,
     mauthor VARCHAR,
     raw_eapi VARCHAR,
     eapi_id INTEGER,
     slot VARCHAR,
-    repository_id INTEGER,
     description_id INTEGER,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
-    FOREIGN KEY (repository_id) REFERENCES repositories (id),
+    FOREIGN KEY (repository_id) REFERENCES repositories(id),
     FOREIGN KEY (description_id) REFERENCES ebuild_descriptions (id),
     CONSTRAINT idx1_unq UNIQUE (package_id, version, repository_id),
     PRIMARY KEY (id)
