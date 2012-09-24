@@ -53,10 +53,17 @@ class Repository
 
     def self.get_repositories(params = {})
         repo_file = File.join(params['profiles2_home'], 'repo_name')
-        self.get_layman_repositories.unshift({
+
+        self.get_layman_repositories
+        .unshift({
             'repository_pd' => File.dirname(params['tree_home']),
             'repository_fs' => File.basename(params['tree_home']),
-            'repository' => IO.read(repo_file).strip
+            'repository'    => IO.read(repo_file).strip
+        })
+        .unshift({
+            'repository_pd' => '/dev/null',
+            'repository_fs' => 'unknown',
+            'repository'    => 'unknown'
         })
     end
 
