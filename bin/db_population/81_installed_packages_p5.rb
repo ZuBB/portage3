@@ -10,11 +10,10 @@ require_relative 'envsetup'
 require 'installed_package'
 
 def get_data(params)
-    Dir[File.join(InstalledPackage::DB_PATH, '**/*/')].select do |item|
-        item.sub!(InstalledPackage::DB_PATH + '/', '')
-        item.sub!(/\/$/, '')
-        item.count('/') == 1
-    end
+    Dir[File.join(InstalledPackage::DB_PATH, '**/*/')]
+        .map { |item| item.sub(InstalledPackage::DB_PATH + '/', '') }
+        .map { |item| item.sub(/\/$/, '') }
+        .select { |item| item.count('/') == 1 }
 end
 
 class Script
@@ -30,11 +29,13 @@ class Script
         Database.select(sql_query).each do |row|
             @shared_data['atom@id']["#{row[1]}/#{row[2]}-#{row[3]}"] = row[0]
         end
+
+        sql_query = 'select name, id from repositories;'
+        @shared_data['repo@id'] = Hash.new[Database.get_1value(sql_query)]
     end
 
     def process(item)
-        ebuild_id = @shared_data['atom@id'][item]
-
+        ebuild_id  = @shared_data['atom@id'][item]
         item_path  = File.join(InstalledPackage::DB_PATH, item)
         pkgsize    = IO.read(File.join(item_path, 'SIZE')).strip
         binpkgmd5  = IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue nil
