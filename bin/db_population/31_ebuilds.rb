@@ -10,9 +10,14 @@ require_relative 'envsetup'
 require 'ebuild'
 
 class Script
+    SOURCE = 'ebuilds'
+
     def pre_insert_task
         sql_query = 'select version, id from eapis;'
         @shared_data['eapis@id'] = Hash[Database.select(sql_query)]
+
+        sql_query = 'select source, id from sources;'
+        @shared_data['source@id'] = Hash[Database.select(sql_query)]
     end
 
     def process(params)
@@ -30,7 +35,8 @@ class Script
             # TODO notify upstream and remove raw_eapi
             ebuild.ebuild_eapi,
             @shared_data['eapis@id'][eapi.to_i],
-            ebuild.ebuild_slot
+            ebuild.ebuild_slot,
+            @shared_data['source@id'][SOURCE]
         )
     end
 end
@@ -39,8 +45,11 @@ script = Script.new({
     'data_source' => Ebuild.method(:list_ebuilds),
     'sql_query' => <<-SQL
         INSERT INTO ebuilds
-        (package_id, version, repository_id, mtime, mauthor, raw_eapi, eapi_id, slot)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        (
+            package_id, version, repository_id, mtime, mauthor, raw_eapi,
+            eapi_id, slot, source_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     SQL
 })
 
