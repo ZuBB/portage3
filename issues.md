@@ -29,8 +29,7 @@
     + ebuild licences: ~~licences without deps~~, licences with logical or, conditional licences
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
     + dependancies: db, scripts
-    + installed stuff: ~~db~~, ~~scripts~~, 'missed' ebuilds
-    + rework scripts that have size more than 2kB (constantly in background progress)
+    + ~~installed stuff: db, scripts, 'missed' ebuilds~~
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + ~~calling scripts for all in theirs forlder~~
@@ -48,16 +47,6 @@
 * installation
     * gemfile
     * setup instructions
-* conditional (**if have free time**)
-    + database
-        - separate statements for read/write
-        - issue with queries and specified params run from workers.
-        - support insert via *specified* cached statement. __do we need this?__
-    + Script class
-        - keep in mind that need to have easy way to debug specified item(s)
-        - make database and logger modules injectable into Script/Worker class
-    + scripts
-        - find faster way of getting available EAPIs
 
 #### Long term tasks
 * Python
@@ -71,16 +60,22 @@
 * database
     + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
     + find a way to reuse license_spec records
-
-#### Blue-sky ideas
-* profiles
-* database
     + check if using WAL accees mode will give some perf?
     + ```CREATE TABLE time_test (my_date timestamp)```
     + separate table for repos parent dir
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
+	+ separate statements for read/write
+	+ issue with queries and specified params run from workers.
+	+ support insert via *specified* cached statement. __do we need this?__
 * Script class
     + check dependant tables before filling current one
+	+ keep in mind that need to have easy way to debug specified item(s)
+	+ make database and logger modules injectable into Script/Worker class
+	+ convert scripts to tasks; runt unblocking tasks in parallel, 
+* libraries
+	+ allow defining of deleted repos without hacks
+* scripts
+	+ find faster way of getting available EAPIs
 * parser
     * do we need it?
 * put portage tree to the faster location
