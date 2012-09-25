@@ -6,19 +6,11 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, 01/11/12
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '../../lib/common'))
-require 'optparse'
-require 'rubygems'
-require 'sqlite3'
-require 'utils'
+require_relative 'envsetup'
+require 'equery'
 
 # hash with options
-options = {
-    :search => nil,
-    :searchdesc => nil
-}
-
-options.merge!(Utils::OPTIONS)
+options = Hash.new.merge!(Utils::OPTIONS)
 
 OptionParser.new do |opts|
     opts.banner = " Usage: equery option param\n"
@@ -77,11 +69,8 @@ OptionParser.new do |opts|
     end
 
     opts.on("-w", "--which STRING", "print full path to ebuild for PKG") do |value|
-        options[:db_filename] = value
+        options['which'] = value
     end
-
-    #glsa(a)  - not implemented yet
-    #stats(t)  - not implemented yet
 
     opts.on_tail("--help", "Show this message") do
         puts opts
@@ -89,9 +78,18 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-# get true portage home
-if options[:db_filename].nil?
-    # get last created database
-    options[:db_filename] = Utils.get_last_created_database(options)
+options['db_filename'] ||= Utils.get_database
+Database.init(options['db_filename'])
+
+case
+when options['which'] != nil
+	atom = Equery.get_atom_specs(options['which'])
+	ebuild = Equery.get_ebuild_specs(atom)
+	output = Equery::EqueryWhich.get_ebuild_path(ebuild)
+when Time.now.hour > 21
+	puts "It's too late"
+else
+	puts "TODO"
 end
 
+puts output
