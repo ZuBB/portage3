@@ -13,7 +13,7 @@ module InstalledPackage
     }
     SQL = {
         'content_type_id' => 'SELECT id FROM content_item_types where type=?;',
-        'item_id' => 'select id from package_content where item=?'
+        'item_id' => 'select id from ipackage_content where item=?'
     }
 
     def self.get_data(params)
