@@ -5,45 +5,39 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 module Equery
-    W_EXACT = <<-SQL
-        SELECT e.id
-        FROM ebuilds e
-        JOIN packages p ON p.id = e.package_id
+    PID1 = <<-SQL
+        SELECT p.id
+        FROM packages p
         JOIN categories c ON c.id = p.category_id
-        WHERE c.name = ? AND p.name = ? AND e.version = ?;
+        WHERE c.name = ? AND p.name = ?;
     SQL
 
-    W_CN_PN = <<-SQL
-        SELECT e.id
-        FROM ebuilds e
-        JOIN packages p ON p.id = e.package_id
-        JOIN categories c ON c.id = p.category_id
-        WHERE c.name = ? AND p.name = ?
-        ORDER BY e.version_order DESC
-        LIMIT 1;
-    SQL
-
-    W_PN_PV = <<-SQL
+    PID2 = <<-SQL
         SELECT distinct e.package_id
-        FROM ebuilds e 
+        FROM ebuilds e
         JOIN packages p ON p.id = e.package_id
         JOIN categories c ON c.id = p.category_id
         WHERE p.name = ? AND e.version = ?;
     SQL
 
-    W_PN = <<-SQL
-        SELECT distinct e.package_id
-        FROM ebuilds e 
-        JOIN packages p ON p.id = e.package_id
-        JOIN categories c ON c.id = p.category_id
+    PID3 = <<-SQL
+        SELECT distinct p.id
+        FROM packages p
         WHERE p.name = ?;
     SQL
 
-    W_P_ID = <<-SQL
+    EID1 = <<-SQL
+        SELECT e.id
+        FROM ebuilds e
+        WHERE e.package_id = ? AND e.version = ?;
+    SQL
+
+    EID2 = <<-SQL
         SELECT e.id
         FROM ebuilds e
         WHERE e.package_id = ?
-        ORDER BY e.version_order DESC
+            -- TODO
+            ORDER BY e.version_order DESC
         LIMIT 1;
     SQL
 
@@ -92,34 +86,54 @@ module Equery
         }
     end
 
-    def self.get_ebuild_specs(atom)
-        params = [atom['category'], atom['package'], atom['version']].compact
+    def self.get_package_id(atom)
+        params = []
 
-        missied_info = (
-            params.empty? ||
-            atom.values.all? { |i| i.nil? } || params.empty? ||
-            atom['package'].nil? && atom['category'].nil? && atom['version']
-        )
+        if atom['package']
+            sql_query = PID3
+            params << atom['package']
 
-        if missied_info
-            puts 'Please specify [CATEGORY]/PACKAGE[-VERSION]'
+            if atom['version']
+                sql_query = PID2
+                params << atom['version']
+            elsif atom['category']
+                sql_query = PID1
+                params.unshift(atom['category'])
+            end
+        end
+
+        unless defined?(sql_query)
+            puts 'Please specify [CATEGORY/]PACKAGE[-VERSION]'
             exit
         end
 
-        sql_query = W_EXACT if atom.values.none? { |i| i.nil? }
-        sql_query = W_CN_PN if atom['package'] && atom['category'] && atom['version'].nil?
-        sql_query = W_PN_PV if atom['package'] && atom['version'] && atom['category'].nil?
-        sql_query ||= W_PN
+        if (result = Database.select(sql_query, params)).size > 1
+            self.warn_ambiguous_pn(result)
+        else
+            result.flatten.first
+        end
+    end
 
-        result = Database.select(sql_query, params)
-        self.warn_ambiguous_pn(result) if result.size > 1
-        result.flatten!
+    def self.get_ebuild_id(atom, package_id)
+        params = []
 
-        if sql_query == W_PN || sql_query == W_PN_PV
-            result = Database.select(W_P_ID, result)
+        if package_id
+            sql_query = EID2
+            params << package_id
+
+            if atom['version']
+                sql_query = EID1
+                params << atom['version']
+            end
         end
 
-        result.flatten.first
+        if defined?(sql_query)
+            if (result = Database.select(sql_query, params)).size > 1
+                self.warn_ambiguous_pn(result)
+            else
+                result.flatten.first
+            end
+        end
     end
 end
 
@@ -143,6 +157,45 @@ module Equery::EqueryWhich
             File.join(*result) + '.ebuild'
         else
             'Can not find any package'
+        end
+    end
+end
+
+module Equery::EquerySize
+    SQL = <<-SQL
+        SELECT
+            c.name,
+            p.name,
+            e.version,
+            ip.pkgsize,
+            count(ipc.id)
+        FROM ebuilds e
+        JOIN packages p ON p.id = e.package_id
+        JOIN categories c ON c.id = p.category_id
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        JOIN ipackage_content ipc ON ipc.iebuild_id = ip.id
+        WHERE e.SEARCH_FIELD = ?;
+    SQL
+
+    def self.get_package_size(package_id, ebuild_id = nil)
+        params = [(ebuild_id.nil?() ? package_id : ebuild_id)]
+        sql_query = SQL.clone.sub(
+            'SEARCH_FIELD',
+            ebuild_id.nil?() ? 'package_id' : 'id'
+        )
+
+        unless (result = Database.select(sql_query, params).flatten).empty?
+            atom = result.first(3)
+
+            mb_size = (result[3].to_i / (1024.0 * 1024.0)).round(2)
+            atom_str  = " * #{atom[0]}/#{atom[1]}-#{atom[2]}"
+            files_str = "\tTotal files: #{result[4]}"
+            size_str  = "\tTotal size: #{mb_size} MiB"
+            "#{atom_str}\n"\
+                "#{files_str}\n"\
+                "#{size_str}"
+        else
+            'Specified package is not installed'
         end
     end
 end

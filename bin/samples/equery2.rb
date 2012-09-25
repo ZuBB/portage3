@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'equery'
 
 # hash with options
-options = Hash.new.merge!(Utils::OPTIONS)
+options = {'atom' => nil}.merge!(Utils::OPTIONS)
 
 OptionParser.new do |opts|
     opts.banner = " Usage: equery option param\n"
@@ -61,7 +61,8 @@ OptionParser.new do |opts|
     end
 
     opts.on("-s", "--size STRING", "display total size of all files owned by PKG") do |value|
-        options[:db_filename] = value
+        options['size'] = true
+        options['atom'] = value
     end
 
     opts.on("-u", "--uses STRING", "display USE flags for PKG") do |value|
@@ -69,7 +70,8 @@ OptionParser.new do |opts|
     end
 
     opts.on("-w", "--which STRING", "print full path to ebuild for PKG") do |value|
-        options['which'] = value
+        options['which'] = true
+        options['atom'] = value
     end
 
     opts.on_tail("--help", "Show this message") do
@@ -81,15 +83,17 @@ end.parse!
 options['db_filename'] ||= Utils.get_database
 Database.init(options['db_filename'])
 
-case
-when options['which'] != nil
-	atom = Equery.get_atom_specs(options['which'])
-	ebuild = Equery.get_ebuild_specs(atom)
-	output = Equery::EqueryWhich.get_ebuild_path(ebuild)
-when Time.now.hour > 21
-	puts "It's too late"
-else
-	puts "TODO"
-end
+atom       = Equery.get_atom_specs(options['atom'])
+package_id = Equery.get_package_id(atom)
+ebuild_id  = Equery.get_ebuild_id(atom, package_id)
+
+output = case
+         when options['which']
+             Equery::EqueryWhich.get_ebuild_path(ebuild_id)
+         when options['size']
+             Equery::EquerySize.get_package_size(package_id, ebuild_id)
+         else
+             puts "TODO"
+         end
 
 puts output
