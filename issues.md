@@ -60,6 +60,7 @@
 * database
     + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
     + find a way to reuse license_spec records
+    + find a way do not make dups in ipackage_content.item
     + check if using WAL accees mode will give some perf?
     + ```CREATE TABLE time_test (my_date timestamp)```
     + separate table for repos parent dir
