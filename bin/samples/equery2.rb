@@ -91,7 +91,7 @@ output = case
          when options['which']
              Equery::EqueryWhich.get_ebuild_path(ebuild_id)
          when options['size']
-             Equery::EquerySize.get_package_size(package_id, ebuild_id)
+             Equery::EquerySize.get_package_size(package_id)
          else
              puts "TODO"
          end
