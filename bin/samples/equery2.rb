@@ -10,9 +10,9 @@ require_relative 'envsetup'
 require 'equery'
 
 # hash with options
-options = {'atom' => nil}.merge!(Utils::OPTIONS)
+options = {'db_filename' => nil}
 
-OptionParser.new do |opts|
+cli = OptionParser.new do |opts|
     opts.banner = " Usage: equery option param\n"
     opts.separator " A script does same search as original equery application\n"
 
@@ -78,7 +78,14 @@ OptionParser.new do |opts|
         puts opts
         exit
     end
-end.parse!
+end
+
+cli.parse!
+
+unless options.keys.reject { |i| i == 'atom' }.any? { |i| options[i] }
+	print cli.help
+	exit
+end
 
 options['db_filename'] ||= Utils.get_database
 Database.init(options['db_filename'])
