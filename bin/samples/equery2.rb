@@ -17,7 +17,8 @@ cli = OptionParser.new do |opts|
     opts.separator " A script does same search as original equery application\n"
 
     opts.on("-b", "--belongs STRING", "list what package FILES belong to") do |value|
-        options[:db_filename] = value
+        options['belongs'] = true
+        options['atom'] = value
     end
 
     opts.on("-c", "--changes STRING", "list changelog entries for ATOM") do |value|
@@ -90,19 +91,23 @@ end
 options['db_filename'] ||= Utils.get_database
 Database.init(options['db_filename'])
 
-atom       = Equery.get_atom_specs(options['atom'])
-package_id = Equery.get_package_id(atom)
-ebuild_id  = Equery.get_ebuild_id(atom, package_id)
+unless options['belongs']
+	atom       = Equery.get_atom_specs(options['atom'])
+	package_id = Equery.get_package_id(atom)
+	ebuild_id  = Equery.get_ebuild_id(atom, package_id)
+end
 
 output = case
-         when options['which']
-             Equery::EqueryWhich.get_ebuild_path(ebuild_id)
+         when options['belongs']
+             Equery::EqueryBelongs.get_iebuild_by_item(options['atom'])
          when options['size']
              params = [package_id]
              params << ebuild_id unless atom['version'].nil?
              Equery::EquerySize.get_package_size(*params)
+         when options['which']
+             Equery::EqueryWhich.get_ebuild_path(ebuild_id)
          else
-             puts "TODO"
+             puts "Unknown command.."
          end
 
 puts output

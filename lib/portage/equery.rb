@@ -201,3 +201,36 @@ module Equery::EquerySize
     end
 end
 
+module Equery::EqueryBelongs
+    SQL = <<-SQL
+        SELECT
+            c.name,
+            p.name,
+            e.version
+        FROM ebuilds e
+        JOIN packages p ON p.id = e.package_id
+        JOIN categories c ON c.id = p.category_id
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        JOIN ipackage_content ipc ON ipc.iebuild_id = ip.id
+        WHERE ipc.item = ?;
+    SQL
+
+    def self.get_iebuild_by_item(item)
+		abs_path = File.expand_path(item)
+		unless File.exist?(abs_path)
+			return 'Passed string is not valid filepath'
+		end
+
+        unless (result = Database.select(SQL, abs_path)).empty?
+			output = []
+			result.each do |row|
+				output << "#{row[0]}/#{row[1]}-#{row[2]} (#{abs_path})"
+			end
+
+			output.join("\n")
+        else
+            'Can not determine size of the package that is not installed'
+        end
+    end
+end
+
