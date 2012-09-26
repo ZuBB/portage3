@@ -137,7 +137,12 @@ if options["recreate_tree"] || !File.exist?(portage_home)
 end
 
 sys_tree_home = Parser.get_multi_line_ini_value(
-    Utils::SETTINGS['emerge --info'], 'PORTDIR'
+	IO.read(File.join(
+		File.dirname(__FILE__),
+		EnvSetup.get_path2root,
+		'config',
+		'emerge_info'
+	)).lines.to_a, 'PORTDIR'
 )
 
 if options['sync_tree'] && root_path != sys_tree_home
