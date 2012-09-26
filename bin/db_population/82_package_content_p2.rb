@@ -25,8 +25,10 @@ class Script
         .select { |line| /^#{ITEM_TYPE}\s+/ =~ line }
         .each do |line|
             params = line.split
-            params[0] = @shared_data['itemtype@id'][ITEM_TYPE]
             params.unshift(param[0])
+            params[1] = @shared_data['itemtype@id'][ITEM_TYPE]
+            params[2] << ' ' + params.slice!(3..-3).join(' ')
+            params[2].strip!
             Database.add_data4insert(params)
         end
     end
