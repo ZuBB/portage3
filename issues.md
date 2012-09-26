@@ -65,20 +65,20 @@
     + ```CREATE TABLE time_test (my_date timestamp)```
     + separate table for repos parent dir
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
-	+ separate statements for read/write
-	+ issue with queries and specified params run from workers.
-	+ support insert via *specified* cached statement. __do we need this?__
+    + separate statements for read/write
+    + issue with queries and specified params run from workers.
+    + support insert via *specified* cached statement. __do we need this?__
 * Script class
     + check dependant tables before filling current one
-	+ keep in mind that need to have easy way to debug specified item(s)
-	+ make database and logger modules injectable into Script/Worker class
-	+ convert scripts to tasks; runt unblocking tasks in parallel, 
+    + keep in mind that need to have easy way to debug specified item(s)
+    + make database and logger modules injectable into Script/Worker class
+    + convert scripts to tasks; runt unblocking tasks in parallel. etc
 * libraries
-	+ allow defining of deleted repos without hacks
+    + allow defining of deleted repos without hacks
 * scripts
-	+ find faster way of getting available EAPIs
+    + find faster way of getting available EAPIs
 * parser
-    * do we need it?
+    + do we need it?
 * put portage tree to the faster location
 
 #### Useful links
