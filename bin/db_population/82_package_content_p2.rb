@@ -18,23 +18,16 @@ class Script
     end
 
     def process(param)
-        iebuild_id = param[0]
-
         return unless (file = InstalledPackage.get_file(param, 'CONTENTS'))
 
-        IO.foreach(file) do |line|
-            next unless /^#{ITEM_TYPE}\s+/ =~ line
-
-            type_id = @shared_data['itemtype@id'][ITEM_TYPE]
-            line.sub!(/^#{ITEM_TYPE}/, '')
-
-            line.sub!(/\d+\s*$/, '')
-            time = $&.to_i
-
-            line.sub!(/\w+$/, '')
-            hash = $&
-
-            Database.add_data4insert(iebuild_id, type_id, line.strip, hash, time)
+        IO.read(file)
+        .lines
+        .select { |line| /^#{ITEM_TYPE}\s+/ =~ line }
+        .each do |line|
+            params = line.split
+            params[0] = @shared_data['itemtype@id'][ITEM_TYPE]
+            params.unshift(param[0])
+            Database.add_data4insert(params)
         end
     end
 end
