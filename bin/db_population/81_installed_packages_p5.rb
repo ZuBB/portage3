@@ -35,13 +35,15 @@ class Script
     end
 
     def process(item)
-        ebuild_id  = @shared_data['atom@id'][item]
+        params = [@shared_data['atom@id'][item]]
         item_path  = File.join(InstalledPackage::DB_PATH, item)
-        pkgsize    = IO.read(File.join(item_path, 'SIZE')).strip
-        binpkgmd5  = IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue nil
-        build_time = IO.read(File.join(item_path, 'BUILD_TIME')).strip
 
-        Database.add_data4insert(ebuild_id, build_time, binpkgmd5, pkgsize)
+        params << IO.read(File.join(item_path, 'SIZE')).strip
+        params << IO.read(File.join(item_path, 'SLOT')).strip
+        params << IO.read(File.join(item_path, 'BUILD_TIME')).strip
+        params << IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue nil
+
+        Database.add_data4insert(params)
     end
 end
 
@@ -49,8 +51,8 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO installed_packages
-        (ebuild_id, build_time, binpkgmd5, pkgsize)
-        VALUES (?, ?, ?, ?);
+        (ebuild_id, pkgsize, slot, build_time, binpkgmd5)
+        VALUES (?, ?, ?, ?, ?);
     SQL
 })
 
