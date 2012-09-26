@@ -22,23 +22,26 @@ cli = OptionParser.new do |opts|
     end
 
     opts.on("-c", "--changes STRING", "list changelog entries for ATOM") do |value|
-        options[:db_filename] = value
+        options['changes'] = true
     end
 
     opts.on("-k", "--check STRING", "verify checksums and timestamps for PKG") do |value|
-        options[:db_filename] = value
+        options['check'] = true
     end
 
     opts.on("-d", "--depends STRING", "list all packages directly depending on ATOM") do |value|
-        options[:db_filename] = value
+        options['depends'] = true
+        options['atom'] = value
     end
 
     opts.on("-g", "--depgraph STRING", "display a tree of all dependencies for PKG") do |value|
-        options[:db_filename] = value
+        options['depgraph'] = true
+        options['atom'] = value
     end
 
     opts.on("-f", "--files STRING", "list all files installed by PKG") do |value|
-        options[:db_filename] = value
+        options['files'] = true
+        options['atom'] = value
     end
 
     opts.on("-a", "--has STRING", "list all packages for matching ENVIRONMENT data stored in /var/db/pkg") do |value|
@@ -100,6 +103,18 @@ end
 output = case
          when options['belongs']
              Equery::EqueryBelongs.get_iebuild_by_item(options['atom'])
+         when options['changes']
+             'Will not be implemented in close future'
+         when options['check']
+             'Will not be implemented in close future'
+         when options['depends']
+             'Not implemented yet'
+         when options['depgraph']
+             'Not implemented yet'
+         when options['files']
+             params = [package_id]
+             params << ebuild_id unless atom['version'].nil?
+             Equery::EqueryFiles.list_package_files(*params)
          when options['size']
              params = [package_id]
              params << ebuild_id unless atom['version'].nil?
@@ -107,7 +122,7 @@ output = case
          when options['which']
              Equery::EqueryWhich.get_ebuild_path(ebuild_id)
          else
-             puts "Unknown command.."
+             'Unknown command..'
          end
 
 puts output

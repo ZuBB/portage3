@@ -234,3 +234,46 @@ module Equery::EqueryBelongs
     end
 end
 
+module Equery::EqueryFiles
+    SQL1 = <<-SQL
+        SELECT
+            c.name,
+            p.name,
+            e.version
+        FROM ebuilds e
+        JOIN packages p ON p.id = e.package_id
+        JOIN categories c ON c.id = p.category_id
+        WHERE e.package_id = ?;
+    SQL
+
+    SQL2 = <<-SQL
+        SELECT ipc.item
+        FROM ebuilds e
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        JOIN ipackage_content ipc ON ipc.iebuild_id = ip.id
+        WHERE e.SEARCH_FIELD = ?
+		ORDER BY ipc.item ASC;
+    SQL
+
+    def self.list_package_files(package_id, ebuild_id = nil)
+		output = []
+        atom = Database.select(SQL1, package_id).flatten
+		atom_str = "#{atom[0]}/#{atom[1]}-#{atom[2]}"
+		output <<  " * Contents of #{atom_str}:"
+
+        params = [(ebuild_id.nil?() ? package_id : ebuild_id)]
+        sql_query = SQL2.clone.sub(
+            'SEARCH_FIELD',
+            ebuild_id.nil?() ? 'package_id' : 'id'
+        )
+
+        unless (result = Database.select(sql_query, params)).empty?
+			result.flatten.each { |item| output << item }
+        else
+			output << "No installed packages matching '#{atom_str}'"
+        end
+
+		output.join("\n")
+    end
+end
+
