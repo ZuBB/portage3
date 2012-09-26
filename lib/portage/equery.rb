@@ -184,7 +184,8 @@ module Equery::EquerySize
             ebuild_id.nil?() ? 'package_id' : 'id'
         )
 
-        unless (result = Database.select(sql_query, params).flatten).empty?
+        if (result = Database.select(sql_query, params)).size == 1
+            result.flatten!
             atom = result.first(3)
 
             mb_size = (result[3].to_i / (1024.0 * 1024.0)).round(2)
@@ -195,7 +196,7 @@ module Equery::EquerySize
                 "#{files_str}\n"\
                 "#{size_str}"
         else
-            'Specified package is not installed'
+            'Can not determine size of the package that is not installed'
         end
     end
 end

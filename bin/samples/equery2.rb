@@ -83,8 +83,8 @@ end
 cli.parse!
 
 unless options.keys.reject { |i| i == 'atom' }.any? { |i| options[i] }
-	print cli.help
-	exit
+    print cli.help
+    exit
 end
 
 options['db_filename'] ||= Utils.get_database
@@ -98,7 +98,9 @@ output = case
          when options['which']
              Equery::EqueryWhich.get_ebuild_path(ebuild_id)
          when options['size']
-             Equery::EquerySize.get_package_size(package_id)
+             params = [package_id]
+             params << ebuild_id unless atom['version'].nil?
+             Equery::EquerySize.get_package_size(*params)
          else
              puts "TODO"
          end
