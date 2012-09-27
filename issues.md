@@ -107,6 +107,5 @@
 * git://git.etoilebsd.net/pkgng
 
 #### Misc
-* /var/cache/edb/dep/usr/portage.sqlite
 * man man |col -bx > /tmp/man.txt
 * check all soft links in ```/etc``` folder
