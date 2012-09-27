@@ -22,10 +22,12 @@ class Script
             DROP TABLE IF EXISTS tmp_installed_packages_ebld;
 
             CREATE TABLE IF NOT EXISTS tmp_installed_packages_ebld (
-                package_id INTEGER NOT NULL,
-                version VARCHAR NOT NULL,
-                repository VARCHAR NOT NULL,
-                source_id INTEGER NOT NULL
+                package_id INTEGER,
+                version VARCHAR,
+                repository VARCHAR,
+                source_id INTEGER,
+                slot VARCHAR,
+                eapi_id INTEGER
             );
         SQL
         Database.execute(sql_query)
@@ -47,11 +49,13 @@ class Script
         Database.select(sql_query).each do |row|
             @shared_data['package@id']["#{row[1]}/#{row[2]}"] = row[0]
         end
+
+        sql_query = 'select version, id from eapis;'
+        @shared_data['eapis@id'] = Hash[Database.select(sql_query)]
     end
 
     def process(item)
         item_path  = File.join(InstalledPackage::DB_PATH, item)
-        repo       = IO.read(File.join(item_path, 'repository')).strip
 
         category, pf = item.split('/')
         if /-r\d+$/ =~ pf
@@ -62,14 +66,16 @@ class Script
             verstion_start = /-[^-]+$/ =~ pf
         end
         package = pf[0...verstion_start]
-        version = pf[verstion_start + 1..-1]
+        eapi = IO.read(File.join(item_path, 'EAPI')).strip
 
-        Database.add_data4insert(
-            @shared_data['package@id']["#{category}/#{package}"],
-            version,
-            repo,
-            @shared_data['source@id'][InstalledPackage::DB_PATH]
-        )
+        params =  [@shared_data['package@id']["#{category}/#{package}"]]
+        params << @shared_data['source@id'][InstalledPackage::DB_PATH]
+        params << IO.read(File.join(item_path, 'repository')).strip
+        params << IO.read(File.join(item_path, 'SLOT')).strip
+        params << @shared_data['eapis@id'][eapi.to_i]
+        params << pf[verstion_start + 1..-1]
+
+        Database.add_data4insert(*params)
     end
 
     def post_insert_task
@@ -77,12 +83,14 @@ class Script
         # http://bit.ly/tLQydk
         sql_query = <<-SQL
             INSERT INTO ebuilds
-            (package_id, version, source_id, repository_id)
+            (package_id, version, source_id, repository_id, slot, eapi_id)
             SELECT
                 te.package_id,
                 te.version,
                 te.source_id,
-                r.id
+                r.id,
+                te.slot,
+                te.eapi_id
             FROM tmp_installed_packages_ebld te
             JOIN repositories r ON r.name=te.repository
             WHERE NOT EXISTS (
@@ -106,8 +114,8 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT OR IGNORE INTO tmp_installed_packages_ebld
-        (package_id, version, repository, source_id)
-        VALUES (?, ?, ?, ?);
+        (package_id, source_id, repository, slot, eapi_id, version)
+        VALUES (?, ?, ?, ?, ?, ?);
     SQL
 })
 
