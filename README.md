@@ -17,6 +17,11 @@ Something like this
 git clone git://github.com/zvasyl/portage3.git /opt/portage-next
 </pre>
 
+Setup
+-------
+
+Nothing complex, but please take a look on [it](https://github.com/zvasyl/portage3/blob/master/readmes/setup.md)
+
 
 Testing
 -------
