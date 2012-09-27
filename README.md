@@ -21,19 +21,8 @@ For now its a JFF project but if it will look solid and fast, it would be nice t
 Requirements
 -----
 
-#### Mandatory
+Nothing special. Only Ruby 1.9 and couple of gems. See [corresponding readme](https://github.com/zvasyl/portage3/blob/master/readmes/requirements.md) for details
 
-    Ruby 1.9 ( `>dev-lang/ruby-1.9.3` )
-    SQLite 3.7.x and above ( `>dev-db/sqlite-3.7` )
-    http://rubygems.org/
-    http://sqlite-ruby.rubyforge.org/
-    http://json-jruby.rubyforge.org/
-    http://nokogiri.org/
-
-#### Optional
-
-    >dev-python/pysqlite-2.6
-    >=app-portage/eix-0.25.5
 
 Installation
 -----------
