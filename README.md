@@ -18,7 +18,7 @@ Below are some things that I do not like in portage
 
 * It stores all data in plain txt files. Some things are duplicated couple of times.
 There is a possibility to store portage cache in sqlite database ([1], [2]).
-However I do not like structure of the [db](file:////var/cache/edb/dep/usr/portage.sqlite) that is used for that (one table with all stuff in it)
+However I do not like structure of the db(/var/cache/edb/dep/usr/portage.sqlite) that is used for that (one table with all stuff in it)
 * Its irritating when it takes minutes to do 'emerge -pvte world'
 * There are several places where files that related to the portage work are stored.
 * Dozen(s) of apps/tools are written that do quite general tasks in terms of PM. None of thems is not fast enough except eix
