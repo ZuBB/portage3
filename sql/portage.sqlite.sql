@@ -363,8 +363,8 @@ create table ipackage_content (
     FOREIGN KEY (type_id) REFERENCES content_item_types(id),
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, type_id, item),
     -- need to enforce somehow next cases
-	--	* hash and install_time can not be NULL in case of type is 'file'
-	--	* install_time can not be NULL in case of type is 'symlink'
+    --  * hash and install_time can not be NULL in case of type is 'file'
+    --  * install_time can not be NULL in case of type is 'symlink'
     PRIMARY KEY (id)
 );
 
