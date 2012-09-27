@@ -1,12 +1,12 @@
 Content
 -------
 
-1. <a href="#Why">Why</a>
-2. <a href="#Requirements">Requirements</a>
-3. <a href="#Installation">Installation</a>
-4. <a href="#Setup">Setup</a>
-5. <a href="#Testing">Testing</a>
-6. <a href="#Contributing">Contributing</a>
+1. <a href="#why">Why</a>
+2. <a href="#requirements">Requirements</a>
+3. <a href="#installation">Installation</a>
+4. <a href="#setup">Setup</a>
+5. <a href="#testing">Testing</a>
+6. <a href="#contributing">Contributing</a>
 
 Why
 ---
