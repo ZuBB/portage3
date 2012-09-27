@@ -39,7 +39,6 @@ class Script
         item_path  = File.join(InstalledPackage::DB_PATH, item)
 
         params << IO.read(File.join(item_path, 'SIZE')).strip
-        params << IO.read(File.join(item_path, 'SLOT')).strip
         params << IO.read(File.join(item_path, 'BUILD_TIME')).strip
         params << IO.read(File.join(item_path, 'BINPKGMD5')).strip rescue nil
 
@@ -51,8 +50,8 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
         INSERT INTO installed_packages
-        (ebuild_id, pkgsize, slot, build_time, binpkgmd5)
-        VALUES (?, ?, ?, ?, ?);
+        (ebuild_id, pkgsize, build_time, binpkgmd5)
+        VALUES (?, ?, ?, ?);
     SQL
 })
 
