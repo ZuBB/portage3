@@ -13,11 +13,11 @@ Next list of ruby gems are also mandatory
 In Gentoo Linux you can use next commans to install them
 
 ```
-emerge -pvta =dev-lang/ruby-1.9* =dev-db/sqlite-3.7*
+emerge -vta =dev-lang/ruby-1.9* =dev-db/sqlite-3.7*
 gem install sqlite3 json nokogiri
 ```
 
-**Note1**: rubygems should be also installed as dependancy for Ruby (atumatically).<br>
+**Note1**: `rubygems` should be also installed as dependancy for Ruby (atumatically).<br>
 **Note2**: maybe you should take care about `ruby_targets` environment variable in `make.conf`
 
 ###### Optional
