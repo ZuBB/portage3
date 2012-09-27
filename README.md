@@ -8,26 +8,20 @@ Requirements
 
 Nothing special. Only Ruby 1.9 and couple of gems. See [corresponding readme](https://github.com/zvasyl/portage3/blob/master/readmes/requirements.md) for details
 
-
 Installation
 -----------
 
-Something like this
-<pre>
-git clone git://github.com/zvasyl/portage3.git /opt/portage-next
-</pre>
+Installation process is described [here](https://github.com/zvasyl/portage3/blob/master/readmes/install.md)
 
 Setup
 -------
 
 Nothing complex, but please take a look on [it](https://github.com/zvasyl/portage3/blob/master/readmes/setup.md)
 
-
 Testing
 -------
 
-Take a look at files in *bin/examples* directory
-
+Most interesting part for you :) is [here](https://github.com/zvasyl/portage3/blob/master/readmes/testing.md)
 
 Contributing
 ------------
