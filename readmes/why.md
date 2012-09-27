@@ -19,5 +19,5 @@ At some moment I decided to improve my knowledge of SQL. To make this process mo
 
 For now its a JFF project but if it will look solid and fast, it would be nice to have it as addition to PM in Gentoo
 
-[1] - [http://en.gentoo-wiki.com/wiki/Portage_SQLite_Cache](http://en.gentoo-wiki.com/wiki/Portage_SQLite_Cache)
-[2] - [http://optimization.hardlinux.ru/?page_id=152]http://optimization.hardlinux.ru/?page_id=152()(rus)
+[1] - [http://en.gentoo-wiki.com/wiki/Portage_SQLite_Cache](http://en.gentoo-wiki.com/wiki/Portage_SQLite_Cache)<br>
+[2] - [http://optimization.hardlinux.ru/?page_id=152](http://optimization.hardlinux.ru/?page_id=152)(rus)
