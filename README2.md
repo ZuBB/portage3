@@ -10,6 +10,8 @@ Content
 7. [Why](#Why)
 8. [Contributing](https://github.com/zvasyl/portage3/blob/master/README2.md#Contributing)
 9. [Contributing](#Contributing)
+10. <a name="Contributing">Contributing</a>
+11. <a href="#Contributing">Contributing</a>
 
 Why
 ---
