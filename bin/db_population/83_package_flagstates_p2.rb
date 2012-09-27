@@ -18,6 +18,7 @@ class Script
 
     def process(param)
         iebuild_id = param[0]
+        #https://www.linux.org.ru/forum/general/8072082?cid=8080127
 
         return unless (file = InstalledPackage.get_file(param, 'USE'))
 
