@@ -8,6 +8,8 @@ Content
 5. Testing
 6. Contributing
 7. [Why](#Why)
+8. [Contributing](https://github.com/zvasyl/portage3/blob/master/README2.md#Contributing)
+9. [Contributing](#Contributing)
 
 Why
 ---
