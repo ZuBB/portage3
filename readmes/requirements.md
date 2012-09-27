@@ -25,7 +25,6 @@ gem install sqlite3 json nokogiri
 There is also optional dependancies. Usually you should not need them unless you are doing some develoment/hacking
 
 ```
-    >dev-python/pysqlite-2.6
-    >=app-portage/eix-0.25.5
+>dev-python/pysqlite-2.6
+>=app-portage/eix-0.25.5
 ```
-
