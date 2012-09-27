@@ -1,12 +1,13 @@
 Content
 -------
 
-1. [Why][]
+1. [Why](https://github.com/zvasyl/portage3/blob/master/README2.md#Why)
 2. Requirements
 3. Installation
 4. Setup
 5. Testing
 6. Contributing
+7. [Why](#Why)
 
 Why
 ---
