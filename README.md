@@ -1,7 +1,7 @@
 Why
 ---
 
-[Here](https://github.com/zvasyl/portage3/blob/master/readmes/why.md) are reasond why I am doing this.
+[Here](https://github.com/zvasyl/portage3/blob/master/readmes/why.md) are reasons why I am doing this.
 
 Requirements
 -----
