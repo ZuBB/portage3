@@ -72,6 +72,7 @@ class Ebuild < Package
     end
 
     def ebuild_use_flags(method = nil)
+        # http://devmanual.gentoo.org/general-concepts/use-flags/index.html
         get_value('iuse', method)
     end
 
