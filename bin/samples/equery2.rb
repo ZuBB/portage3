@@ -45,23 +45,24 @@ cli = OptionParser.new do |opts|
     end
 
     opts.on("-a", "--has STRING", "list all packages for matching ENVIRONMENT data stored in /var/db/pkg") do |value|
-        options[:db_filename] = value
+        options['has'] = value
     end
 
     opts.on("-h", "--hasuse STRING", "list all packages that have USE flag") do |value|
-        options[:db_filename] = value
+        options['hasuse'] = true
+        options['atom'] = value
     end
 
     opts.on("-y", "--keywords STRING", "display keywords for specified PKG") do |value|
-        options[:db_filename] = value
+        options['keywords'] = value
     end
 
     opts.on("-l", "--list STRING", "list package matching PKG") do |value|
-        options[:db_filename] = value
+        options['list'] = value
     end
 
     opts.on("-m", "--meta STRING", "display metadata about PKG") do |value|
-        options[:db_filename] = value
+        options['meta'] = value
     end
 
     opts.on("-s", "--size STRING", "display total size of all files owned by PKG") do |value|
@@ -70,7 +71,7 @@ cli = OptionParser.new do |opts|
     end
 
     opts.on("-u", "--uses STRING", "display USE flags for PKG") do |value|
-        options[:db_filename] = value
+        options['uses'] = value
     end
 
     opts.on("-w", "--which STRING", "print full path to ebuild for PKG") do |value|
@@ -94,7 +95,7 @@ end
 options['db_filename'] ||= Utils.get_database
 Database.init(options['db_filename'])
 
-unless options['belongs']
+if !options['belongs'] || !options['hasuse']
 	atom       = Equery.get_atom_specs(options['atom'])
 	package_id = Equery.get_package_id(atom)
 	ebuild_id  = Equery.get_ebuild_id(atom, package_id)
@@ -115,10 +116,23 @@ output = case
              params = [package_id]
              params << ebuild_id unless atom['version'].nil?
              Equery::EqueryFiles.list_package_files(*params)
+         when options['has']
+             'Will not be implemented in close future'
+         when options['hasuse']
+             #Equery::EqueryHasUse.get_packages_by_use(options['atom'])
+             'WIP'
+         when options['keywords']
+             'Not implemented yet'
+         when options['list']
+             'Not implemented yet'
+         when options['meta']
+             'Will not be implemented in close future'
          when options['size']
              params = [package_id]
              params << ebuild_id unless atom['version'].nil?
              Equery::EquerySize.get_package_size(*params)
+         when options['uses']
+             'Not implemented yet'
          when options['which']
              Equery::EqueryWhich.get_ebuild_path(ebuild_id)
          else
@@ -126,3 +140,4 @@ output = case
          end
 
 puts output
+
