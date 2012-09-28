@@ -216,18 +216,18 @@ module Equery::EqueryBelongs
     SQL
 
     def self.get_iebuild_by_item(item)
-		abs_path = File.expand_path(item)
-		unless File.exist?(abs_path)
-			return 'Passed string is not valid filepath'
-		end
+        abs_path = File.expand_path(item)
+        unless File.exist?(abs_path)
+            return 'Passed string is not valid filepath'
+        end
 
         unless (result = Database.select(SQL, abs_path)).empty?
-			output = []
-			result.each do |row|
-				output << "#{row[0]}/#{row[1]}-#{row[2]} (#{abs_path})"
-			end
+            output = []
+            result.each do |row|
+                output << "#{row[0]}/#{row[1]}-#{row[2]} (#{abs_path})"
+            end
 
-			output.join("\n")
+            output.join("\n")
         else
             'Can not determine size of the package that is not installed'
         end
@@ -252,14 +252,14 @@ module Equery::EqueryFiles
         JOIN installed_packages ip ON ip.ebuild_id = e.id
         JOIN ipackage_content ipc ON ipc.iebuild_id = ip.id
         WHERE e.SEARCH_FIELD = ?
-		ORDER BY ipc.item ASC;
+        ORDER BY ipc.item ASC;
     SQL
 
     def self.list_package_files(package_id, ebuild_id = nil)
-		output = []
+        output = []
         atom = Database.select(SQL1, package_id).flatten
-		atom_str = "#{atom[0]}/#{atom[1]}-#{atom[2]}"
-		output <<  " * Contents of #{atom_str}:"
+        atom_str = "#{atom[0]}/#{atom[1]}-#{atom[2]}"
+        output <<  " * Contents of #{atom_str}:"
 
         params = [(ebuild_id.nil?() ? package_id : ebuild_id)]
         sql_query = SQL2.clone.sub(
@@ -268,12 +268,103 @@ module Equery::EqueryFiles
         )
 
         unless (result = Database.select(sql_query, params)).empty?
-			result.flatten.each { |item| output << item }
+            result.flatten.each { |item| output << item }
         else
-			output << "No installed packages matching '#{atom_str}'"
+            output << "No installed packages matching '#{atom_str}'"
         end
 
-		output.join("\n")
+        output.join("\n")
+    end
+end
+
+module Equery::EqueryHasUse
+    SQL1 = <<-SQL
+        SELECT
+            p.id,
+            e.id,
+            c.name,
+            p.name,
+            e.version
+        FROM ebuilds e
+        JOIN packages p ON p.id = e.package_id
+        JOIN categories c ON c.id = p.category_id
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        JOIN ipackage_flagstates pf ON pf.iebuild_id = ip.id
+        JOIN flags f ON f.id = pf.flag_id
+        WHERE f.name = ?;
+    SQL
+
+    SQL2 = <<-SQL
+        SELECT r.name
+        FROM repositories r
+        JOIN ebuilds e ON e.repository_id = r.id
+        JOIN packages p ON p.id = e.package_id
+        JOIN categories c ON c.id = p.category_id
+        WHERE c.name = ? AND p.name = ? AND e.version = ?;
+    SQL
+
+    SQL3 = <<-SQL
+        SELECT k.name
+        FROM ebuilds e
+        JOIN ebuilds_keywords ek ON ek.ebuild_id = e.id
+        JOIN keywords k ON k.id = ek.keyword_id
+        WHERE
+            e.id = ? AND
+            ek.arch_id = (
+                SELECT value FROM system_settings WHERE param='arch'
+            )
+        ORDER BY ek.source_id, ek.id DESC
+        LIMIT 1;
+    SQL
+
+    SQL4 = <<-SQL
+        SELECT e.mtime, ms.state
+        FROM ebuilds e
+        JOIN ebuilds_masks em ON em.ebuild_id = e.id
+        LEFT JOIN mask_states ms ON ms.id = em.state_id
+        WHERE
+            e.id = ? AND
+            em.arch_id = (
+                SELECT value FROM system_settings WHERE param='arch'
+            )
+        ORDER BY em.source_id, em.id DESC
+        LIMIT 1;
+    SQL
+
+    SQL5 = <<-SQL
+        SELECT ip.slot
+        FROM ebuilds e
+        JOIN installed_packages ip ON ip.ebuild_id = e.id
+        WHERE e.id = ?;
+    SQL
+
+    def self.get_packages_by_use(item)
+        output = [" * Searching for USE flag '#{item}'..."]
+
+        Database.select(SQL1, item).each do |row|
+            params_sql2 = [row[2], row[3], row[4]]
+            repos = Database.select(SQL2, params_sql2).flatten
+            gentoo_repo_mark = repos.include?('gentoo') ? 'P' : '-'
+            overlays_mark = !(repos.reject { |r| r == 'gentoo' }.empty?) ? 'O' : '-'
+            _1st_bracket = "[I#{gentoo_repo_mark}#{overlays_mark}]"
+
+            keyword = Database.get_1value(SQL3, row[1])
+            keyword_str = keyword.nil?() ? '?' : (keyword == 'stable' ? ' ' : '~')
+            p row
+            p keyword
+
+            mask = Database.select(SQL4, row[1]).flatten
+            p mask
+            mask_str = mask.empty?() ? '-' : (mask[1] == 'masked' ? 'M' : ' ')
+
+            _2nd_bracket = "[#{keyword_str}#{mask_str}]"
+            slot = Database.get_1value(SQL5, row[1])
+            atom_str = "#{row[2]}/#{row[3]}-#{row[4]}"
+
+            output << "#{_1st_bracket} #{_2nd_bracket} #{atom_str}:#{slot}"
+        end
+
+        output.join("\n")
     end
 end
 
