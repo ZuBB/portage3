@@ -25,14 +25,17 @@ class Script
     def process(params)
         PLogger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
-        ebuild.ebuild_use_flags.split.each do |flag|
-            flag_name = UseFlag.get_flag(flag)
-            flag_state = UseFlag.get_flag_state(flag)
-            Database.add_data4insert(flag_name,
-                                     @shared_data['state@id'][flag_state],
-                                     ebuild.ebuild_id,
-                                     @shared_data['source@id']['ebuilds']
-                                    )
+        # NOTE we need here `.uniq()` because results of command like this
+        # `portageq metadata / ebuild www-client/firefox-10.0.5 IUSE`
+        # may return duplicated flags.
+        # I did not make any checks on state of the flag that is being returned
+        ebuild.ebuild_use_flags.split.uniq.each do |flag|
+            params =  [UseFlag.get_flag(flag)]
+            params << ebuild.package_id
+            params << @shared_data['state@id'][UseFlag.get_flag_state(flag)]
+            params << ebuild.ebuild_id
+            params << @shared_data['source@id']['ebuilds']
+            Database.add_data4insert(params)
         end
     end
 
@@ -47,7 +50,14 @@ script = Script.new({
             (
                 SELECT id
                 FROM flags
-                WHERE name=?
+                WHERE
+                    name=? AND
+                    (
+                        -- case for local flag
+                        package_id = ? OR
+                        -- case for flag of all another types (except unknown)?
+                        (package_id IS NULL)
+                    )
                 ORDER BY type_id ASC
                 LIMIT 1
             ),
