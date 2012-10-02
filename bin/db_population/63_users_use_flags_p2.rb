@@ -7,7 +7,6 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require_relative 'envsetup'
-require 'useflag'
 
 def get_data(params)
     IO.read('/etc/portage/package.use').split("\n")
