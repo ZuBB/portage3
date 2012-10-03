@@ -19,18 +19,33 @@ class Script
             DROP TABLE IF EXISTS tmp_etc_port_flags;
 
             CREATE TABLE IF NOT EXISTS tmp_etc_port_flags (
-                name VARCHAR UNIQUE NOT NULL
+                name VARCHAR NOT NULL,
+				package_id INTEGER
             );
         SQL
         Database.execute(sql_query)
+
+        @shared_data['atom@id'] = {}
+        sql_query = <<-SQL
+            select c.name, p.name, p.id
+            from packages p
+            join categories c on p.category_id=c.id;
+        SQL
+        Database.select(sql_query).each do |row|
+            key = row[0] + '/' + row[1]
+            @shared_data['atom@id'][key] = row[2]
+        end
     end
 
     def process(line)
         return if /^\s*#/ =~ line
         line.sub!(/#.*$/, '')
-        line.split.drop(1).each { |flag|
+        words = line.split
+		atom = words.delete_at(0)
+        words.each { |flag|
             flag_name = UseFlag.get_flag(flag)
-            Database.add_data4insert(flag_name) unless flag_name == '*'
+            next if flag_name == '*'
+			Database.add_data4insert(flag_name, @shared_data['atom@id'][atom])
         }
     end
 
@@ -47,7 +62,12 @@ class Script
             SELECT tf.name, #{type_id}, #{source_id}
             FROM tmp_etc_port_flags tf
             WHERE NOT EXISTS (
-                SELECT name FROM flags f WHERE f.name = tf.name
+                SELECT name
+				FROM flags f
+				WHERE
+					(f.name = tf.name AND f.package_id IS NULL) OR 
+					(f.name = tf.name AND tf.package_id = f.package_id)
+
             );
         SQL
 
@@ -62,7 +82,7 @@ end
 script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => <<-SQL
-        INSERT OR IGNORE INTO tmp_etc_port_flags (name) VALUES (?);
+        INSERT OR IGNORE INTO tmp_etc_port_flags (name, package_id) VALUES (?, ?);
     SQL
 })
 
