@@ -48,7 +48,8 @@ class Script
         flags.each do |flag|
             params = params_c.dup
             params << UseFlag.get_flag(flag)
-            params << @shared_data['state@id'][UseFlag.get_flag_state(flag)]
+            params << params_c.last
+            params << @shared_data['state@id'][UseFlag.get_flag_state2(flag)]
             Database.add_data4insert(params)
         end
     end
@@ -72,7 +73,19 @@ script = Script.new({
         VALUES (
             ?,
             ?,
-            (SELECT id FROM flags WHERE name=? ORDER BY type_id ASC LIMIT 1),
+            (
+                SELECT id
+                FROM flags
+                WHERE
+                    name=? AND
+                    (
+                        (package_id = ?) OR
+                        -- NOTE we may need to exclude type='unknown'
+                        (package_id IS NULL)
+                    )
+                ORDER BY type_id ASC
+                LIMIT 1
+            ),
             ?
         );
     SQL
