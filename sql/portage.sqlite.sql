@@ -257,6 +257,7 @@ create table ebuilds_masks (
     PRIMARY KEY (id)
 );
 
+-- TODO add check(s)
 create table flags_states (
     id INTEGER,
     package_id INTEGER,
@@ -271,6 +272,8 @@ create table flags_states (
     FOREIGN KEY (package_id) REFERENCES packages(id),
     PRIMARY KEY (id)
 );
+
+CREATE INDEX flags_states_idx3 on flags_states(package_id, ebuild_id);
 
 create table ebuilds_license_specs (
     id INTEGER,
