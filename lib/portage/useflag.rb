@@ -7,14 +7,15 @@
 class UseFlag
     ENTITY = self.name.downcase[0..-7]
     TYPES = ['unknown', 'hidden', 'expand', 'local', 'global']
-    STATES = ['masked', 'disabled', 'enabled', 'forced']
+    STATES = ['unknown', 'masked', 'disabled', 'enabled', 'forced']
     SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
         'expand' => Regexp.new('([\\w\\+\\-@]+)(?:\\s+-\\s+)(.*)'),
         'hidden' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
         'global' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
-        'state' => Regexp.new('^[^\\w]?')
+        # app-doc/pms section 8.2
+        'state' => Regexp.new('^[\-\+!]{0,2}')
     }
 
     def self.pre_insert_task(type)
@@ -41,13 +42,22 @@ class UseFlag
     end
 
     def self.get_flag_state(flag)
-        # app-doc/pms section 8.2
         sign = REGEXPS['state'].match(flag).to_s
         case sign
+        # https://www.linux.org.ru/forum/general/8292958?cid=8293106
         when '-' then 'disabled'
         when '+' then 'enabled'
-        when '' then 'enabled'
-        else nil
+        when ''  then 'disabled'
+        else 'unknown'
+        end
+    end
+
+    def self.get_flag_state2(flag)
+        sign = REGEXPS['state'].match(flag).to_s
+        case sign
+        when ''  then 'enabled'
+        when '-' then 'disabled'
+        else 'unknown'
         end
     end
 
