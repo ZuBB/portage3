@@ -17,7 +17,7 @@ end
 
 class Script
     SOURCE = '/etc/make.conf'
-	TYPE = 'global'
+    TYPE = 'global'
 
     def pre_insert_task
         sql_query = 'select id from sources where source=?;'
@@ -37,7 +37,9 @@ class Script
     def process(flag_spec)
         flag = UseFlag.get_flag(flag_spec)
         flag_id = @shared_data['flag@id'][TYPE][flag]
-        flag_state = UseFlag.get_flag_state(flag_spec)
+        # we have to use different method for getting state of flag
+        # because of https://github.com/zvasyl/portage3/wiki/Collisions-in-Gentoo
+        flag_state = UseFlag.get_flag_state2(flag_spec)
         flag_state_id = @shared_data['state@id'][flag_state]
         source_id = @shared_data['source@id'][SOURCE]
         Database.add_data4insert(flag_id, flag_state_id, source_id)
