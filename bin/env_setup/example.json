@@ -11,11 +11,6 @@
             "tree_home": "/dev/shm/portage",
             "log_home": "/dev/shm",
             "db_home": "/dev/shm"
-        },
-        "gentoo production": {
-            "tree_home": "${PORTDIR}",
-            "log_home": "/var/log/portage/cache",
-            "db_home": "/var/cache"
         }
     }
 }
