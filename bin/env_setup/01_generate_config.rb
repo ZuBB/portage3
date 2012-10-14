@@ -64,10 +64,10 @@ def get_profile
     `eselect --brief profile show`.strip
 end
 
-config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'config']
+config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'data']
 settings_dir = File.expand_path(File.join(*config_path_parts))
 settings_file = File.join(settings_dir, 'settings.json')
-example_file = File.join(settings_dir, 'example.json')
+example_file = File.join(File.dirname(__FILE__), 'example.json')
 run_checks(settings_dir, example_file, settings_file)
 
 begin
@@ -77,8 +77,14 @@ rescue
     exit(1)
 end
 
-if data['gentoo_os'] = gentoo_os?
-    emerge_info = get_emerge_info + "\nPROFILE=#{get_profile}"
+if (data['gentoo_os'] = gentoo_os?) == true
+    print 'Getting output of `emerge --info`..'
+    STDOUT.flush
+
+    emerge_info = get_emerge_info
+    puts ' Done'
+
+    emerge_info << "\nPROFILE=#{get_profile}"
     File.open(File.join(settings_dir, 'emerge_info'), 'w') { |file|
         file.write(emerge_info)
     }
@@ -88,10 +94,22 @@ if data['gentoo_os'] = gentoo_os?
         sys_tree_home = "/usr/portage"
     end
 
-    data['deployments']['gentoo production']['tree_home'] = sys_tree_home
+    data['deployments'].each_value do |deployment|
+        if deployment['tree_home'].include?('${PORTDIR}')
+            deployment['tree_home'] = sys_tree_home
+        end
+    end
+
     data['overlay_support'] = get_overlay_support(data['overlay_support'])
 else
     data['overlay_support'] = false
+end
+
+data_dir_path = File.absolute_path(File.join(File.dirname(__FILE__), EnvSetup.get_path2root))
+data['deployments'].each_value do |deployment|
+    deployment.each_value do |path|
+        path.sub!('${APPROOT}', data_dir_path)
+    end
 end
 
 deploy_type = get_deploy_type(data['deployments'], data['deploy_type'])
