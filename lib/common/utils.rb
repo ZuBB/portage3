@@ -30,7 +30,7 @@ module Utils
     end
 
     def self.get_settings(settings_file = 'settings.json')
-        config_path_parts = [File.dirname(__FILE__), '../..', 'config']
+        config_path_parts = [File.dirname(__FILE__), '../..', 'data']
         settings_dir = File.expand_path(File.join(*config_path_parts))
         settings_file = File.join(settings_dir, settings_file)
 
