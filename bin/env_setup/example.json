@@ -1,6 +1,6 @@
 {
     "config_version": 1,
-    "deploy_type": "local",
+    "deploy_type": "debug",
     "gentoo_os": true,
     "new_profiles": "profiles2",
     "overlay_support": false,
