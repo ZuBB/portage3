@@ -136,14 +136,18 @@ if options["recreate_tree"] || !File.exist?(portage_home)
     puts "Done"
 end
 
-sys_tree_home = Parser.get_multi_line_ini_value(
-	IO.read(File.join(
-		File.dirname(__FILE__),
-		EnvSetup.get_path2root,
-		'config',
-		'emerge_info'
-	)).lines.to_a, 'PORTDIR'
-)
+if Utils::SETTINGS['gentoo_os']
+    sys_tree_home = Parser.get_multi_line_ini_value(
+        IO.read(File.join(
+            File.dirname(__FILE__),
+            EnvSetup.get_path2root,
+            'data',
+            'emerge_info'
+        )).lines.to_a, 'PORTDIR'
+    )
+else
+    sys_tree_home = nil
+end
 
 if options['sync_tree'] && root_path != sys_tree_home
     print "Starting syncing portage snapshot with system tree.. "
