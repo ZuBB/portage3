@@ -9,7 +9,7 @@
 require_relative 'envsetup'
 
 def get_data(params)
-    path = File.join(params['profiles2_home'], 'profiles.desc')
+    path = File.join(params['profiles_home'], 'profiles.desc')
     results = %x[grep -oP '\t[a-z]*$' #{path}].split("\n") rescue []
     # drop first item since its a header
     results.shift

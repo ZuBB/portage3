@@ -52,7 +52,7 @@ class Repository
     end
 
     def self.get_repositories(params = {})
-        repo_file = File.join(params['profiles2_home'], 'repo_name')
+        repo_file = File.join(params['profiles_home'], 'repo_name')
 
         self.get_layman_repositories
         .unshift({

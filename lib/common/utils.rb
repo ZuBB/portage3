@@ -50,13 +50,10 @@ module Utils
 
     def self.get_pathes
         portage_home = SETTINGS['tree_home']
-        profiles_home = File.join(portage_home, "profiles")
-        new_profiles_home = File.join(portage_home, SETTINGS['new_profiles'])
+        profiles_home = File.join(portage_home, 'profiles')
 
         {
             'tree_home' => portage_home,
-            'profiles2_home' => new_profiles_home,
-            # TODO check if it can be removed
             'profiles_home' => profiles_home
         }
     end
@@ -65,8 +62,8 @@ module Utils
         SETTINGS['tree_home']
     end
 
-    def self.get_profiles2_home
-        File.join(SETTINGS['tree_home'], SETTINGS['new_profiles'])
+    def self.get_profiles_home
+        File.join(SETTINGS['tree_home'], 'profiles')
     end
 
     def self.get_db_home

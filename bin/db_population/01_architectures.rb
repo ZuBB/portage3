@@ -11,7 +11,7 @@ require_relative 'envsetup'
 def get_data(params)
     # NOTE we need to add those as they are used later
     results = ['x64', 'sparc64']
-    filename = File.join(params['profiles2_home'], 'arch.list')
+    filename = File.join(params['profiles_home'], 'arch.list')
 
     IO.foreach(filename) do |line|
         # break if we come down to prefixes

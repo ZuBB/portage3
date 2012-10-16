@@ -10,7 +10,7 @@ require_relative 'envsetup'
 
 def get_data(params)
     results = []
-    filename = File.join(params['profiles2_home'], 'profiles.desc')
+    filename = File.join(params['profiles_home'], 'profiles.desc')
 
     IO.foreach(filename) do |line|
         break if line.include?('Gentoo Prefix profiles')

@@ -11,11 +11,11 @@ require 'useflag'
 require 'parser'
 
 def get_data(params)
-    filename = File.join(params['profiles2_home'], 'base', 'make.defaults')
+    filename = File.join(params['profiles_home'], 'base', 'make.defaults')
     content = IO.read(filename).split("\n")
     exceptions = Parser.get_multi_line_ini_value(content, 'USE_EXPAND_HIDDEN').split
 
-    Dir.glob(File.join(params['profiles2_home'], 'desc', '*desc')).reject { |file|
+    Dir.glob(File.join(params['profiles_home'], 'desc', '*desc')).reject { |file|
         exceptions.include?(File.basename(file, '.desc').upcase)
     }
 end

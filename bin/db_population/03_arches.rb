@@ -10,7 +10,7 @@ require_relative 'envsetup'
 
 def get_data(params)
     results = []
-    filename = File.join(params['profiles2_home'], 'arch.list')
+    filename = File.join(params['profiles_home'], 'arch.list')
 
     IO.foreach(filename) do |line|
         line.strip!

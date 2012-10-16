@@ -10,7 +10,7 @@ require_relative 'envsetup'
 require 'useflag'
 
 def get_data(params)
-    filename = File.join(params['profiles2_home'], 'use.desc')
+    filename = File.join(params['profiles_home'], 'use.desc')
     (IO.read(filename).split("\n") rescue []).select { |line|
         !line.start_with?('#') && /\S+/ =~ line
     }
