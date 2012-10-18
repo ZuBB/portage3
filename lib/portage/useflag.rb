@@ -6,7 +6,7 @@
 #
 class UseFlag
     ENTITY = self.name.downcase[0..-7]
-    TYPES = ['unknown', 'hidden', 'expand', 'local', 'global']
+    TYPES = ['unknown', 'arch', 'hidden', 'expand', 'local', 'global']
     STATES = ['unknown', 'masked', 'disabled', 'enabled', 'forced']
     SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
     REGEXPS = {
@@ -41,6 +41,7 @@ class UseFlag
         flag.sub(REGEXPS['state'], '')
     end
 
+    # used in ebuilds
     def self.get_flag_state(flag)
         sign = REGEXPS['state'].match(flag).to_s
         case sign
@@ -52,6 +53,7 @@ class UseFlag
         end
     end
 
+    # used in make.conf
     def self.get_flag_state2(flag)
         sign = REGEXPS['state'].match(flag).to_s
         case sign
