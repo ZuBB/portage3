@@ -19,7 +19,7 @@ options = {
     "snapshot_name" => 'portage-latest.tar.bz2',
     "required_space" => 700,
     "recreate_tree" => false,
-    "sync_tree" => true
+    "sync_tree" => Utils::SETTINGS['gentoo_os']
 }
 
 # lets merge stuff from tools lib
@@ -41,8 +41,10 @@ OptionParser.new do |opts|
         options["recreate_tree"] = value
     end
 
-    opts.on("-s", "--[no-]sync-tree", "Sync downloaded tree with system's one (default is true)") do |value|
-        options["sync_tree"] = value
+    if Utils::SETTINGS['gentoo_os']
+        opts.on("-s", "--[no-]sync-tree", "Sync downloaded tree with system's one (default is true)") do |value|
+            options["sync_tree"] = value
+        end
     end
 
     opts.on("-u", "--url STRING", "URL for downloading custom portage snapshot") do |value|
