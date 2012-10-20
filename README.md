@@ -5,8 +5,7 @@ Content
 2. <a href="#requirements">Requirements</a>
 3. <a href="#installation">Installation</a>
 4. <a href="#setup">Setup</a>
-5. <a href="#testing">Testing</a>
-6. <a href="#contributing">Contributing</a>
+5. <a href="#status">Status</a>
 
 Why
 ---
@@ -18,7 +17,7 @@ Below are some things that I do not like in portage
 
 * It stores all data in plain txt files. Some things are duplicated couple of times.
 There is a possibility to store portage cache in sqlite database ([1], [2]).
-However I do not like structure of the db(/var/cache/edb/dep/usr/portage.sqlite) that is used for that (one table with all stuff in it)
+However I do not like structure of the db(/var/cache/edb/dep/usr/portage.sqlite) that is used (one table with all stuff in it)
 * Its irritating when it takes minutes to do 'emerge -pvte world'
 * There are several places where files that related to the portage work are stored.
 * Dozen(s) of apps/tools are written that do quite general tasks in terms of PM. None of thems is not fast enough except eix
@@ -69,11 +68,9 @@ There is also optional dependancies. Usually you should not need them unless you
 Installation
 -----------
 
-Currently AFAIK this tool is not available in any [Gentoo overlay](http://www.gentoo.org/proj/en/overlays/userguide.xml)
-
-Due to this most simple way to try it is to do a `git clone` operation
+Currently this tool does not follow FHS. Due to this most simple way to get it is to do a `git clone` operation
 <pre>
-git clone git://github.com/zvasyl/portage3.git /opt/portage-next
+git clone git@github.com:ZuBB/portage3.git [/path]
 </pre>
 
 Setup
@@ -81,16 +78,7 @@ Setup
 
 **TBD**
 
-Testing
+Status
 -------
 
-This is most interesting part for you :)
-
-Take a look at files in *bin/examples* directory
-
-Everything else **TBD**
-
-Contributing
-------------
-
-[As usual](https://github.com/github/markup/#contributing-1)
+Currently its in experimental status. For list of features that I would like to see in **prototype** see 'Short term tasks' part of [issues file](https://github.com/ZuBB/portage3/blob/master/issues.md) After prototype will be completed I decide what to do with it: freeze or continue to develop
