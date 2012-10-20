@@ -81,6 +81,10 @@
 * logger
     + before loggin db issue itself, need to log original(using HRF) data
 * scripts
+    + check scripts (\d\d_\w+\.check\.rb)
+		- where to place
+		- when to run
+		- best format
     + find faster way of getting available EAPIs
     + check what homepages are similar and report? them to devs
     + check what descriptions are similar and report? them to devs
