@@ -36,7 +36,6 @@
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + ~~calling scripts for all in theirs forlder~~
-    + get all expand use flags from make.conf
     + new path of make.conf
 * examples:
     + examples for use flags stuff, dependancies, installed stuff
@@ -75,6 +74,7 @@
 * logger
     + before loggin db issue itself, need to log original(using HRF) data
 * scripts
+    + get all expand use flags from make.conf
     + check scripts (\d\d_\w+\.check\.rb)
 		- where to place
 		- when to run
