@@ -30,13 +30,9 @@
 * scripts
     + ~~homepages: db, scripts, checks~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
-    + ebuild licences: db, licences without deps, licences with logical 'or', conditional licences
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
     + dependancies: db, scripts
     + ~~installed stuff: db, scripts, 'missed' ebuilds~~, use flags
-* profiles
-    + **find solution for use flags & profiles**
-    + `No such file or directory - /dev/shm/portage/profiles2/arch.list (Errno::ENOENT)`
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + ~~calling scripts for all in theirs forlder~~
@@ -45,9 +41,7 @@
 * examples:
     + examples for use flags stuff, dependancies, installed stuff
     + statistics on what is in db
-* installation
-    * setup instructions
-    * gemfile
+* readme
 
 #### Long term tasks
 * Python
@@ -85,6 +79,7 @@
 		- where to place
 		- when to run
 		- best format
+    + ebuild licences: db, licences without deps, licences with logical 'or', conditional licences
     + find faster way of getting available EAPIs
     + check what homepages are similar and report? them to devs
     + check what descriptions are similar and report? them to devs
