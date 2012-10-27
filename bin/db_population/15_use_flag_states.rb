@@ -11,6 +11,6 @@ require 'useflag'
 
 script = Script.new({
     'data_source' => Proc.new { UseFlag::STATES },
-    'sql_query' => 'INSERT INTO flag_states (state) VALUES (?);'
+    'sql_query' => 'INSERT INTO flag_states (state, status) VALUES (?, ?);'
 })
 
