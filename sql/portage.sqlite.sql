@@ -94,6 +94,7 @@ create table flag_types (
 create table flag_states (
     id INTEGER,
     state VARCHAR NOT NULL UNIQUE,
+    status VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 
