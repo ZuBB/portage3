@@ -7,7 +7,13 @@
 class UseFlag
     ENTITY = self.name.downcase[0..-7]
     TYPES = ['unknown', 'arch', 'hidden', 'expand', 'local', 'global']
-    STATES = ['unknown', 'masked', 'disabled', 'enabled', 'forced']
+    STATES = [
+        ['unknown', 'unknown'],
+        ['masked', 'disabled'],
+        ['disabled', 'disabled'],
+        ['enabled', 'enabled'],
+        ['forced', 'enabled'],
+    ]
     SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
