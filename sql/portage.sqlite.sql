@@ -261,6 +261,7 @@ create table ebuilds_masks (
 -- TODO add check(s)
 create table flags_states (
     id INTEGER,
+    profile_id INTEGER,
     package_id INTEGER,
     ebuild_id INTEGER,
     flag_id INTEGER NOT NULL,
