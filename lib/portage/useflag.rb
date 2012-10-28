@@ -69,6 +69,27 @@ class UseFlag
         end
     end
 
+    # used in use.force
+    def self.get_flag_state3(flag)
+        sign = REGEXPS['state'].match(flag).to_s
+        case sign
+        when ''  then 'forced'
+        # TODO what is the best value for '-' here
+        when '-' then 'disabled'
+        else 'unknown'
+        end
+    end
+
+    # used in use.mask
+    def self.get_flag_state4(flag)
+        sign = REGEXPS['state'].match(flag).to_s
+        case sign
+        when ''  then 'masked'
+        when '-' then 'enabled'
+        else 'unknown'
+        end
+    end
+
     def self.expand_asterix_flag(line, package_id)
         sql_query = <<-SQL
             select distinct f.name
