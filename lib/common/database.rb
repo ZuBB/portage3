@@ -10,44 +10,45 @@ require 'thread'
 
 module Database
     @database = nil
-    @sql_queries = []
-    @statements = []
-    @totals = {}
+    @statements = {}
     @data4db = Queue.new
-    @workers_running = true
     @semaphore = Mutex.new
     Thread.abort_on_exception = true
     @thread = Thread.new do
         Thread.current.priority = 1
-        Thread.current['passed'] = 0
-        Thread.current['failed'] = 0
         Thread.current["name"] = "db worker"
 
-        while (self.is_workers_running? ? true : @data4db.size > 0)
-            data2insert = @data4db.pop()
+        while true
+            hash = @data4db.pop
+
+            if hash['data'] == ['DB:EOT']
+                self.close_statement(hash['id'])
+                next
+            end
+
+            break if hash['data'] == ['DB:EOS']
 
             begin
-                # TODO full support of the multiple statements
-                @statements[0].execute(*data2insert)
-                Thread.current['passed'] += 1
+                @statements[hash['id']].execute(*hash['data'])
+                Thread.current[hash['id']]['passed'] += 1
             rescue SQLite3::Exception => exception
-                PLogger.group_log([
+                PLogger.group_log(hash['id'], [
                     [3, "#{'>' * 20} database exception happened #{'>' * 20}"],
                     [1, "Message: #{exception.message}"],
-                    [1, "Values: #{data2insert.inspect}"],
+                    [1, "Values: #{(hash['raw_data'] || hash['data']).inspect}"],
                     [1, "#{'<' * 69}"]
                 ])
-                Thread.current['failed'] += 1
+                Thread.current[hash['id']]['failed'] += 1
             end
         end
     end
 
-    def self.init(db_filename, queries = nil)
+    def self.init(db_filename = '')
         filename_valid = true
+
         if db_filename.is_a?(String) && !db_filename.empty?
             if File.exist?(db_filename)
-                filetype = `file -b #{db_filename}`
-                filename_valid &= !filetype.match(/sqlite/i).nil?
+                filename_valid &= /sqlite/i =~ `file -b #{db_filename}`
                 filename_valid &= File.writable?(db_filename)
             else
                 filename_valid &= File.writable?(File.dirname(db_filename))
@@ -61,29 +62,33 @@ module Database
         end
 
         @database = SQLite3::Database.new(db_filename)
-
-        # TODO merge next if and 'validate_query' function
-        if queries
-            if queries.is_a?(Array)
-                queries.each { |query| self.validate_query(query) }
-            elsif queries.is_a?(String)
-                self.validate_query(queries)
-            else
-                throw "Passed sql query is not valid"
-            end
-        end
+        @database.transaction
     end
 
-    def self.validate_query(query)
-        unless @database.complete?(query)
-            @database.close
-            @sql_queries = nil
-            throw "Passed sql query is not valid"
+    def self.validate_query(id, query = '')
+        result = nil
+
+        if query.is_a?(String) && !query.empty? && @database.complete?(query)
+            @semaphore.synchronize {
+                @statements[id] = @database.prepare(query)
+            }
+
+            @thread[id] = {
+                'passed' => 0,
+                'failed' => 0
+            }
+
+            PLogger.log_info_block(id, query)
+            result = true
+        else
+            result = false
+            PLogger.fatal(id, "Passed sql query is not valid")
         end
-        @sql_queries << query
+
+        result
     end
 
-    def self.add_data4insert(*item)
+    def self.add_data4insert(item)
         @data4db << item
     end
 
@@ -99,57 +104,31 @@ module Database
         @database.get_first_value(sql_query, *values)
     end
 
-    def self.last_inserted_id()
+    def self.last_inserted_id
         @database.get_first_value("SELECT last_insert_rowid();")
     end
 
-    def self.prepare_bunch_insert
-        @database.transaction()
-        @sql_queries.each { |query|
-            @statements << @database.prepare(query)
-        }
+    def self.end_of_task(id)
+        self.add_data4insert({'id' => id, 'data' => ['DB:EOT']})
     end
 
-    def self.is_workers_running?
-        @semaphore.synchronize { @workers_running }
+    def self.close_statement(id)
+        @statements[id].reset!
+        @statements[id].close
+        @semaphore.synchronize { @statements.delete(id) }
     end
 
-    def self.set_workers_done
-        # FIXME this is ugly hacks
-        print (@thread['passed'] + @thread['failed']).to_s + "\n"
-        print "#{@data4db.size}\n"
-        sleep(1)
-        sleep(0.1) while @thread.status != 'sleep'
-        # NOTE - end of hacks
-        @semaphore.synchronize { @workers_running = false }
-    end
-
-    def self.finalize_bunch_insert
-        # FIXME this is ugly hacks
-        sleep(0.2) while @thread.status != 'sleep' && @data4db.size > 0
-        sleep(2)
-        # NOTE - end of hacks
-
-        @thread.terminate
-        @database.commit
-        @sql_queries = nil
-        @statements.each do |statement|
-            statement.reset!
-            statement.close
-        end
-
-        @totals = {
-           'passed' => @thread['passed'],
-           'failed' => @thread['failed'],
-        }
-    end
-
-    def self.get_insert_stats
-        @totals
+    def self.get_stats(id)
+        sleep(0.2) while @statements.has_key?(id)
+        @thread[id]
     end
 
     def self.close
-        @database.close() unless @database.closed?
+        sleep(0.2) while !@statements.empty?
+        self.add_data4insert({'data' => ['DB:EOS']})
+        @thread.join
+        @database.commit
+        @database.close unless @database.closed?
     end
 end
 
