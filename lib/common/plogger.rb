@@ -5,7 +5,6 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'logger'
-require 'thread'
 
 module PLogger
     # blog.grayproductions.net/articles/the_books_are_wrong_about_logger
@@ -22,38 +21,72 @@ module PLogger
     LOGFILE_EXT = ".log"
     @log_tasks = Queue.new
     @semaphore = Mutex.new
-    @log_file = nil
-    @logger = nil
+    @loggers = {}
+    @level = nil
 
     def self.init(params = {})
-        if (@log_file = self.get_logfile(params)).nil?
-            throw "Required parameters was not passed!"
+        unless self.is_basic_params_valid?(params)
+            throw "PLogger::init: Required parameters was not passed!"
         end
 
-        @logger = Logger.new(@log_file)
-        @logger.level = params["level"] if params["level"]
-        @logger.formatter = SimpleLog.new
         @thread = Thread.new do
             Thread.current.priority = 2
             Thread.current["name"] = "log worker"
+
             while true
-                severity, message = *@log_tasks.pop
-                @logger.add(severity, message)
+                device, severity, message = *@log_tasks.pop
+
+                if message == 'LOG:EOT'
+                    self.close_logger(device)
+                    next
+                end
+
+                break if message == 'LOG:EOS'
+
+                @loggers[device].add(severity, message)
             end
         end
     end
 
+    def self.is_basic_params_valid?(params)
+        return false if params["path"].nil?
+        return false if params["dir"].nil?
+
+        return false if params["path"].empty?
+        return false if params["dir"].empty?
+
+        return false unless File.exist?(params["path"])
+        return false unless File.writable?(params["path"])
+
+        log_dir = File.join(params["path"], params["dir"])
+        Dir.mkdir(log_dir) unless File.exist?(log_dir)
+
+        @logs_home = params["path"]
+        @log_dir = params["dir"]
+        @level = params["level"] if params["level"]
+        return true
+    end
+
+    def self.init_device(params = {})
+        if (log_file = self.get_logfile(params)).nil?
+            throw "PLogger::init_device: Required parameters was not passed!"
+        end
+
+        logger = Logger.new(log_file)
+        logger.level = @level
+        logger.formatter = SimpleLog.new
+        @loggers[params['id']] = logger
+    end
+
     def self.get_logfile(params)
-        if params["path"] && params["dir"] && params["file"]
-            return nil unless File.exist?(params["path"])
-            return nil unless File.writable?(params["path"])
+        return nil if params['id'].empty?
 
-            instance_dir = File.basename(params["dir"], '.sqlite')
-            log_dir = File.join(params["path"], instance_dir)
-            Dir.mkdir(log_dir) unless File.exist?(log_dir)
-
-            log_file = File.basename(params["file"], '.rb') + LOGFILE_EXT
-            log_file_path = File.join(log_dir, log_file)
+        if !params["file"].nil? && !params["file"].empty?
+            filename = params["file"].downcase
+            filename.sub!(/^[^:]+::/, '')
+            filename.sub!(/^task_/, '')
+            log_file = filename + LOGFILE_EXT
+            log_file_path = File.join(@logs_home, @log_dir, log_file)
 
             if File.exist?(log_file_path)
                 log_file_path_bak = log_file_path.dup
@@ -72,50 +105,63 @@ module PLogger
 
             return params['logfile']
         else
+            # TODO STDOUT
             return nil
         end
     end
 
-    def self.group_log(messages)
+    def self.log_info_block(id, message)
+        self.group_log(id, [
+            [1, "#{'-' * 70}"],
+            [1, message],
+            [1, "#{'-' * 70}"]
+        ])
+    end
+
+    def self.group_log(id, messages)
         @semaphore.synchronize {
             messages.each { |message|
-                @log_tasks << message
+                @log_tasks << [id] + message
             }
         }
     end
 
-    def self.unknown(message)
-        @log_tasks << [5, message]
+    def self.unknown(id, message)
+        @log_tasks << [id, 5, message]
     end
 
-    def self.fatal(message)
-        @log_tasks << [4, message]
+    def self.fatal(id, message)
+        @log_tasks << [id, 4, message]
     end
 
-    def self.error(message)
-        @log_tasks << [3, message]
+    def self.error(id, message)
+        @log_tasks << [id, 3, message]
     end
 
-    def self.warn(message)
-        @log_tasks << [2, message]
+    def self.warn(id, message)
+        @log_tasks << [id, 2, message]
     end
 
-    def self.info(message)
-        @log_tasks << [1, message]
+    def self.info(id, message)
+        @log_tasks << [id, 1, message]
     end
 
-    def self.debug(message)
-        @log_tasks << [0, message]
+    def self.debug(id, message)
+        @log_tasks << [id, 0, message]
+    end
+
+    def self.end_of_task(id)
+        self.info(id, 'LOG:EOT')
+    end
+
+    def self.close_logger(device)
+        @loggers[device].close
+        @loggers.delete(device)
     end
 
     def self.close
-        # FIXME this is ugly hacks
-        sleep(3)
-        sleep(0.1) while @thread.status != 'sleep' && @log_tasks.size > 0
-        #t = Time.now.to_i.to_s
-        #puts "in logger close: #{t}"
-        # NOTE - end of hacks
-        @thread.terminate
-        @logger.close
+        sleep(0.2) while !@loggers.empty?
+        self.info(nil, 'LOG:EOS')
+        @thread.join
     end
 end
