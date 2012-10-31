@@ -65,9 +65,9 @@ begin
     Database.execute(IO.read(sql_filename))
 
     puts "Everything is OK. Database was created at:\n#{db_path}"
-rescue Exception => msg
+rescue Exception => exception
     File.delete(db_path) if File.exists?(db_path)
-    puts msg
+    puts "Exception: #{exception.message}"
 ensure
     Database.close
 end
