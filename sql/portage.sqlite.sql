@@ -1,9 +1,13 @@
-BEGIN TRANSACTION;
-
 create table system_settings (
     id INTEGER,
     param VARCHAR NOT NULL UNIQUE,
     value INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table completed_tasks (
+    id INTEGER,
+    name VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -75,7 +79,7 @@ create table mask_states (
 
 create table content_item_types (
     id INTEGER,
-    type VARCHAR NOT NULL,
+    type VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -385,6 +389,4 @@ create table ipackage_flagstates (
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, flag_id, state_id),
     PRIMARY KEY (id)
 );
-
-COMMIT;
 
