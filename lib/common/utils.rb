@@ -8,12 +8,6 @@ require 'rubygems'
 require 'json'
 
 module Utils
-    OPTIONS = {
-        "quiet" => true,
-        "debug" => false,
-        "db_filename" => nil
-    }
-
     # pattern for db files
     TIMESTAMP = "%Y%m%d-%H%M%S-UTC"
     # atom prefix matcher
@@ -83,5 +77,11 @@ module Utils
     end
 
     SETTINGS = Utils.get_settings unless $0.end_with?('01_generate_config.rb')
+
+    Utils::OPTIONS = {
+        "quiet" => true,
+        "debug" => false,
+        "db_filename" => defined?(SETTINGS) ? Utils.get_database : nil
+    }
 end
 
