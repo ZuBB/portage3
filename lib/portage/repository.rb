@@ -51,7 +51,7 @@ class Repository
         File.join(@repository_pd, @repository_fs)
     end
 
-    def self.get_repositories(params = {})
+    def self.get_repositories(params)
         repo_file = File.join(params['profiles_home'], 'repo_name')
 
         self.get_layman_repositories
