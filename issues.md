@@ -1,10 +1,6 @@
 #### Short term tasks
-* ~~deal with pathes~~
-    + ~~find nice way to do includes for all kind of scripts~~
-    + ~~"root_path" vs "root_folder" vs "portage_home"~~
-    + ~~options["storage"]["root"] is not valid 'path'~~
 * ~~Script class~~
-    + ~~**convert scripts to tasks; runt unblocking tasks in parallel. etc**~~
+    + ~~**convert scripts to tasks; run unblocking tasks in parallel**~~
     + ~~**check dependant tables before filling current one**~~
     + ~~shared resources for workers~~
     + ~~pre/post insert tasks~~
@@ -23,6 +19,7 @@
 * ~~parser~~
     * ~~**new parse method: simple and fast**~~
 * scripts
+    + **scripts to tasks migration**
     + ~~homepages: db, scripts, checks~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
@@ -32,7 +29,8 @@
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + ~~calling scripts for all in theirs forlder~~
     + new path of make.conf
-* examples:
+* ~~deal with pathes~~
+* examples
     + examples for use flags stuff, dependancies, installed stuff
     + statistics on what is in db
 * readme
@@ -41,14 +39,14 @@
 * Python
     + select python sqlite wrapper (apsw vs pysqlite vs..)
     + rewrite using Python (start with things that are used for all scripts)
-    + replace calls of external apps with Python API calls
+    + replace calls of external apps with Python API calls:
         - env setup
         - versions
         - portageq
-    + find calls for install/uninstall actions
+        - install/uninstall actions
 * Script class
     + keep in mind that need to have easy way to debug specified item(s)
-    + make database and logger modules injectable into Script/Worker class
+    + make logger (and database) module injectable into Script/Worker class
     + create reusable 'modules' for case(s) like this: fill 'missed' categories
 * database
     + [support overlays priority](https://www.linux.org.ru/forum/general/8364331?cid=8366484)
