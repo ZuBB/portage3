@@ -6,12 +6,20 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, 01/06/12
 #
-require_relative 'envsetup'
 require 'ebuild_version'
-require 'ebuild'
 
-class Script
-    def process(params)
+klass = Class.new(Tasks::Runner) do
+    self::DEPENDS = '091_ebuilds'
+    self::THREADS = 4
+    self::SQL = {
+        'insert' => 'UPDATE ebuilds SET version_order=? WHERE id=?;'
+    }
+
+    def get_data(params)
+        EbuildVersion.get_data(params)
+    end
+
+    def process_item(params)
         versions = params['versions']
         atom = params['category'] + '/' + params['package']
         ordered_versions = versions.sort { |a, b|
@@ -30,18 +38,15 @@ class Script
             }
 
             if !ord_num.nil?
-                Database.add_data4insert(ord_num + 1, params['ids'][index])
+                send_data4insert({'data' => [ord_num + 1, params['ids'][index]]})
             else
                 logged_items << [3, "Version `#{versions[index]}` - 'cache miss'"]
             end
         end
 
-        PLogger.group_log(logged_items) if logged_items.size > 3
+        PLogger.group_log(@id, logged_items) if logged_items.size > 3
     end
 end
 
-script = Script.new({
-    'data_source' => EbuildVersion.method(:get_data),
-    'sql_query' => 'UPDATE ebuilds SET version_order=? WHERE id=?;'
-})
+Tasks.create_task(__FILE__, klass)
 
