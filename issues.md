@@ -3,8 +3,6 @@
     + ~~**convert scripts to tasks; run unblocking tasks in parallel**~~
     + ~~**check dependant tables before filling current one**~~
     + ~~shared resources for workers~~
-    + ~~pre/post insert tasks~~
-    + ~~post processing checks~~
     + ~~log queries and stats~~
     + ~~add '-1' option for max_threads~~
 * ~~database~~
@@ -20,7 +18,6 @@
     * ~~**new parse method: simple and fast**~~
 * scripts
     + **scripts to tasks migration**
-    + ~~homepages: db, scripts, checks~~
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
     + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
     + dependancies: db, scripts
@@ -45,9 +42,9 @@
         - portageq
         - install/uninstall actions
 * Script class
+    + rename 'arch' to 'keyword', 'keyword' to keyword_status?
     + keep in mind that need to have easy way to debug specified item(s)
     + make logger (and database) module injectable into Script/Worker class
-    + create reusable 'modules' for case(s) like this: fill 'missed' categories
 * database
     + [support overlays priority](https://www.linux.org.ru/forum/general/8364331?cid=8366484)
     + investigate joining keywords and masks into single entity
@@ -58,7 +55,7 @@
     + ```CREATE TABLE time_test (my_date timestamp)```
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
     + separate connections (and statements?) for read/write __do we need this?__
-    + issue with queries and specified params run from workers.
+    + issue with queries and specified params run from workers. __do we still have this?__
     + separate table for repos parent dir
 * logger
     + ...
