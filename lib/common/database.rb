@@ -70,6 +70,8 @@ module Database
 
         if query.is_a?(String) && !query.empty? && @database.complete?(query)
             @semaphore.synchronize {
+                # NOTE here you may get an exception in next case:
+                # statement operates on table that is not created yet
                 @statements[id] = @database.prepare(query)
             }
 
