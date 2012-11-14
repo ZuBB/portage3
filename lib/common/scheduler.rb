@@ -19,6 +19,9 @@ require 'database'
 require 'plogger'
 require 'utils'
 
+Encoding.default_external = 'UTF-8'
+Encoding.default_internal = 'UTF-8'
+
 class Tasks::Scheduler
     SQL = {
         'check' => 'select count(id) from completed_tasks where name = ?;',
@@ -30,12 +33,12 @@ class Tasks::Scheduler
 
     def initialize(params)
         @id = Digest::MD5.hexdigest(self.class.name + SQL['insert'])
-        @scheduled_tasks = {}
-        @dependency_hash = {}
-        @dependencies = {}
-        @shared_data = {}
         @options = params
         @all_tasks = {}
+        @dependencies = {}
+        @dependency_hash = {}
+        @scheduled_tasks = {}
+        @running_tasks = {}
 
         Database.init(@options['db_filename'])
         PLogger.init({
@@ -70,7 +73,7 @@ class Tasks::Scheduler
             end
 
             @dependencies[name] = task.const_defined?('DEPENDS') ?
-                task::DEPENDS.split(/;\ ?/) : []
+                task::DEPENDS.split(/;\ ?/).sort : []
 
             @dependencies[name].map! { |dependency|
                 Tasks::TASK_NAME_PREFIX + dependency
@@ -114,10 +117,10 @@ class Tasks::Scheduler
                 PLogger.info(@id, "#{name}: I am really done")
             end
 
-            @scheduled_tasks[name] = thread
+            @running_tasks[name] = thread
         end
 
-        @scheduled_tasks.values.each { |task| task.join }
+        @running_tasks.values.each { |task| task.join }
 
         Database.end_of_task(@id)
         PLogger.end_of_task(@id)
@@ -134,7 +137,7 @@ class Tasks::Scheduler
     end
 
     def get_tasks_by_range
-        @all_tasks.keys.select do |name|
+        @scheduled_tasks = @all_tasks.keys.select do |name|
             name.to_s.match(/^Task_(\d{3})/).to_a[1].to_i >= @options["from"]
         end .select do |name|
             name.to_s.match(/^Task_(\d{3})/).to_a[1].to_i < @options["until"]
@@ -152,7 +155,10 @@ class Tasks::Scheduler
         end
 
         inaccessible_dependency = @dependencies[name].any? { |dependency|
-            !@scheduled_tasks.has_key?(dependency)
+            !(
+                @scheduled_tasks.include?(dependency) ||
+                Thread.current['deps'].include?(dependency)
+            )
         }
 
         if inaccessible_dependency
@@ -171,9 +177,9 @@ class Tasks::Scheduler
     def send_signal2deps(name)
         if @dependency_hash.has_key?(name)
             @dependency_hash[name].each do |d|
-                if @scheduled_tasks.has_key?(d)
+                if @running_tasks.has_key?(d)
                     PLogger.info(@id, "#{name} says to #{d}: I am done")
-                    @scheduled_tasks[d]['queue'] << name
+                    @running_tasks[d]['queue'] << name
                 end
             end
         end
