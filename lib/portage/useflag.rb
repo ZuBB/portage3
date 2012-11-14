@@ -14,7 +14,10 @@ class UseFlag
         ['enabled', 'enabled'],
         ['forced', 'enabled'],
     ]
-    SQL = { 'type' => 'SELECT id FROM flag_types WHERE type=?' }
+    SQL = {
+        '@1' => 'select type, id from flag_types;',
+        '@2' => 'select state, id from flag_states;'
+    }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
         'expand' => Regexp.new('([\\w\\+\\-@]+)(?:\\s+-\\s+)(.*)'),
@@ -24,23 +27,9 @@ class UseFlag
         'state' => Regexp.new('^[\-\+!]{0,2}')
     }
 
-    def self.pre_insert_task(type)
-        result = {}
-        repo = 'gentoo'
-        source = 'profiles'
-
-        type_id = Database.get_1value(UseFlag::SQL['type'], type)
-        result['flag_type@id'] = { type => type_id }
-
-        sql_query = 'select id from sources where source=?;'
-        source_id = Database.get_1value(sql_query, source)
-        result['source@id'] = { source => source_id }
-
-        sql_query = 'SELECT id FROM repositories WHERE name=?;'
-        repo_id = Database.get_1value(sql_query, repo)
-        result['repo@id'] = { repo => repo_id }
-
-        result
+    def self.get_shared_data
+        # HINT common code
+        # TODO do we need this?
     end
 
     def self.get_flag(flag)
