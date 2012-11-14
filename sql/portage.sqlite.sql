@@ -390,3 +390,25 @@ create table ipackage_flagstates (
     PRIMARY KEY (id)
 );
 
+-- TEMPORARY TABLES --
+
+--DROP TABLE IF EXISTS tmp_ebuild_descriptions;
+CREATE TABLE tmp_ebuild_descriptions (
+    id INTEGER,
+    descr VARCHAR NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX ted on tmp_ebuild_descriptions (descr);
+
+--DROP TABLE IF EXISTS tmp_ebuild_homepages;
+CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
+    id INTEGER,
+    homepage VARCHAR NOT NULL,
+    ebuild_id INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX teh on tmp_ebuild_homepages (homepage);
+
