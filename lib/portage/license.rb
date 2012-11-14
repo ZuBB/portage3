@@ -8,8 +8,8 @@ class License
     # http://www.gentoo.org/proj/en/glep/glep-0023.html
     ENTITY = self.name.downcase[0..-7]
     SQL = {
-        'group@id' => 'SELECT name, id FROM license_groups;',
-        'license@id' => 'SELECT name, id FROM licenses;'
+        '@1' => 'SELECT name, id FROM license_groups;',
+        '@2' => 'SELECT name, id FROM licenses;'
     }
     REGEXPS = {
         'license'  => Regexp.new("^[\\w\\-\\.\\+]+$"),
