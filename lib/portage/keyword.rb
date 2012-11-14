@@ -6,13 +6,13 @@
 #
 module Keyword
     LABELS = ['not work', 'not known', 'unstable', 'stable']
-    # http://devmanual.gentoo.org/tools-reference/ekeyword/index.html
-    # ^sparc (to remove the sparc keyword)
     SYMBOLS = ['-', '?', '~', '']
     SYM2LBL = Hash[SYMBOLS.zip(LABELS)]
     LBL2SYM = Hash[LABELS.zip(SYMBOLS)]
     SYM_RGXP = Regexp.new("^[#{SYMBOLS.join}]{0,2}")
     SQL = {
+        '@1' => 'SELECT name, id FROM arches;',
+        '@2' => 'SELECT name, id FROM keywords;',
         'pid' => 'SELECT id FROM ebuilds WHERE package_id=?',
         'ids@pid' => 'SELECT id FROM ebuilds WHERE package_id=?',
         'ids@pid&%v' => 'SELECT id FROM ebuilds WHERE package_id=? AND version like ?',
