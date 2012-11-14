@@ -4,6 +4,8 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'ebuild'
+
 module EbuildVersion
     VER_REGEXP = Regexp.new("^(cvs\\.)?(\\d+)((\\.\\d+)*)([a-z]?)((_(pre|p|beta|alpha|rc)\\d*)*)(-r(\\d+))?$")
     SUFFIX_REGEXP = Regexp.new("^(alpha|beta|rc|pre|p)(\\d*)$")
