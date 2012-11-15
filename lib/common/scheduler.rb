@@ -120,7 +120,11 @@ class Tasks::Scheduler
             @running_tasks[name] = thread
         end
 
-        @running_tasks.values.each { |task| task.join }
+        @running_tasks.values.each do |task|
+            PLogger.info(@id, "#{task['name']}: attempt to do a 'join'")
+            task.join
+            PLogger.info(@id, "#{task['name']}: attempt successful")
+        end
 
         Database.end_of_task(@id)
         PLogger.end_of_task(@id)
