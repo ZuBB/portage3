@@ -195,8 +195,8 @@ create table ebuilds (
     mtime INTEGER,
     mauthor VARCHAR,
     raw_eapi VARCHAR,
-    eapi_id INTEGER NOT NULL,
-    slot VARCHAR NOT NULL,
+    eapi_id INTEGER,
+    slot VARCHAR,
     description_id INTEGER,
     FOREIGN KEY (package_id) REFERENCES packages(id),
     FOREIGN KEY (eapi_id) REFERENCES eapis(id),
@@ -249,16 +249,17 @@ create table ebuilds_keywords (
 create table ebuilds_masks (
     id INTEGER,
     ebuild_id INTEGER NOT NULL,
-    arch_id INTEGER NOT NULL,
     state_id INTEGER NOT NULL,
+    arch_id INTEGER,
+    profile_id INTEGER,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
     FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (state_id) REFERENCES mask_states(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    CONSTRAINT idx1_unq UNIQUE (
-        ebuild_id, arch_id, state_id, source_id
-    ),
+    CONSTRAINT chk1 CHECK (arch_id IS NOT NULL OR profile_id IS NOT NULL),
+    -- TODO replace this constraint with trigger(s)
+    --CONSTRAINT idx1_unq UNIQUE (ebuild_id, arch_id, state_id, source_id),
     PRIMARY KEY (id)
 );
 
@@ -411,4 +412,36 @@ CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
 );
 
 CREATE INDEX teh on tmp_ebuild_homepages (homepage);
+
+--DROP TABLE IF EXISTS tmp_profile_mask_categories;
+CREATE TABLE IF NOT EXISTS tmp_profile_mask_categories (
+    id INTEGER,
+    category VARCHAR NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX tpmc on tmp_profile_mask_categories(category);
+
+--DROP TABLE IF EXISTS tmp_profile_mask_packages;
+CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
+    id INTEGER,
+    package VARCHAR NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX tpmp on tmp_profile_mask_packages(package);
+
+--DROP TABLE IF EXISTS tmp_profile_mask_ebuilds;
+CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
+    id INTEGER,
+    version VARCHAR NOT NULL,
+    package_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES package(id),
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX tpme1 on tmp_profile_mask_ebuilds(version);
+CREATE INDEX tpme2 on tmp_profile_mask_ebuilds(version, package_id);
 
