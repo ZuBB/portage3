@@ -202,8 +202,6 @@ class Ebuild < Package
             JOIN packages p on p.id=e.package_id
             JOIN categories c on p.category_id=c.id
             JOIN repositories r on r.id=e.repository_id
-			-- TODO hardcoded value
-            where e.source_id = 1;
         SQL
         )
     end
