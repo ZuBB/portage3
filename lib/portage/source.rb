@@ -6,6 +6,7 @@
 #
 class Source
     SOURCES = [
+        'portage tree',
         'ebuilds',
         'profiles',
         'make.conf',
