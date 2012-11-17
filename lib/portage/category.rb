@@ -14,7 +14,8 @@ class Category < Repository
     SQL = {
         'category' => 'SELECT name FROM categories WHERE id=?',
         'id' => 'SELECT id FROM categories WHERE name=?',
-        'all' => 'SELECT * FROM categories'
+        'all' => 'SELECT * FROM categories',
+        '@' => 'SELECT name, id FROM categories;'
     }
 
     def initialize(params)
