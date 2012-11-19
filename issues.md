@@ -11,7 +11,6 @@
     + ~~threadsafe queue for data that is going to be inserted~~
 * ~~Logger~~
     + ~~loggin in separate thread~~
-    + ~~backup previous file~~
     + ~~**possibility to log data in HRF in case of exception**~~
     + ~~grouplog API~~
 * ~~parser~~
@@ -35,7 +34,7 @@
 #### Long term tasks
 * Python
     + select python sqlite wrapper (apsw vs pysqlite vs..)
-    + rewrite using Python (start with things that are used for all scripts)
+    + rewrite using Python
     + replace calls of external apps with Python API calls:
         - env setup
         - versions
@@ -49,14 +48,19 @@
     + [support overlays priority](https://www.linux.org.ru/forum/general/8364331?cid=8366484)
     + investigate joining keywords and masks into single entity
     + create some constraint/trigger/function to protect flags table of duplicate data [1^](https://www.linux.org.ru/forum/development/8077477), [2^](http://stackoverflow.com/questions/10231338/)
-    + find a way to reuse license_spec records
-    + find a way do not make dups in ipackage_content.item
+    + data deduplication
+        - find a way do not make dups in ipackage_content.item
+        - find a way to reuse license_spec records
+        - find a way to reuse/inherit profile's package.mask data
+        - check what homepages are similar and report? them to devs
+        - check what descriptions are similar and report? them to devs
     + check if using WAL accees mode will give some perf?
     + ```CREATE TABLE time_test (my_date timestamp)```
     + [strict types](http://stackoverflow.com/questions/2761563/sqlite-data-types)
     + separate connections (and statements?) for read/write __do we need this?__
     + issue with queries and specified params run from workers. __do we still have this?__
     + separate table for repos parent dir
+    + move database code into separate application/process
 * logger
     + ...
 * scripts
@@ -67,9 +71,8 @@
         - best format
     + ebuild licences: db, licences without deps, licences with logical 'or', conditional licences
     + find faster way of getting available EAPIs
-    + check what homepages are similar and report? them to devs
-    + check what descriptions are similar and report? them to devs
 * libraries
+    + move all libraries into separate namespace
     + allow defining of deleted repos without hacks
 * parser
     + do we need it?
