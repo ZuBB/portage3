@@ -11,10 +11,7 @@ require 'source'
 require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;'\
-                    '053_global_use_flags;054_local_use_flags;'\
-                    '055_expand_use_flags;056_hidden_use_flags;'\
-                    '091_ebuilds'
+    self::DEPENDS = '059_use_flag_stuff;091_ebuilds'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {
