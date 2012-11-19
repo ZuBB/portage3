@@ -16,7 +16,10 @@ class UseFlag
     ]
     SQL = {
         '@1' => 'select type, id from flag_types;',
-        '@2' => 'select state, id from flag_states;'
+        '@2' => 'select state, id from flag_states;',
+        '@3' => 'select name, id from flags where type_id = ('\
+            'select id from flag_types where type = "global"'\
+        ');'
     }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
