@@ -450,3 +450,14 @@ CREATE TABLE IF NOT EXISTS tmp_etc_portage_flags_categories (
 );
 
 CREATE INDEX tepfc on tmp_etc_portage_flags_categories(category);
+
+
+CREATE TABLE IF NOT EXISTS tmp_etc_portage_flags_package (
+    id INTEGER,
+    package VARCHAR NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX tepfp on tmp_profile_mask_packages(package);
