@@ -15,7 +15,14 @@ class Package < Category
         'all' => 'select * from packages',
         'all@c_id' => 'select * from packages where category_id=?',
         'id' => 'SELECT id FROM packages WHERE name=? and category_id = ?',
-        '@' => 'SELECT name, id FROM packages;'
+        '@' => 'SELECT name, id FROM packages;',
+        'ghost' => <<-SQL
+            SELECT distinct package, category_id
+            FROM TMP_TABLE tp
+            WHERE NOT EXISTS (
+                SELECT name FROM packages p WHERE p.name = tp.package
+            );
+        SQL
     }
 
     def initialize(params)

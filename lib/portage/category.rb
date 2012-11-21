@@ -15,7 +15,14 @@ class Category < Repository
         'category' => 'SELECT name FROM categories WHERE id=?',
         'id' => 'SELECT id FROM categories WHERE name=?',
         'all' => 'SELECT * FROM categories',
-        '@' => 'SELECT name, id FROM categories;'
+        '@' => 'SELECT name, id FROM categories;',
+        'ghost' => <<-SQL
+            SELECT distinct category
+            FROM TMP_TABLE tc
+            WHERE NOT EXISTS (
+                SELECT name FROM categories c WHERE c.name = tc.category
+            );
+        SQL
     }
 
     def initialize(params)
