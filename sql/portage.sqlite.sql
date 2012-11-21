@@ -393,7 +393,6 @@ create table ipackage_flagstates (
 
 -- TEMPORARY TABLES --
 
---DROP TABLE IF EXISTS tmp_ebuild_descriptions;
 CREATE TABLE tmp_ebuild_descriptions (
     id INTEGER,
     descr VARCHAR NOT NULL,
@@ -403,7 +402,7 @@ CREATE TABLE tmp_ebuild_descriptions (
 
 CREATE INDEX ted on tmp_ebuild_descriptions (descr);
 
---DROP TABLE IF EXISTS tmp_ebuild_homepages;
+
 CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
     id INTEGER,
     homepage VARCHAR NOT NULL,
@@ -413,7 +412,7 @@ CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
 
 CREATE INDEX teh on tmp_ebuild_homepages (homepage);
 
---DROP TABLE IF EXISTS tmp_profile_mask_categories;
+
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_categories (
     id INTEGER,
     category VARCHAR NOT NULL,
@@ -422,7 +421,7 @@ CREATE TABLE IF NOT EXISTS tmp_profile_mask_categories (
 
 CREATE INDEX tpmc on tmp_profile_mask_categories(category);
 
---DROP TABLE IF EXISTS tmp_profile_mask_packages;
+
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
     id INTEGER,
     package VARCHAR NOT NULL,
@@ -433,7 +432,7 @@ CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
 
 CREATE INDEX tpmp on tmp_profile_mask_packages(package);
 
---DROP TABLE IF EXISTS tmp_profile_mask_ebuilds;
+
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
     id INTEGER,
     version VARCHAR NOT NULL,
@@ -445,3 +444,9 @@ CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
 CREATE INDEX tpme1 on tmp_profile_mask_ebuilds(version);
 CREATE INDEX tpme2 on tmp_profile_mask_ebuilds(version, package_id);
 
+
+CREATE TABLE IF NOT EXISTS tmp_etc_portage_flags_categories (
+    category VARCHAR NOT NULL
+);
+
+CREATE INDEX tepfc on tmp_etc_portage_flags_categories(category);
