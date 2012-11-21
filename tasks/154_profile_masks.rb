@@ -7,6 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'source'
+require 'package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '153_profile_masks'
@@ -20,13 +21,8 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        sql_query = <<-SQL
-            SELECT distinct package, category_id
-            FROM tmp_profile_mask_packages tp
-            WHERE NOT EXISTS (
-                SELECT name FROM packages p WHERE p.name = tp.package
-            );
-        SQL
+        sql_query = Package::SQL['ghost'].dup
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_packages')
         Database.select(sql_query)
     end
 

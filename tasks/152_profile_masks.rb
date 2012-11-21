@@ -7,6 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'source'
+require 'category'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '151_profile_masks'
@@ -16,13 +17,8 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        sql_query = <<-SQL
-            SELECT distinct category
-            FROM tmp_profile_mask_categories tc
-            WHERE NOT EXISTS (
-                SELECT name FROM categories c WHERE c.name = tc.category
-            );
-        SQL
+        sql_query = Category::SQL['ghost'].dup
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_categories')
         Database.select(sql_query).flatten
     end
 
