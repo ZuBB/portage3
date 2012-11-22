@@ -70,20 +70,30 @@ module EbuildVersion
 
     def self.get_data(params)
         tmp_results = {}
+        sql_query = <<-SQL
+            SELECT
+                e.package_id,
+                e.id,
+                version,
+                c.name || '/' || p.name
+            FROM ebuilds e
+            JOIN packages p on p.id=e.package_id
+            JOIN categories c on p.category_id=c.id
+            JOIN repositories r on r.id=e.repository_id
+        SQL
 
-        Ebuild.get_ebuilds.each do |row|
-            package_id = row[7]
+        Database.select(sql_query).each do |row|
+            package_id = row.first
             unless tmp_results.has_key?(package_id)
                 tmp_results[package_id] = {
-                    'category' => row[3],
-                    'package'  => row[4],
+                    'atom'  => row[3],
                     'versions' => [],
                     'ids'      => []
                 }
             end
 
-            tmp_results[package_id]['versions'] << row[5]
-            tmp_results[package_id]['ids'] << row[6]
+            tmp_results[package_id]['versions'] << row[2]
+            tmp_results[package_id]['ids'] << row[1]
         end
 
         tmp_results.values
