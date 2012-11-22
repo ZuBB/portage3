@@ -11,7 +11,7 @@ require 'source'
 require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '406_users_use_flags'
+    self::DEPENDS = '059_use_flag_stuff;091_ebuilds'
     self::SOURCE = '/etc/portage'
     self::TYPE = 'unknown'
     self::SQL = {
