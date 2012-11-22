@@ -10,7 +10,7 @@ require 'source'
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '151_profile_masks'
+    self::DEPENDS = '031_categories;151_profile_masks'
     self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => 'INSERT INTO categories (name, source_id) VALUES (?, ?);'

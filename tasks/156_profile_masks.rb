@@ -10,7 +10,7 @@ require 'source'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '155_profile_masks'
+    self::DEPENDS = '091_ebuilds;155_profile_masks'
     self::SOURCE = 'profiles'
     self::REPO = 'unknown'
     self::SQL = {

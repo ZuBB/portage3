@@ -10,7 +10,7 @@ require 'ebuild'
 require 'keyword'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '003_arches;004_keywords;008_sources;091_ebuilds'
+    self::DEPENDS = '003_arches;004_keywords;091_ebuilds'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {

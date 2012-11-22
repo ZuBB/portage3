@@ -9,7 +9,7 @@
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '095_ebuild_descriptions;098_ebuild_homepages'
+    self::DEPENDS = '402_users_use_flags'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO tmp_etc_portage_flags_package

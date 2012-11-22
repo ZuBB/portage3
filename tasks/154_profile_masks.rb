@@ -10,7 +10,7 @@ require 'source'
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '153_profile_masks'
+    self::DEPENDS = '041_packages;153_profile_masks'
     self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => <<-SQL

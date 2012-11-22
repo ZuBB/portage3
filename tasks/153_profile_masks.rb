@@ -9,7 +9,8 @@
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '095_ebuild_descriptions;098_ebuild_homepages'
+    self::DEPENDS = '152_profile_masks'
+
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO tmp_profile_mask_packages

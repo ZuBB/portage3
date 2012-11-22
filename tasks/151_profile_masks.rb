@@ -8,7 +8,6 @@
 #
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '095_ebuild_descriptions;098_ebuild_homepages'
     self::SQL = {
         'insert' => 'INSERT INTO tmp_profile_mask_categories (category) VALUES (?);'
     }

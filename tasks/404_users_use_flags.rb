@@ -10,7 +10,7 @@ require 'source'
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '403_users_use_flags'
+    self::DEPENDS = '041_packages;403_users_use_flags'
     self::SOURCE = '/etc/portage'
     self::SQL = {
         'insert' => <<-SQL

@@ -21,13 +21,12 @@ klass = Class.new(Tasks::Runner) do
 
     def process_item(params)
         versions = params['versions']
-        atom = params['category'] + '/' + params['package']
         ordered_versions = versions.sort { |a, b|
             EbuildVersion.compare_versions_with_rbapi(a, b)
         }
 
         logged_items = [
-            [1, "Package #{atom}"],
+            [1, "Package #{params['atom']}"],
             [1, "original versions #{versions.inspect}"],
             [1, "sorted versions #{ordered_versions.inspect}"]
         ]
