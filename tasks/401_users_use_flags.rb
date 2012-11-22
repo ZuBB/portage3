@@ -6,21 +6,59 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'atom'
+require 'source'
+require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
+    self::DEPENDS = '406_users_use_flags'
+    self::SOURCE = '/etc/portage'
+    self::TYPE = 'unknown'
     self::SQL = {
-        'insert' => 'INSERT INTO tmp_etc_portage_flags_categories (category) VALUES (?);'
+        'insert' => <<-SQL
+            INSERT INTO flags_states
+            (state_id, package_id, source_id, flag_id)
+            VALUES (?, ?, ?, (
+                SELECT id FROM flags f
+                /* NOTE hardcoded constants */
+                WHERE name=? AND (f.type_id BETWEEN 4 and 6)
+                ORDER BY f.type_id ASC
+                LIMIT 1
+            ));
+        SQL
     }
 
     def get_data(params)
-        # TODO hardcodede value
         IO.readlines('/etc/portage/package.use')
     end
 
+    def get_shared_data
+        Tasks::Scheduler.set_shared_data('flag_state@id', UseFlag::SQL['@2'])
+        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
+        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    end
+
     def process_item(line)
-        if (/^\s*#/ =~ line).nil? && (/^\s*$/ =~ line).nil?
-            send_data4insert({'data' => [line.split[0].split('/')[0]]})
+        return if /^\s*#/ =~ line
+        return if /^\s*$/ =~ line
+
+        line       = line.sub(/#.*$/, '')
+        flags      = line.split
+		atom       = flags.delete_at(0)
+        package_id = shared_data('CPN@id', atom)
+
+        if line.include?('*')
+            flags = UseFlag.expand_asterix_flag(flags, package_id)
         end
+
+        flags.each { |flag|
+            send_data4insert({'data' => [
+                shared_data('flag_state@id', UseFlag.get_flag_state(flag)),
+                package_id,
+                shared_data('source@id', self.class::SOURCE),
+                UseFlag.get_flag(flag)
+            ]})
+        }
     end
 end
 
