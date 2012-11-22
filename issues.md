@@ -51,7 +51,7 @@
     + data deduplication
         - find a way do not make dups in ipackage_content.item
         - find a way to reuse license_spec records
-        - find a way to reuse/inherit profile's package.mask data
+        - find a way to reuse/inherit profile`s package.mask data
         - check what homepages are similar and report? them to devs
         - check what descriptions are similar and report? them to devs
     + check if using WAL accees mode will give some perf?
@@ -64,6 +64,7 @@
 * logger
     + ...
 * scripts
+    + add to tmp tables also a source_id on 1st stage, to make 2nd stage even more simple
     + get all expand use flags from make.conf
     + check scripts (\d\d_\w+\.check\.rb)
         - where to place
