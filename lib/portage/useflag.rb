@@ -19,7 +19,20 @@ class UseFlag
         '@2' => 'select state, id from flag_states;',
         '@3' => 'select name, id from flags where type_id = ('\
             'select id from flag_types where type = "global"'\
-        ');'
+        ');',
+        'ghost' => <<-SQL
+            SELECT tf.name
+            FROM TMP_TABLE tf
+            WHERE NOT EXISTS (
+                SELECT name
+				FROM flags f
+				WHERE
+					f.name = tf.name AND
+                    /* NOTE hardcoded constants */
+                    f.type_id BETWEEN 4 and 6
+
+            );
+        SQL
     }
     REGEXPS = {
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
