@@ -78,8 +78,9 @@ klass = Class.new(Tasks::Runner) do
             end
         end
 
-        package_mask_file = File.join(path, 'package.mask')
-        process_file(package_mask_file, profile) if File.exist?(package_mask_file)
+        if File.exist?(package_mask_file = File.join(path, 'package.mask'))
+            process_file(package_mask_file, profile)
+        end
     end
 
     def process_item(profile)
