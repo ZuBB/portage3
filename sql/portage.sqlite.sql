@@ -434,13 +434,21 @@ CREATE INDEX tpmp on tmp_profile_mask_packages(package);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
-    id INTEGER,
     version VARCHAR NOT NULL,
     package_id INTEGER NOT NULL,
     FOREIGN KEY (package_id) REFERENCES package(id),
-    PRIMARY KEY (id)
 );
 
 CREATE INDEX tpme1 on tmp_profile_mask_ebuilds(version);
 CREATE INDEX tpme2 on tmp_profile_mask_ebuilds(version, package_id);
+
+
+CREATE TABLE IF NOT EXISTS tmp_etc_portage_mask_ebuilds (
+    version VARCHAR NOT NULL,
+    package_id INTEGER NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES package(id),
+);
+
+CREATE INDEX tepme1 on tmp_etc_portage_mask_ebuilds(version);
+CREATE INDEX tepme2 on tmp_etc_portage_mask_ebuilds(version, package_id);
 
