@@ -6,6 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'ebuild'
 require 'source'
 require 'repository'
 
@@ -22,17 +23,8 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        sql_query = <<-SQL
-            SELECT distinct package_id, version
-            FROM tmp_profile_mask_ebuilds te
-            WHERE NOT EXISTS (
-                SELECT version
-                FROM ebuilds e
-                WHERE
-                    e.version = te.version AND
-                    e.package_id = te.package_id
-            );
-        SQL
+        sql_query = Ebuild::SQL['ghost'].dup
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_ebuilds')
         Database.select(sql_query)
     end
 
