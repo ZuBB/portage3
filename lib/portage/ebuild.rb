@@ -16,7 +16,18 @@ class Ebuild < Package
     ]
     SQL = {
         "eapi_id" => "SELECT id FROM eapis WHERE version=?",
-        "id" => "SELECT id FROM ebuilds WHERE package_id=? AND version=?"
+        "id" => "SELECT id FROM ebuilds WHERE package_id=? AND version=?",
+        'ghost' => <<-SQL
+            SELECT distinct package_id, version
+            FROM TMP_TABLE te
+            WHERE NOT EXISTS (
+                SELECT version
+                FROM ebuilds e
+                WHERE
+                    e.version = te.version AND
+                    e.package_id = te.package_id
+            );
+        SQL
     }
 
     def initialize(params, strict = true)
