@@ -80,24 +80,30 @@ module Keyword
     end
 
     def self.parse_line(line, cur_arch, cur_keyword)
-        atom = line.dup
-        arch = atom.slice!(/\s+.*/)
+        result = {}
+
+        atom, arch = *line.split
         arch.strip! unless arch.nil?
+
+        # take care about trailing ':'
+        # it means slot for this atom/package
+        result["slot"] = atom.slice!(/(?=:).+$/)[1..-1] if atom.include?(':')
 
         # take care about leading ~
         # it means match any subversion of the specified base version.
-        atom.sub!(/^~/, '')
-        slot = atom.slice!(atom.index(':')..-1)[1..-1] if atom.include?(':')
+        if atom.start_with?('~')
+            atom.sub!(/^~/, '')
+            atom << '*' unless atom.end_with?('*')
+        end
 
-        # version restrictions
-        atom.sub!(Utils::RESTRICTION, '')
-        vrsn_rstr = $&
+        # get version restrictions
+        result["vrestr"] = atom.slice!(Atom::VERSION_RESTRICTION)
 
-        # deal with versions
-        atom.sub!(Utils::ATOM_VERSION, '')
-        version = $&[1..-1] unless $&.empty?
-
-        category, package = *atom.split('/')
+        # get versions
+        unless (version = Atom.get_version(atom)).nil?
+            result["version"] = version
+            atom.sub!('-' + version, '')
+        end
 
         unless arch.nil?
             arch.sub!(/\*$/, cur_arch) if arch.end_with?('*')
@@ -109,50 +115,11 @@ module Keyword
             arch = cur_arch
         end
 
-        result = {
-            'vrsn_rstr' => vrsn_rstr,
-            'category'  => category,
-            'package'   => package,
-            'version'   => version,
-            'keyword'   => keyword,
-            'arch'      => arch
-        }
-    end
+        result['atom']    = atom 
+        result['keyword'] = keyword 
+        result['arch']    = arch 
 
-    def self.get_package_id(atom_specs)
-        params = [atom_specs['category'], atom_specs['package']]
-        
-        if (package_id = Database.get_1value(SQL["pid"], params)).nil?
-            atom = "#{atom_specs['category']}/#{atom_specs['package']}"
-            PLogger.warn("'#{atom}' package is not present in portage")
-        end
-
-        package_id
-    end
-
-    def self.get_ebuild_ids(atom_specs)
-        if atom_specs['vrsn_rstr'].nil? && atom_specs['version'].nil?
-            sql_query = SQL['ids@pid']
-            params = [atom_specs['package_id']]
-        elsif atom_specs['vrsn_rstr'] == '=' && atom_specs['version'].end_with?('*')
-            sql_query = SQL['ids@pid&%v']
-            params = [atom_specs['package_id'], atom_specs['version'].sub('*', '%')]
-        else
-            sql_query = SQL['id@pid&v_co']
-            sql_query.sub!('OPERATOR', atom_specs['vrsn_rstr'])
-            params = [atom_specs['package_id'], atom_specs['version']]
-        end
-
-        if (results = Database.select(sql_query, params).flatten).empty?
-            PLogger.warn(
-                "Atom (#{atom_specs["vrsn_rstr"]}"\
-                "#{atom_specs['category']}/#{atom_specs['package']}"\
-                "-#{atom_specs["version"]}) "\
-                "already is not present in portage"
-            )
-        end
-
-        results
+        result
     end
 end
 
