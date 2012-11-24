@@ -33,7 +33,7 @@ klass = Class.new(Tasks::Runner) do
         Tasks::Scheduler.set_shared_data('mask_state@id', Mask::SQL['@'])
         Tasks::Scheduler.set_shared_data('setting@id', Setting::SQL['@'])
         Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-       #Tasks::Scheduler.set_shared_data('arch@id', Keyword::SQL['@1'])
+        Tasks::Scheduler.set_shared_data('arch@id', Keyword::SQL['@1'])
         Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
     end
 
@@ -55,11 +55,10 @@ klass = Class.new(Tasks::Runner) do
 
         result_set.each { |ebuild_id|
             send_data4insert({'data' => [
-                 ebuild_id,
-                #shared_data('arch@id', shared_data('setting@id', 'arch')),
-                 shared_data('setting@id', 'arch'),
-                 shared_data('mask_state@id', result["state"]),
-                 shared_data('source@id', self.class::SOURCE)
+                ebuild_id,
+                shared_data('arch@id', shared_data('setting@id', 'arch')),
+                shared_data('mask_state@id', result["state"]),
+                shared_data('source@id', self.class::SOURCE)
             ]})
         }
     end
