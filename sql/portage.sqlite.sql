@@ -1,7 +1,7 @@
 create table system_settings (
     id INTEGER,
     param VARCHAR NOT NULL UNIQUE,
-    value INTEGER NOT NULL,
+    value VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
 

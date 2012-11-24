@@ -8,7 +8,7 @@
 #
 require 'parser'
 
-# TODO rewrite with settings settings
+# TODO rewrite with data from data/emerge_infoo
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '003_arches;004_keywords'
     self::SQL = {
@@ -28,13 +28,10 @@ klass = Class.new(Tasks::Runner) do
 
         keyword_name = accept_keywords.index('~') == 0 ? 'unstable' : 'stable'
         arch_name = accept_keywords.sub(/^~/, '')
-        return [
-            ['arch', Database.get_1value(
-                'SELECT id FROM arches WHERE name=?', arch_name
-            ).to_s],
-            ['keyword', Database.get_1value(
-                'SELECT id FROM keywords WHERE name=?', keyword_name
-            ).to_s]
+
+        [
+            ['arch', arch_name],
+            ['keyword', keyword_name]
         ]
     end
 end
