@@ -18,7 +18,14 @@ class Repository
         'id@fs' => 'SELECT id FROM repositories WHERE parent_folder=? and repository_folder=?',
         'external' => 'SELECT * FROM repositories WHERE name!="gentoo"',
         'any' => 'SELECT id FROM repositories limit 1',
-        '@' => 'SELECT name, id FROM repositories;'
+        '@' => 'SELECT name, id FROM repositories;',
+        'ghost' => <<-SQL
+            SELECT distinct tr.name
+            FROM TMP_TABLE tr
+            WHERE NOT EXISTS (
+                SELECT name FROM repositories r WHERE r.name = tr.name
+            );
+        SQL
     }
 
     def initialize(params)
