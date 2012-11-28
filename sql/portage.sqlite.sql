@@ -418,12 +418,11 @@ CREATE INDEX teh on tmp_ebuild_homepages (homepage);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_categories (
-    id INTEGER,
-    category VARCHAR NOT NULL,
-    PRIMARY KEY (id)
+    name VARCHAR NOT NULL,
+    source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpmc on tmp_profile_mask_categories(category);
+CREATE INDEX tpmc on tmp_profile_mask_categories(name);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
@@ -465,3 +464,10 @@ CREATE TABLE IF NOT EXISTS tmp_installed_packages_repos (
 
 CREATE INDEX tipr on tmp_installed_packages_repos(name);
 
+
+CREATE TABLE IF NOT EXISTS tmp_installed_packages_categories (
+    name VARCHAR NOT NULL,
+    source_id INTEGER NOT NULL
+);
+
+CREATE INDEX tipc on tmp_installed_packages_categories(name);
