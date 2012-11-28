@@ -10,17 +10,17 @@ require 'eapi'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '021_repositories;041_packages;009_eapis'
+    self::DEPENDS = '021_repositories;041_packages' # ;009_eapis
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds
             (
-                package_id, version, repository_id, mtime, mauthor, raw_eapi,
-                eapi_id, slot, source_id
+                package_id, version, repository_id, mtime, mauthor, /*raw_eapi,
+                eapi_id,*/ slot, source_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?/*, ?, ?*/);
         SQL
     }
 
@@ -46,8 +46,8 @@ klass = Class.new(Tasks::Runner) do
             ebuild.ebuild_mtime,
             ebuild.ebuild_author,
             # TODO notify upstream and remove raw_eapi
-            ebuild.ebuild_eapi,
-            shared_data('eapi@id', eapi.to_i),
+            #ebuild.ebuild_eapi,
+            #shared_data('eapi@id', eapi.to_i),
             ebuild.ebuild_slot,
             shared_data('source@id', self.class::SOURCE)
         ]})
