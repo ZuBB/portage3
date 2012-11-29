@@ -6,12 +6,10 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '041_packages;153_profile_masks'
-    self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO packages
@@ -23,16 +21,7 @@ klass = Class.new(Tasks::Runner) do
     def get_data(params)
         sql_query = Package::SQL['ghost'].dup
         sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_packages')
-        Database.select(sql_query)
-    end
-
-    def set_shared_data
-        request_data('source@id', Source::SQL['@'])
-    end
-
-    def process_item(params)
-        params << shared_data('source@id', self.class::SOURCE)
-        send_data4insert({'data' => params})
+        Portage3::Database.get_client.select(sql_query)
     end
 end
 

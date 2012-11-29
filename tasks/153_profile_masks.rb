@@ -6,16 +6,17 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'source'
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '152_profile_masks'
-
+    self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO tmp_profile_mask_packages
-            (package, category_id)
-            VALUES (?, ?);
+            (name, category_id, source_id)
+            VALUES (?, ?, ?);
         SQL
     }
 
@@ -26,6 +27,7 @@ klass = Class.new(Tasks::Runner) do
 
     def set_shared_data
         request_data('category@id', Category::SQL['@'])
+        request_data('source@id', Source::SQL['@'])
     end
 
     def process_item(filename)
@@ -36,7 +38,8 @@ klass = Class.new(Tasks::Runner) do
             result = Mask.parse_line(line.strip)
             send_data4insert({'data' => [
                 result["package"].strip,
-                shared_data('category@id', result["category"])
+                shared_data('category@id', result["category"]),
+                shared_data('source@id', self.class::SOURCE)
             ]})
         end
     end
