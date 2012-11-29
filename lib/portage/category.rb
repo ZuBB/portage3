@@ -17,10 +17,10 @@ class Category < Repository
         'all' => 'SELECT * FROM categories',
         '@' => 'SELECT name, id FROM categories;',
         'ghost' => <<-SQL
-            SELECT distinct category
-            FROM TMP_TABLE tc
+            SELECT distinct *
+            FROM TMP_TABLE tb
             WHERE NOT EXISTS (
-                SELECT name FROM categories c WHERE c.name = tc.category
+                SELECT name FROM categories c WHERE c.name = tb.name
             );
         SQL
     }
