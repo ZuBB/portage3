@@ -47,6 +47,33 @@ module InstalledPackage
         filepath
     end
 
+    def self.get_filepath(path_part, filename, silent = false)
+        filepath = File.join(path_part, filename)
+
+        if !File.exist?(filepath) || !File.file?(filepath)
+            PLogger.warn("File '#{file}' is missed") unless silent
+            return false
+        end
+
+        filepath
+    end
+
+    def self.get_file_content(path_part, filename)
+        content = false
+        filepath = self.get_filepath(path_part, filename, true)
+
+		if filepath.is_a?(String) && File.readable?(filepath)
+			content = IO.read(filepath).strip
+
+			if !content.is_a?(String) || content.empty?
+				PLogger.warn("File '#{filepath}' has invalid content")
+				return content
+			end
+		end
+
+        content
+    end
+
     def self.get_symlink_id(line, cline)
         parts = line.split('->').map { |i| i.strip }
         if parts.size != 2
