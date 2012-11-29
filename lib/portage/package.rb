@@ -17,10 +17,10 @@ class Package < Category
         'id' => 'SELECT id FROM packages WHERE name=? and category_id = ?',
         '@' => 'SELECT name, id FROM packages;',
         'ghost' => <<-SQL
-            SELECT distinct package, category_id
-            FROM TMP_TABLE tp
+            SELECT distinct *
+            FROM TMP_TABLE tb
             WHERE NOT EXISTS (
-                SELECT name FROM packages p WHERE p.name = tp.package
+                SELECT name FROM packages p WHERE p.name = tb.name
             );
         SQL
     }
