@@ -10,7 +10,7 @@ require 'eapi'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;041_packages;021_repositories;009_eapis'
+    self::DEPENDS = '021_repositories;041_packages;009_eapis'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {

@@ -12,7 +12,7 @@ require 'keyword'
 require 'setting'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = ''
+    self::DEPENDS = '091_ebuilds'
     self::SOURCE = '/etc/portage'
     self::TYPE = 'unknown'
     self::SQL = {

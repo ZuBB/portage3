@@ -10,7 +10,7 @@ require 'source'
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;031_categories'
+    self::DEPENDS = '031_categories'
     self::SOURCE = 'portage tree'
     self::SQL = {
         'insert' => <<-SQL

@@ -44,7 +44,7 @@ klass = Class.new(Tasks::Runner) do
 
         line       = line.sub(/#.*$/, '')
         flags      = line.split
-		atom       = flags.delete_at(0)
+        atom       = flags.delete_at(0)
         package_id = shared_data('CPN@id', atom)
 
         if line.include?('*')
