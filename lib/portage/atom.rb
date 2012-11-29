@@ -18,6 +18,21 @@ class Atom
         SQL
     }
 
+    def self.get_package(pf)
+        package = nil
+
+        if /-r\d+$/ =~ pf
+            # has -rX
+            verstion_start = /-[^-]+-r\d+$/ =~ pf
+        elsif /-\d[^-]*$/ =~ pf
+            # does not have -rX
+            verstion_start = /-\d[^-]*$/ =~ pf
+        end
+
+        package = pf[0...verstion_start] unless verstion_start.nil?
+        package
+    end
+
     def self.get_version(pf)
         version = nil
 
@@ -71,7 +86,8 @@ class Atom
         end
         # NOTE end of section that needs cleanup
 
-        Database.select(sql_query, sql_query_params).flatten
+        db_client = Portage3::Database.get_client
+        db_client.select(sql_query, sql_query_params).flatten
     end
 end
 
