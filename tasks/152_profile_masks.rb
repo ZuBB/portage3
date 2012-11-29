@@ -6,12 +6,10 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '031_categories;151_profile_masks'
-    self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => 'INSERT INTO categories (name, source_id) VALUES (?, ?);'
     }
@@ -19,18 +17,7 @@ klass = Class.new(Tasks::Runner) do
     def get_data(params)
         sql_query = Category::SQL['ghost'].dup
         sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_categories')
-        Database.select(sql_query).flatten
-    end
-
-    def set_shared_data
-        request_data('source@id', Source::SQL['@'])
-    end
-
-    def process_item(category)
-        send_data4insert({'data' => [
-            category,
-            shared_data('source@id', self.class::SOURCE),
-        ]})
+        Portage3::Database.get_client.select(sql_query)
     end
 end
 
