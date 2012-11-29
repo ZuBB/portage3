@@ -9,11 +9,12 @@
 require_relative 'envsetup'
 require 'parser'
 
-def get_deploy_type(deployments, deploy_type)
+def get_deploy_type(deployment_objs, deploy_type)
     message_parts = ['Select deployment type']
-    deployments = deployments.keys.sort
+    deployments = deployment_objs.keys.sort
     deployments.each { |depl|
-        message_parts << "[#{(deployments.index(depl) + 1).to_s}] #{depl}"
+        message_parts << "[#{(deployments.index(depl) + 1).to_s}] #{depl}:"\
+            " #{deployment_objs[depl]['description']}"
     }
 
     message_parts << "Default one (#{deploy_type}) is highly recommended: "
@@ -115,6 +116,7 @@ end
 deploy_type = get_deploy_type(data['deployments'], data['deploy_type'])
 data['deployments'][deploy_type].each { |key, value| data[key] = value }
 ['deployments', 'deploy_type'].each { |item| data.delete(item) }
+data.delete('description')
 data['uuid'] = `cat /proc/sys/kernel/random/uuid`.strip
 
 File.open(settings_file, 'w') { |file|

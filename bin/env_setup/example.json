@@ -1,20 +1,28 @@
 {
     "config_version": 1,
-    "deploy_type": "debug",
+    "deploy_type": "fast",
     "gentoo_os": true,
     "overlay_support": false,
     "settings_home": "/etc/portage",
     "uuid": "",
     "deployments": {
-        "debug": {
+        "fast": {
+            "description": "Uses '/dev/shm' and eats 0.7+ Gb of RAM (distro agnostic)",
             "tree_home": "/dev/shm/portage",
             "log_home": "/dev/shm",
             "db_home": "/dev/shm"
         },
-        "local": {
+        "native": {
+            "description": "Applicable only for Gentoo Linux (uses $PORTDIR)",
             "tree_home": "${PORTDIR}",
             "log_home": "${APPROOT}/data",
             "db_home": "${APPROOT}/data"
+        },
+        "simple": {
+            "description": "Uses '/tmp' and requires 0.7+ Gb (distro agnostic)",
+            "tree_home": "/tmp",
+            "log_home": "/tmp",
+            "db_home": "/tmp"
         }
     }
 }
