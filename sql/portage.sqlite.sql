@@ -426,14 +426,12 @@ CREATE INDEX tpmc on tmp_profile_mask_categories(name);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
-    id INTEGER,
-    package VARCHAR NOT NULL,
+    name VARCHAR NOT NULL,
     category_id INTEGER NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES categories(id),
-    PRIMARY KEY (id)
+    source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpmp on tmp_profile_mask_packages(package);
+CREATE INDEX tpmp on tmp_profile_mask_packages(name);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
@@ -471,3 +469,12 @@ CREATE TABLE IF NOT EXISTS tmp_installed_packages_categories (
 );
 
 CREATE INDEX tipc on tmp_installed_packages_categories(name);
+
+
+CREATE TABLE IF NOT EXISTS tmp_installed_packages_packages (
+    name VARCHAR NOT NULL,
+    category_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL
+);
+
+CREATE INDEX tipp on tmp_installed_packages_packages(name);
