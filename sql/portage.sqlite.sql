@@ -437,21 +437,21 @@ CREATE INDEX tpmp on tmp_profile_mask_packages(name);
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
     version VARCHAR NOT NULL,
     package_id INTEGER NOT NULL,
-    FOREIGN KEY (package_id) REFERENCES package(id)
+    repository_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpme1 on tmp_profile_mask_ebuilds(version);
-CREATE INDEX tpme2 on tmp_profile_mask_ebuilds(version, package_id);
+CREATE INDEX tpme on tmp_profile_mask_ebuilds(version, package_id);
 
 
 CREATE TABLE IF NOT EXISTS tmp_etc_portage_mask_ebuilds (
     version VARCHAR NOT NULL,
     package_id INTEGER NOT NULL,
-    FOREIGN KEY (package_id) REFERENCES package(id)
+    repository_id INTEGER NOT NULL,
+    source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tepme1 on tmp_etc_portage_mask_ebuilds(version);
-CREATE INDEX tepme2 on tmp_etc_portage_mask_ebuilds(version, package_id);
+CREATE INDEX tepme on tmp_etc_portage_mask_ebuilds(version, package_id);
 
 
 CREATE TABLE IF NOT EXISTS tmp_installed_packages_repos (
@@ -478,3 +478,14 @@ CREATE TABLE IF NOT EXISTS tmp_installed_packages_packages (
 );
 
 CREATE INDEX tipp on tmp_installed_packages_packages(name);
+
+
+CREATE TABLE IF NOT EXISTS tmp_installed_packages_ebuilds (
+    version VARCHAR,
+    package_id INTEGER,
+    --slot VARCHAR,
+    repository_id INTEGER,
+    source_id INTEGER
+);
+
+CREATE INDEX tipe on tmp_installed_packages_ebuilds(version, package_id);
