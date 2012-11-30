@@ -63,7 +63,7 @@ OptionParser.new do |opts|
 
     # parsing 'skip' option if present
     opts.on("-s", "--skip STRING", "Skip specified scripts") do |value|
-        options["skip"] = value.split(',').map { |i| i.strip.to_i }
+        options["skip"] = value
     end
 
     # parsing 'untill' option if present

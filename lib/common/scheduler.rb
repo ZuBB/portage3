@@ -32,6 +32,7 @@ class Tasks::Scheduler
     @@semaphore = Mutex.new
 
     def initialize(params)
+        @start = Time.now
         @id = Digest::MD5.hexdigest(self.class.name + SQL['insert'])
         @options = params
         @all_tasks = {}
@@ -61,6 +62,8 @@ class Tasks::Scheduler
                 puts "#{diff} task(s) have issue with filename/class name"
             end
         end
+
+        expand_skip_param
     end
 
     def get_dependencies
@@ -126,6 +129,8 @@ class Tasks::Scheduler
             PLogger.info(@id, "#{task['name']}: attempt successful")
         end
 
+        PLogger.info(@id, "Total passed: #{(Time.now - @start)} seconds")
+
         Database.end_of_task(@id)
         PLogger.end_of_task(@id)
 
@@ -187,6 +192,24 @@ class Tasks::Scheduler
                 end
             end
         end
+    end
+
+    def expand_skip_param
+        return if @options['skip'].empty?
+        @options['skip'] = @options['skip']
+            .split(',')
+            .map { |i|
+                if i.include?('-')
+                    ends = i.split('-')
+                    (ends[0]..ends[1]).to_a
+                else
+                    i
+                end
+            }
+            .flatten
+            .map { |i|
+                i.to_i
+            }
     end
 
     def self.set_shared_data(key, sql_query)
