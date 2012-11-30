@@ -7,14 +7,19 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'atom'
+require 'mask'
+require 'source'
+require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '041_packages'
+    self::DEPENDS = '021_repositories;041_packages'
+    self::SOURCE = '/etc/portage'
+    self::REPO = 'unknown'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO tmp_etc_portage_mask_ebuilds
-            (package_id, version)
-            VALUES (?, ?);
+            (version, package_id, repository_id, source_id)
+            VALUES (?, ?, ?, ?);
         SQL
     }
 
@@ -30,6 +35,8 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def set_shared_data
+        request_data('repository@id', Repository::SQL['@'])
+        request_data('source@id', Source::SQL['@'])
         request_data('CPN@id', Atom::SQL['@1'])
     end
 
@@ -43,13 +50,12 @@ klass = Class.new(Tasks::Runner) do
         return if result['vrestr'].eql?('=')
         return if result['version'].nil?
 
-        send_data4insert({
-            'raw_data' => [result['atom'], result["version"]],
-            'data' => [
-                shared_data('CPN@id', result['atom']),
-                result["version"].strip
-            ]
-        })
+        send_data4insert({'data' => [
+            result["version"].strip,
+            shared_data('CPN@id', result['atom']),
+            shared_data('repository@id', self.class::REPO),
+            shared_data('source@id', self.class::SOURCE)
+        ]})
     end
 end
 
