@@ -18,7 +18,7 @@ class Ebuild < Package
         "eapi_id" => "SELECT id FROM eapis WHERE version=?",
         "id" => "SELECT id FROM ebuilds WHERE package_id=? AND version=?",
         'ghost' => <<-SQL
-            SELECT distinct package_id, version
+            SELECT distinct *
             FROM TMP_TABLE te
             WHERE NOT EXISTS (
                 SELECT version
