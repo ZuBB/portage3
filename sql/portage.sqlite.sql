@@ -458,7 +458,9 @@ CREATE INDEX tepme2 on tmp_etc_portage_mask_ebuilds(version, package_id);
 
 
 CREATE TABLE IF NOT EXISTS tmp_installed_packages_repos (
-    name VARCHAR NOT NULL
+    name VARCHAR NOT NULL,
+    parent_folder VARCHAR NOT NULL,
+    repository_folder VARCHAR
 );
 
 CREATE INDEX tipr on tmp_installed_packages_repos(name);
