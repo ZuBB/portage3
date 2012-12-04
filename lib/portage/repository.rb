@@ -20,7 +20,7 @@ class Repository
         'any' => 'SELECT id FROM repositories limit 1',
         '@' => 'SELECT name, id FROM repositories;',
         'ghost' => <<-SQL
-            SELECT distinct tr.name
+            SELECT distinct *
             FROM TMP_TABLE tr
             WHERE NOT EXISTS (
                 SELECT name FROM repositories r WHERE r.name = tr.name
