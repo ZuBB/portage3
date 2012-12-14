@@ -7,3 +7,6 @@ module Tasks
         self.const_set(class_name, klass)
     end
 end
+
+require 'tasks/runner'
+require 'tasks/scheduler'
