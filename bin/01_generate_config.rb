@@ -6,8 +6,9 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require_relative 'envsetup'
-require 'parser'
+require_relative '../lib/common/parser'
+require 'rubygems'
+require 'json'
 
 def get_deploy_type(deployment_objs, deploy_type)
     message_parts = ['Select deployment type']
@@ -65,7 +66,7 @@ def get_profile
     `eselect --brief profile show`.strip
 end
 
-config_path_parts = [File.dirname(__FILE__), EnvSetup.get_path2root, 'data']
+config_path_parts = [File.dirname(__FILE__), '../', 'data']
 settings_dir = File.expand_path(File.join(*config_path_parts))
 settings_file = File.join(settings_dir, 'settings.json')
 example_file = File.join(File.dirname(__FILE__), 'example.json')
@@ -73,8 +74,8 @@ run_checks(settings_dir, example_file, settings_file)
 
 begin
     data = JSON.parse(IO.read(example_file))
-rescue
-    puts('Failed to parse settings example')
+rescue Exception => e
+    puts e.message
     exit(1)
 end
 
@@ -106,7 +107,7 @@ else
     data['overlay_support'] = false
 end
 
-data_dir_path = File.absolute_path(File.join(File.dirname(__FILE__), EnvSetup.get_path2root))
+data_dir_path = File.absolute_path(File.join(File.dirname(__FILE__), '..'))
 data['deployments'].each_value do |deployment|
     deployment.each_value do |path|
         path.sub!('${APPROOT}', data_dir_path)
