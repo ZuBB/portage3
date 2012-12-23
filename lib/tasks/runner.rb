@@ -11,31 +11,33 @@
 # Initial Author: Vasyl Zuzyak, 04/10/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'digest/md5'
 
 class Tasks::Runner
     def initialize(params)
-        @id          = get_task_id(params['name'])
+        start_time = Time.now
+
         @jobs        = Queue.new
+        @id          = self.class.get_task_id
         @stats       = {'timings' => []}
-        @insert_stub = {'id' => @id}
+        @logger      = get_logger_client(params)
+        @database    = get_database_client(params)
 
-        # init log device
-        # TODO custom log device?
-        PLogger.init_device({'file' => params['name'], 'id' => @id})
+        @logger.info(@id)
+        @logger.log_info_block(self.class::SQL['insert'])
 
-        # validate and register 'INSERT' query
-        if Database.validate_query(@id, self.class::SQL['insert'])
-            process_task_methods
+        if @database.validate_query(self.class::SQL['insert'])
+            process_task_methods(params['name'])
+        else
+            @logger.fatal("Passed sql query is not valid")
         end
 
-        log_stats(params['start'])
-        PLogger.end_of_task(@id)
+        log_stats(start_time)
+        @logger.finish_logging
     end
 
-    def process_task_methods
+    def process_task_methods(class_name)
         process_get_data_method
-        process_get_shared_data_method
+        process_set_shared_data_method
         process_pre_insert_method
 
         fill_table
@@ -43,8 +45,7 @@ class Tasks::Runner
         process_post_insert_check_method
         process_post_insert_method
 
-        Database.end_of_task(@id)
-        @stats.merge!(Database.get_stats(@id))
+        end_db_stuff(class_name)
     end
 
     def process_get_data_method
@@ -57,11 +58,12 @@ class Tasks::Runner
         end
     end
 
-    def process_get_shared_data_method
+    def process_set_shared_data_method
         start_time = Time.now
 
-        if defined?(get_shared_data) == 'method'
-            get_shared_data
+        if defined?(set_shared_data) == 'method'
+            @logger.info("found 'get_shared_data' method, executing")
+            set_shared_data
             store_timeframe(__method__, start_time, Time.now)
         end
     end
@@ -70,6 +72,7 @@ class Tasks::Runner
         start_time = Time.now
 
         if defined?(pre_insert) == 'method'
+            @logger.info("found 'pre_insert' method, executing")
             #pre_insert
             store_timeframe(__method__, start_time, Time.now)
         end
@@ -91,7 +94,7 @@ class Tasks::Runner
                     if defined?(process_item) == 'method'
                         process_item(item2process)
                     else
-                        send_data4insert({'data' => item2process})
+                        send_data4insert(item2process)
                     end
                     Thread.current['count'] += 1
                 end
@@ -109,7 +112,7 @@ class Tasks::Runner
 
         if defined?(post_insert_check) == 'method'
             if @data['run_check']
-                #PLogger.info("#{'=' * 35} CHECKS #{'=' * 35}")
+                @logger.info("found 'post_insert_check' method, executing")
                 #post_insert_check
                 store_timeframe(__method__, start_time, Time.now)
             end
@@ -120,34 +123,41 @@ class Tasks::Runner
         start_time = Time.now
 
         if defined?(post_insert_task) == 'method'
-            PLogger.info("#{'=' * 30} post_insert_task #{'=' * 30}")
-            message = post_insert_task
-            PLogger.info(message) unless message.nil?
+            @logger.info("found 'post_insert_task' method, executing")
+            #message = post_insert_task
+            #PLogger.info(message) unless message.nil?
             store_timeframe(__method__, start_time, Time.now)
         end
     end
 
+    def end_db_stuff(class_name)
+        start_time = Time.now
+        @database.insert_end(class_name)
+        @stats.merge!(@database.get_stats)
+        store_timeframe(__method__, start_time, Time.now)
+    end
+
     def log_stats(start_time)
-        logs = [["#{'=' * 35} SUMMARY #{'=' * 35}"]]
+        logs = [
+            "#{'=' * 20} SUMMARY #{'=' * 20}",
+            "Total amount of items for processing: #{@stats['total']}"
+        ]
         store_timeframe("Total time", start_time, Time.now)
 
         @stats['timings'].each { |hash|
             method_name = hash.keys.first
             timeframe = hash.values.first
-            logs << ["#{method_name}: elapsed #{timeframe} milliseconds"]
+            logs << "#{method_name}: elapsed #{timeframe} milliseconds"
         }
-
-        logs << ["Total amount of items for processing: #{@stats['total']}"]
 
         @stats.keys
         .select { |key| key.start_with?('worker') }
-        .each { |key| logs << ["Thread '#{key}' processed #{@stats[key]} items"] }
+        .each { |key| logs << "Thread '#{key}' processed #{@stats[key]} items" }
 
-        PLogger.group_log(@id, logs.each { |log| log.insert(0, 1) })
-        PLogger.group_log(@id, [
-            [1, "Successful inserts: #{@stats['passed']}"],
-            [1, "Faileddddd inserts: #{@stats['failed']}"]
-        ])
+        logs << "Successful inserts: #{@stats['passed']}"
+        logs << "Faileddddd inserts: #{@stats['failed']}"
+
+        @logger.group_log(logs)
     end
 
     # {
@@ -156,7 +166,7 @@ class Tasks::Runner
     #     'raw_data' => item2process
     # }
     def send_data4insert(data)
-        Database.add_data4insert(data.merge(@insert_stub))
+        @database.insert(data)
     end
 
     def store_timeframe(method_name, start_time, end_time)
@@ -165,19 +175,45 @@ class Tasks::Runner
         }
     end
 
-    def get_task_id(class_name)
-        id = []
-
-        id << class_name
-        id << self.class::DEPENDS rescue ''
-        id << self.class::PROVIDES rescue ''
-        id << self.class::SQL['insert'] rescue ''
-
-        Digest::MD5.hexdigest(id.join)
+    def request_data(key, sql_query)
+        Tasks::Scheduler.set_shared_data(key, sql_query)
     end
 
     def shared_data(data_key, item_key)
-        Tasks::Scheduler.class_variable_get(:@@shared_data)[data_key][item_key]
+        shared_data = Tasks::Scheduler.class_variable_get('@@shared_data')
+
+        unless shared_data.has_key?(data_key)
+            @logger.error("shared data does not have '#{data_key}' object")
+            return nil
+        end
+
+        unless shared_data[data_key].has_key?(item_key)
+            message = "object '#{data_key}' of shared data does not have"\
+                "'#{item_key}' value"
+            @logger.warn(message)
+            return nil
+        end
+
+        shared_data[data_key][item_key]
+    end
+
+    def get_logger_client(params)
+        Portage3::Logger.get_client({
+            'debug' => params['log_level'],
+            'file'  => params['name'],
+            'id'    => @id
+        })
+    end
+
+    def get_database_client(params)
+        Portage3::Database.get_client({'id' => @id})
+    end
+
+    def self.get_task_id
+        Digest::MD5.hexdigest([
+            self.name.to_s,
+            self::SQL['insert'],
+            (self::DEPENDS rescue '')
+        ].join('|'))
     end
 end
-
