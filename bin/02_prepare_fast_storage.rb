@@ -6,16 +6,16 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require_relative 'envsetup'
 require 'fileutils'
 require 'optparse'
-require 'parser'
+require_relative '../lib/common/parser'
+require_relative '../lib/common/utils'
 
 options = {
     "download_snapshot" => false,
     "download_url" => 'http://goo.gl/o0kHa',
     # TODO replace with /tmp
-    "snapshots_home" => '../../misc/snapshots',
+    "snapshots_home" => '../misc/snapshots',
     "snapshot_name" => 'portage-latest.tar.bz2',
     "required_space" => 700,
     "recreate_tree" => false,
@@ -140,12 +140,12 @@ end
 
 if Utils::SETTINGS['gentoo_os']
     sys_tree_home = Parser.get_multi_line_ini_value(
-        IO.read(File.join(
+        IO.readlines(File.join(
             File.dirname(__FILE__),
-            EnvSetup.get_path2root,
+            '../',
             'data',
             'emerge_info'
-        )).lines.to_a, 'PORTDIR'
+        )), 'PORTDIR'
     )
 else
     sys_tree_home = nil
@@ -163,4 +163,3 @@ if options['sync_tree'] && root_path != sys_tree_home
     %x[rm #{portage_home}/*-*/*/ChangeLog]
     puts "Done"
 end
-
