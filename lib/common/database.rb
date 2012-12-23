@@ -6,49 +6,82 @@
 #
 require 'rubygems'
 require 'sqlite3'
-require 'thread'
 
-module Database
-    @database = nil
-    @statements = {}
-    @data4db = Queue.new
-    @semaphore = Mutex.new
-    Thread.abort_on_exception = true
-    @thread = Thread.new do
+module Portage3::Database
+    INSERT = 'insert or ignore into completed_tasks (name) VALUES (?);'
+    EXT = 'sqlite'
+
+    @@stats = {}
+    @@completed_tasks = {}
+    @@insert_statement = nil
+    @@database = nil
+    @@statements = {}
+    @@data4db = Queue.new
+    @@semaphore = Mutex.new
+    @@thread = Thread.new do
         Thread.current.priority = 1
         Thread.current["name"] = "db worker"
 
         while true
-            hash = @data4db.pop
+            hash = @@data4db.pop
 
-            if hash['data'] == ['DB:EOT']
-                self.close_statement(hash['id'])
+            if hash['data'][0] == 'DB:EOT'
+                self.close_statement(hash['id'], hash['data'].last)
                 next
             end
 
-            break if hash['data'] == ['DB:EOS']
+            if hash['data'] == ['DB:EOS']
+                close_database
+                break
+            end
 
             begin
-                @statements[hash['id']].execute(*hash['data'])
-                Thread.current[hash['id']]['passed'] += 1
+                @@statements[hash['id']].execute(*hash['data'])
+                @@stats[hash['id']]['passed'] += 1
             rescue SQLite3::Exception => exception
-                PLogger.group_log(hash['id'], [
-                    [3, "#{'>' * 20} database exception happened #{'>' * 20}"],
-                    [1, "Message: #{exception.message}"],
-                    [1, "Values: #{(hash['raw_data'] || hash['data']).inspect}"],
-                    [1, "#{'<' * 69}"]
-                ])
-                Thread.current[hash['id']]['failed'] += 1
+                @@stats[hash['id']]['failed'] += 1
+                messages = [
+                    "#{'>' * 20} database exception happened #{'>' * 20}",
+                    "Message: #{exception.message}",
+                    "Values: #{(hash['raw_data'] || hash['data']).inspect}",
+                    "#{'<' * 69}"
+                ]
+                messages.map! { |message| [message, 1, hash['id']] }
+                messages[0][1] = Logger::ERROR
+                @@logger.group_log(messages)
             end
         end
     end
 
-    def self.init(db_filename = '')
+    def self.init(db_filename)
+        unless self.valid_db_filename?(db_filename)
+            throw "Can not create/use db file at `#{db_filename}"
+        end
+
+        @@db_filename = db_filename.dup
+        @@database = SQLite3::Database.new(db_filename)
+
+        # need to set a home dir for logging of this db
+        # but we are aware of that dir after db made his vakidation
+        dummy_client = Portage3::Logger.class_variable_get('@@dummy_client')
+        dummy_client.set_log_dir(db_filename)
+
+        # get a log client for db module/object
+        @@logger = Portage3::Logger.get_client({
+            'id'   => Digest::MD5.hexdigest(self.name),
+            'file' => self.name
+        })
+
+        @@logger.info('lets start')
+        self.start_transaction
+    end
+
+    def self.valid_db_filename?(db_filename)
         filename_valid = true
 
         if db_filename.is_a?(String) && !db_filename.empty?
             if File.exist?(db_filename)
-                filename_valid &= /sqlite/i =~ `file -b #{db_filename}`
+                filename_valid &= /#{EXT}/i =~ `file -b #{db_filename}`
                 filename_valid &= File.writable?(db_filename)
             else
                 filename_valid &= File.writable?(File.dirname(db_filename))
@@ -57,80 +90,189 @@ module Database
             filename_valid &= false
         end
 
-        unless filename_valid
-            throw "Can not create/use db file at `#{db_filename}"
-        end
-
-        @database = SQLite3::Database.new(db_filename)
-        @database.transaction
+        filename_valid
     end
 
-    def self.validate_query(id, query = '')
-        result = nil
+    def self.validate_query(id, query)
+        return false unless query.is_a?(String)
+        return false if     query.empty?
+        return false unless @@database.complete?(query)
 
-        if query.is_a?(String) && !query.empty? && @database.complete?(query)
-            @semaphore.synchronize {
-                # NOTE here you may get an exception in next case:
-                # statement operates on table that is not created yet
-                @statements[id] = @database.prepare(query)
-            }
+        self.create_insert_statement
+        @@semaphore.synchronize {
+            @@stats[id] = { 'passed' => 0, 'failed' => 0 }
+            # NOTE here you may get an exception in next case:
+            # statement operates on table that is not created yet
+            @@statements[id] = @@database.prepare(query)
+            @@completed_tasks[id] = Queue.new
+        }
 
-            @thread[id] = {
-                'passed' => 0,
-                'failed' => 0
-            }
+        true
+    end
 
-            PLogger.log_info_block(id, query)
-            result = true
-        else
-            result = false
-            PLogger.fatal(id, "Passed sql query is not valid")
+    def self.create_insert_statement
+        if @@insert_statement.nil? && File.size?(@@db_filename)
+            @@insert_statement = @@database.prepare(INSERT)
         end
-
-        result
     end
 
     def self.add_data4insert(item)
-        @data4db << item
+        @@data4db << item
     end
 
     def self.execute(sql_query, *values)
-        @database.execute_batch(sql_query, *values)
+        @@database.execute_batch(sql_query, *values)
+    end
+
+    def self.safe_execute(*values)
+        begin
+            @@database.execute_batch(*values)
+            true
+        rescue
+            false
+        end
     end
 
     def self.select(sql_query, *values)
-        @database.execute(sql_query, *values)
+        @@database.execute(sql_query, *values)
     end
 
     def self.get_1value(sql_query, *values)
-        @database.get_first_value(sql_query, *values)
+        @@database.get_first_value(sql_query, *values)
     end
 
     def self.last_inserted_id
-        @database.get_first_value("SELECT last_insert_rowid();")
+        @@database.get_first_value("SELECT last_insert_rowid();")
     end
 
-    def self.end_of_task(id)
-        self.add_data4insert({'id' => id, 'data' => ['DB:EOT']})
+    def self.close_statement(id, task_name)
+        @@statements[id].reset!
+        @@statements[id].close
+        @@semaphore.synchronize { @@statements.delete(id) }
+        @@logger.info("statement '#{id}' has been closed")
+
+        @@insert_statement.execute(task_name)
+        @@completed_tasks[id] << id
     end
 
-    def self.close_statement(id)
-        @statements[id].reset!
-        @statements[id].close
-        @semaphore.synchronize { @statements.delete(id) }
+    def self.get_task_stats(id)
+        # to be sure we get all stats, we need to wait till task is completed
+        @@stats[@@completed_tasks[id].pop]
     end
 
-    def self.get_stats(id)
-        sleep(0.2) while @statements.has_key?(id)
-        @thread[id]
+    def self.start_transaction
+        unless @@database.transaction_active?
+            @@logger.info('going to start transaction')
+            @@database.transaction
+        end
+    end
+
+    def self.commit_transaction
+        if @@database.transaction_active?
+            @@logger.info('going to commit transaction')
+            @@database.commit
+        end
+    end
+
+    def self.close_database
+        @@statements.keys.each do |key|
+            @@statements[key].reset!
+            @@statements[key].close
+            @@statements.delete(key)
+
+            @@completed_tasks[key] << 0
+            @@logger.error("Forced to close '#{key}' statement")
+        end
+
+        unless @@insert_statement.nil?
+            @@insert_statement.reset!
+            @@insert_statement.close
+        end
+
+        self.commit_transaction
+        @@database.close
+
+        @@logger.info('closing database')
+        @@logger.finish_logging
     end
 
     def self.close
-        sleep(0.2) while !@statements.empty?
-        self.add_data4insert({'data' => ['DB:EOS']})
-        @thread.join
-        @database.commit
-        @database.close unless @database.closed?
+        @@thread.join
+    end
+
+    def self.get_client(params = {})
+        Portage3::Database::Client.new(params)
+    end
+
+    def self.create_db_name
+        "portage-cache-#{Utils.get_timestamp}.#{EXT}"
+    end
+end
+
+class Portage3::Database::Client
+    SERVER = Portage3::Database
+
+    def initialize(params = {})
+        if params.has_key?('db_filename')
+            Portage3::Database.init(params['db_filename'])
+        end
+
+        if params.has_key?('id') && params['id'].is_a?(String) && !params['id'].empty?
+            @id = params['id']
+        else
+            @id = Digest::MD5.hexdigest(Random.rand.to_s)
+        end
+
+        @id_hash = {'id' => @id}
+
+        self
+    end
+
+    def validate_query(query)
+        SERVER.validate_query(@id, query)
+    end
+
+    def insert(params)
+        params = {'data' => params} unless params.is_a?(Hash)
+        SERVER.add_data4insert(params.merge(@id_hash))
+    end
+
+    def execute(sql_query, *values)
+        SERVER.execute(sql_query, *values)
+    end
+
+    def safe_execute(*values)
+        SERVER.safe_execute(*values)
+    end
+
+    def select(sql_query, *values)
+        SERVER.select(sql_query, *values)
+    end
+
+    def get_1value(sql_query, *values)
+        SERVER.get_1value(sql_query, *values)
+    end
+
+    def insert_end(task_name)
+        insert(['DB:EOT', task_name])
+    end
+
+    # TODO useless?
+    def start_transaction
+        SERVER.start_transaction
+    end
+
+    def commit_transaction
+        SERVER.commit_transaction
+    end
+
+    def get_stats
+        SERVER.get_task_stats(@id)
+    end
+
+    def shutdown_server
+        insert(['DB:EOS'])
+        SERVER.close
     end
 end
 
