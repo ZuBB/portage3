@@ -65,9 +65,10 @@ class Package < Category
 
     def self.get_packages(params = {})
         results = {}
-        categories = Database.select(Category::SQL['all'])
+        db_client = Portage3::Database.get_client
+        categories = db_client.select(Category::SQL['all'])
 
-        Database.select(Repository::SQL['all']).each do |repo_row|
+        db_client.select(Repository::SQL['all']).each do |repo_row|
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
             next unless File.exist?(repo_home)
 
