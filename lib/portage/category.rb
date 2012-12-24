@@ -67,7 +67,8 @@ class Category < Repository
     def self.get_categories(params = {})
         results = {}
 
-        Database.select(Repository::SQL['all']).each do |repo_row|
+        db_client = Portage3::Database.get_client
+        db_client.select(Repository::SQL['all']).each do |repo_row|
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
             next unless File.exist?(repo_home)
 
