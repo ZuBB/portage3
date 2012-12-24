@@ -43,7 +43,7 @@ klass = Class.new(Tasks::Runner) do
             end
         end
 
-        PLogger.group_log(@id, logged_items) if logged_items.size > 3
+        @logger.group_log(logged_items) if logged_items.size > 3
     end
 end
 

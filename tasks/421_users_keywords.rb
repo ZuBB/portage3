@@ -38,10 +38,10 @@ klass = Class.new(Tasks::Runner) do
         results
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('setting@id', Setting::SQL['@'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('setting@id', Setting::SQL['@'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_item(line)
@@ -54,12 +54,12 @@ klass = Class.new(Tasks::Runner) do
 
         
         if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
-            PLogger.warn(@id, "Dead package: #{line.strip}")
+            @logger.warn("Dead package: #{line.strip}")
             return
         end
 
         if (result_set = Atom.get_ebuilds(result)).nil?
-            PLogger.warn(@id, "Dead PV: #{line.strip}")
+            @logger.warn("Dead PV: #{line.strip}")
             return
         end
 

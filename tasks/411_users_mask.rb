@@ -29,8 +29,8 @@ klass = Class.new(Tasks::Runner) do
         lines
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_item(line)

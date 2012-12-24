@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 02/07/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'parser'
 
 # TODO rewrite with data from data/emerge_infoo
 klass = Class.new(Tasks::Runner) do

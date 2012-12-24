@@ -24,12 +24,12 @@ klass = Class.new(Tasks::Runner) do
         Category.get_categories(params)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Category: #{params}")
+        @logger.debug("Category: #{params}")
         category = Category.new(params)
 
         params = [category.category]

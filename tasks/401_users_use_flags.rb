@@ -32,10 +32,10 @@ klass = Class.new(Tasks::Runner) do
         IO.readlines('/etc/portage/package.use')
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('flag_state@id', UseFlag::SQL['@2'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('flag_state@id', UseFlag::SQL['@2'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_item(line)

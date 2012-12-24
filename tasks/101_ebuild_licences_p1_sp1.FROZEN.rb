@@ -26,7 +26,7 @@ class Script
     end
 
     def process(params)
-        PLogger.debug("Ebuild: #{params[3, 3].join('-')}")
+        @logger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
         licenses = License.get_0dep_licenses(ebuild.ebuild_licences)
 

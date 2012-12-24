@@ -31,11 +31,11 @@ klass = Class.new(Tasks::Runner) do
         .reject { |line| /^\s*$/ =~ line }
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('flag_type@id', UseFlag::SQL['@1'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('repo@id', Repository::SQL['@'])
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('flag_type@id', UseFlag::SQL['@1'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('repo@id', Repository::SQL['@'])
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_item(line)
@@ -48,7 +48,7 @@ klass = Class.new(Tasks::Runner) do
             params << shared_data('repo@id', self.class::REPO)
             send_data4insert({'data' => params})
         else
-            PLogger.group_log(@id, [
+            @logger.group_log([
                 [3, 'Failed to parse next line'],
                 [1, line]
             ])

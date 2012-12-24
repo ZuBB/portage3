@@ -24,8 +24,8 @@ klass = Class.new(Tasks::Runner) do
         .reject { |i| File.exist?(i.sub('package.mask', 'deprecated')) }
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('category@id', Category::SQL['@'])
+    def set_shared_data
+        request_data('category@id', Category::SQL['@'])
     end
 
     def process_item(filename)

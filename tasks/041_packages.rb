@@ -24,12 +24,12 @@ klass = Class.new(Tasks::Runner) do
         Package.get_packages(params)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Package: #{params}")
+        @logger.debug("Package: #{params}")
         package = Package.new(params)
 
         params = [package.package]

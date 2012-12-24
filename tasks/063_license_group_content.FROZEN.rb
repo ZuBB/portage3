@@ -39,8 +39,8 @@ klass = Class.new(Tasks::Runner) do
         items.flatten(1)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('license_group@id', License::SQL['@1'])
+    def set_shared_data
+        request_data('license_group@id', License::SQL['@1'])
     end
 
     def process_item(params)

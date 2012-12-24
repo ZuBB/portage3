@@ -29,7 +29,7 @@ klass = Class.new(Tasks::Runner) do
         if File.size?(filepath)
             send_data4insert({'data' => [IO.read(filepath).strip]})
         else
-            PLogger.error(@id, "File `#{filepath}` is missed")
+            @logger.error("File `#{filepath}` is missed")
         end
     end
 end
