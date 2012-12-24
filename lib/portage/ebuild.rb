@@ -170,9 +170,10 @@ class Ebuild < Package
             JOIN categories c on p.category_id = c.id;
         SQL
 
-        atoms = Database.select(sql_query)
+        db_client = Portage3::Database.get_client
+        atoms = db_client.select(sql_query)
 
-        Database.select(Repository::SQL['all']).each do |repo_row|
+        db_client.select(Repository::SQL['all']).each do |repo_row|
             repo_home = File.join(repo_row[2], repo_row[3] || repo_row[1])
             next unless File.exist?(repo_home)
 
@@ -199,11 +200,11 @@ class Ebuild < Package
     end
 
     def self.get_ebuilds(params = {})
-        Database.select(<<-SQL
+        Portage3::Database.get_client.select(<<-SQL
             SELECT
                 r.name,
-                parent_folder,
-                repository_folder,
+                r.parent_folder,
+                r.repository_folder,
                 c.name,
                 p.name,
                 version,
@@ -213,6 +214,31 @@ class Ebuild < Package
             JOIN packages p on p.id=e.package_id
             JOIN categories c on p.category_id=c.id
             JOIN repositories r on r.id=e.repository_id
+            /* TODO hardcoded value */
+            where e.source_id = (
+                select id from sources where source = 'ebuilds'
+            );
+        SQL
+        )
+    end
+
+    def self.get_ebuilds_data(field)
+        Portage3::Database.get_client.select(<<-SQL
+            SELECT
+                r.id,
+                r.parent_folder,
+                r.repository_folder,
+                c.name,
+                p.name,
+                e.version,
+                e.id,
+                p.id,
+                d.#{field}
+            FROM ebuilds e
+            JOIN packages p on p.id = e.package_id
+            JOIN categories c on p.category_id = c.id
+            JOIN repositories r on r.id = e.repository_id
+            JOIN tmp_ebuilds_data d on d.ebuild_id = e.id
             /* TODO hardcoded value */
             where e.source_id = (
                 select id from sources where source = 'ebuilds'

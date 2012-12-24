@@ -82,7 +82,7 @@ module EbuildVersion
             JOIN repositories r on r.id=e.repository_id
         SQL
 
-        Database.select(sql_query).each do |row|
+        Portage3::Database.get_client.select(sql_query).each do |row|
             package_id = row.first
             unless tmp_results.has_key?(package_id)
                 tmp_results[package_id] = {

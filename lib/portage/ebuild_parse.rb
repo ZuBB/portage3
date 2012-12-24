@@ -4,7 +4,6 @@
 # Initial Author: Vasyl Zuzyak, 04/03/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'parser'
 
 class Ebuild
     private
