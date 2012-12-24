@@ -28,13 +28,13 @@ klass = Class.new(Tasks::Runner) do
         Ebuild.list_ebuilds(params)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('eapi@id', Eapi::SQL['@'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
+        request_data('eapi@id', Eapi::SQL['@'])
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Ebuild: #{params}")
+        @logger.debug("Ebuild: #{params}")
         ebuild = Ebuild.new(params)
         eapi = ebuild.ebuild_eapi('parse')
         eapi = eapi == '0_EAPI_DEF' ? '0' : eapi

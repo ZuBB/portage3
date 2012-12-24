@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'parser'
 require 'source'
 require 'useflag'
 require 'repository'
@@ -35,10 +34,10 @@ klass = Class.new(Tasks::Runner) do
         }
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('flag_type@id', UseFlag::SQL['@1'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('repo@id', Repository::SQL['@'])
+    def set_shared_data
+        request_data('flag_type@id', UseFlag::SQL['@1'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('repo@id', Repository::SQL['@'])
     end
 
     def process_item(file)
@@ -56,18 +55,18 @@ klass = Class.new(Tasks::Runner) do
                 params[0] = use_prefix + '_' + params[0]
 
                 if /\s{2,}/ =~ params[1]
-                    PLogger.group_log(@id, [
-                        [2, 'Got 2+ space chars in next line Fixing..'],
-                        [1, params[1]]
+                    @logger.group_log([
+                        ['Got 2+ space chars in next line Fixing..', 2],
+                        params[1]
                     ])
                     params[1].gsub!(/\s{2,}/, ' ')
                 end
 
                 send_data4insert({'data' => params})
             else
-                PLogger.group_log(@id, [
-                    [3, 'Failed to parse next line'],
-                    [1, line]
+                @logger.group_log([
+                    ['Failed to parse next line', 3],
+                    line
                 ])
             end
         end

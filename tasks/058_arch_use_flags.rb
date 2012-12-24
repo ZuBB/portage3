@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'parser'
 require 'source'
 require 'useflag'
 require 'repository'
@@ -31,10 +30,10 @@ klass = Class.new(Tasks::Runner) do
         Parser.get_multi_line_ini_value(content, 'USE_EXPAND_VALUES_ARCH').split
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('flag_type@id', UseFlag::SQL['@1'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('repo@id', Repository::SQL['@'])
+    def set_shared_data
+        request_data('flag_type@id', UseFlag::SQL['@1'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('repo@id', Repository::SQL['@'])
     end
 
     def process_item(flag)

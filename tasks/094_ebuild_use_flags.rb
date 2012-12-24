@@ -44,13 +44,13 @@ klass = Class.new(Tasks::Runner) do
         Ebuild.get_ebuilds(params)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('flag_state@id', UseFlag::SQL['@2'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
+        request_data('flag_state@id', UseFlag::SQL['@2'])
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Ebuild: #{params[3, 3].join('-')}")
+        @logger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
         # NOTE we need here `.uniq()` because results of command like this
         # `portageq metadata / ebuild www-client/firefox-10.0.10 IUSE`

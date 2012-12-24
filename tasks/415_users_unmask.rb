@@ -29,12 +29,12 @@ klass = Class.new(Tasks::Runner) do
         IO.readlines(File.join(*path_items))
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('mask_state@id', Mask::SQL['@'])
-        Tasks::Scheduler.set_shared_data('setting@id', Setting::SQL['@'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('arch@id', Keyword::SQL['@1'])
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('mask_state@id', Mask::SQL['@'])
+        request_data('setting@id', Setting::SQL['@'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('arch@id', Keyword::SQL['@1'])
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_item(line)
@@ -44,12 +44,12 @@ klass = Class.new(Tasks::Runner) do
         result = Mask.parse_line(line.strip.insert(0, '-'))
 
         if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
-            PLogger.warn(@id, "File `#{self.class::FILE}` has dead package: #{line.strip}")
+            @logger.warn("File `#{self.class::FILE}` has dead package: #{line.strip}")
             return
         end
 
         if (result_set = Atom.get_ebuilds(result)).size == 0
-            PLogger.warn(@id, "File `#{self.class::FILE}` has dead PV: #{line.strip}")
+            @logger.warn("File `#{self.class::FILE}` has dead PV: #{line.strip}")
             return
         end
 

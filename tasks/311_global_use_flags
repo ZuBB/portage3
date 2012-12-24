@@ -28,11 +28,11 @@ klass = Class.new(Tasks::Runner) do
         Parser.get_multi_line_ini_value(file_content, 'USE').split.uniq
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('flag_type@id', UseFlag::SQL['@1'])
-        Tasks::Scheduler.set_shared_data('flag_state@id', UseFlag::SQL['@2'])
-        Tasks::Scheduler.set_shared_data('global_flag@id', UseFlag::SQL['@3'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
+        request_data('flag_type@id', UseFlag::SQL['@1'])
+        request_data('flag_state@id', UseFlag::SQL['@2'])
+        request_data('global_flag@id', UseFlag::SQL['@3'])
     end
 
     def process_item(flag_spec)

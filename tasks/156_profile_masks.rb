@@ -28,9 +28,9 @@ klass = Class.new(Tasks::Runner) do
         Database.select(sql_query)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('repository@id', Repository::SQL['@'])
+    def set_shared_data
+        request_data('source@id', Source::SQL['@'])
+        request_data('repository@id', Repository::SQL['@'])
     end
 
     def process_item(params)

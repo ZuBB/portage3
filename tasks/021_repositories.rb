@@ -22,7 +22,7 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Repository: #{params}")
+        @logger.debug("Repository: #{params}")
         repository = Repository.new(params)
 
         send_data4insert({ 'data' => [

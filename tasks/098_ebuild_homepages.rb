@@ -24,7 +24,7 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Ebuild: #{params[3, 3].join('-')}")
+        @logger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
         ebuild.ebuild_homepage.split.each { |homepage|

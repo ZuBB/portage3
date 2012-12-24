@@ -26,15 +26,15 @@ klass = Class.new(Tasks::Runner) do
         Database.select(PProfile::SQL['names']).flatten
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('profile@id', PProfile::SQL['@'])
-        Tasks::Scheduler.set_shared_data('mask_state@id', Mask::SQL['@'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('CPN@id', Atom::SQL['@1'])
+    def set_shared_data
+        request_data('profile@id', PProfile::SQL['@'])
+        request_data('mask_state@id', Mask::SQL['@'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('CPN@id', Atom::SQL['@1'])
     end
 
     def process_file(filename, profile)
-        PLogger.debug(@id, "File: #{filename}")
+        @logger.debug("File: #{filename}")
 
         IO.foreach(filename) do |line|
             next if /^\s*#/ =~ line
@@ -43,12 +43,12 @@ klass = Class.new(Tasks::Runner) do
             result = Mask.parse_line(line.strip)
 
             if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
-                PLogger.warn(@id, "File `#{filename}` has dead package: #{line.strip}")
+                @logger.warn("File `#{filename}` has dead package: #{line.strip}")
                 next 
             end
 
             if (result_set = Atom.get_ebuilds(result)).size == 0
-                PLogger.warn(@id, "File `#{filename}` has dead PV: #{line.strip}")
+                @logger.warn("File `#{filename}` has dead PV: #{line.strip}")
                 next
             end
 
@@ -87,12 +87,12 @@ klass = Class.new(Tasks::Runner) do
         profile_path = File.join(Utils::get_profiles_home, profile)
 
         unless File.exist?(profile_path)
-            PLogger.error("Path #{profile_path} does not exist")
+            @logger.error("Path #{profile_path} does not exist")
             return
         end
 
         if File.file?(profile_path)
-            PLogger.error("Path #{profile_path} is a file")
+            @logger.error("Path #{profile_path} is a file")
             return
         end
 

@@ -25,14 +25,14 @@ klass = Class.new(Tasks::Runner) do
         Ebuild.get_ebuilds(params)
     end
 
-    def get_shared_data
-        Tasks::Scheduler.set_shared_data('keyword@id', Keyword::SQL['@2'])
-        Tasks::Scheduler.set_shared_data('source@id', Source::SQL['@'])
-        Tasks::Scheduler.set_shared_data('arch@id', Keyword::SQL['@1'])
+    def set_shared_data
+        request_data('keyword@id', Keyword::SQL['@2'])
+        request_data('source@id', Source::SQL['@'])
+        request_data('arch@id', Keyword::SQL['@1'])
     end
 
     def process_item(params)
-        PLogger.debug(@id, "Ebuild: #{params[3, 3].join('-')}")
+        @logger.debug("Ebuild: #{params[3, 3].join('-')}")
         ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
         Keyword.parse_ebuild_keywords(
             ebuild.ebuild_keywords,
