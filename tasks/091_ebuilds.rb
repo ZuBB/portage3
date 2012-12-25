@@ -16,11 +16,8 @@ klass = Class.new(Tasks::Runner) do
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds
-            (
-                package_id, version, repository_id, mtime, mauthor, /*raw_eapi,
-                eapi_id,*/ slot, source_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?/*, ?, ?*/);
+            (package_id, version, repository_id, source_id)
+            VALUES (?, ?, ?, ?);
         SQL
     }
 
@@ -36,19 +33,11 @@ klass = Class.new(Tasks::Runner) do
     def process_item(params)
         @logger.debug("Ebuild: #{params}")
         ebuild = Ebuild.new(params)
-        eapi = ebuild.ebuild_eapi('parse')
-        eapi = eapi == '0_EAPI_DEF' ? '0' : eapi
 
         send_data4insert({'data' => [
             ebuild.package_id,
             ebuild.ebuild_version,
             ebuild.repository_id,
-            ebuild.ebuild_mtime,
-            ebuild.ebuild_author,
-            # TODO notify upstream and remove raw_eapi
-            #ebuild.ebuild_eapi,
-            #shared_data('eapi@id', eapi.to_i),
-            ebuild.ebuild_slot,
             shared_data('source@id', self.class::SOURCE)
         ]})
     end
