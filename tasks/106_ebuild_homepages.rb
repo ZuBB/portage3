@@ -9,7 +9,7 @@
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '091_ebuilds'
+    self::DEPENDS = '093_read_ebuilds_data'
     self::THREADS = 4
     self::SQL = {
         'insert' => <<-SQL
@@ -20,18 +20,16 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        Ebuild.get_ebuilds(params)
+        Ebuild.get_ebuilds_data('homepages')
     end
 
     def process_item(params)
         @logger.debug("Ebuild: #{params[3, 3].join('-')}")
-        ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
 
-        ebuild.ebuild_homepage.split.each { |homepage|
-            send_data4insert({'data' => [homepage, ebuild.ebuild_id]})
+        params.last.split.each { |homepage|
+            send_data4insert({'data' => [homepage, params[6]]})
         }
     end
 end
 
 Tasks.create_task(__FILE__, klass)
-
