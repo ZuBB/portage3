@@ -22,4 +22,3 @@ script = Script.new({
     'data_source' => method(:get_data),
     'sql_query' => 'INSERT INTO license_specs (switch_type_id) VALUES (?);'
 })
-

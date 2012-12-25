@@ -12,7 +12,7 @@ require 'ebuild'
 def get_data(params)
     sql_query = <<-SQL
         select ebuild_id, ls.id
-        from tmp_ebuild_licenses_p1 tmp1 
+        from tmp_ebuild_licenses_p1 tmp1
         join license_specs ls on ls.id = tmp1.id;
     SQL
     Database.select(sql_query)
@@ -32,4 +32,3 @@ script = Script.new({
         VALUES (?, ?);
     SQL
 })
-
