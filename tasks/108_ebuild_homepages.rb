@@ -8,7 +8,7 @@
 #
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '099_ebuild_homepages'
+    self::DEPENDS = '107_ebuild_homepages'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds_homepages
@@ -23,9 +23,8 @@ klass = Class.new(Tasks::Runner) do
             FROM ebuild_homepages eh
             JOIN tmp_ebuild_homepages teh ON eh.homepage = teh.homepage;
         SQL
-        Database.select(sql_query)
+        Portage3::Database.get_client.select(sql_query)
     end
 end
 
 Tasks.create_task(__FILE__, klass)
-
