@@ -44,4 +44,3 @@ script = Script.new({
         VALUES (?, ?);
     SQL
 })
-
