@@ -11,7 +11,7 @@ require 'source'
 require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '059_use_flag_stuff;091_ebuilds'
+    self::DEPENDS = '059_use_flag_stuff;093_read_ebuilds_data'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {
@@ -41,7 +41,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        Ebuild.get_ebuilds(params)
+        Ebuild.get_ebuilds_data('use_flags')
     end
 
     def set_shared_data
@@ -51,16 +51,15 @@ klass = Class.new(Tasks::Runner) do
 
     def process_item(params)
         @logger.debug("Ebuild: #{params[3, 3].join('-')}")
-        ebuild = Ebuild.new(Ebuild.generate_ebuild_params(params))
         # NOTE we need here `.uniq()` because results of command like this
         # `portageq metadata / ebuild www-client/firefox-10.0.10 IUSE`
         # may return duplicated flags.
-        ebuild.ebuild_use_flags.split.uniq.each do |flag|
+        params.last.split.uniq.each do |flag|
             send_data4insert({'data' => [
                 UseFlag.get_flag(flag),
-                ebuild.package_id,
+                params[7],
                 shared_data('flag_state@id', UseFlag.get_flag_state(flag)),
-                ebuild.ebuild_id,
+                params[6],
                 shared_data('source@id', self.class::SOURCE)
             ]})
         end
@@ -68,4 +67,3 @@ klass = Class.new(Tasks::Runner) do
 end
 
 Tasks.create_task(__FILE__, klass)
-
