@@ -393,14 +393,18 @@ create table ipackage_flagstates (
 
 -- TEMPORARY TABLES --
 
-CREATE TABLE tmp_ebuild_descriptions (
+CREATE TABLE tmp_ebuilds_data (
     id INTEGER,
-    descr VARCHAR NOT NULL,
     ebuild_id INTEGER NOT NULL,
+    homepages VARCHAR NOT NULL,
+    descr VARCHAR NOT NULL,
+    use_flags VARCHAR NOT NULL,
+    keywords VARCHAR NOT NULL,
+    mauthor VARCHAR NOT NULL,
+    mtime VARCHAR NOT NULL,
+    slot VARCHAR NOT NULL,
     PRIMARY KEY (id)
 );
-
-CREATE INDEX ted on tmp_ebuild_descriptions (descr);
 
 
 CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
