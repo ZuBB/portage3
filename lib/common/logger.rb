@@ -6,7 +6,9 @@
 #
 require 'logger'
 
-module Portage3::Logger
+class Portage3::Logger
+    include Portage3::Server
+
     # blog.grayproductions.net/articles/the_books_are_wrong_about_logger
     class SimpleLog < Logger::Formatter
         TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -18,43 +20,31 @@ module Portage3::Logger
         end
     end
 
+    PORT = 8127
     EOT = 'LOG:EOT'
     EOS = 'LOG:EOS'
     EXT = "log"
 
-    @@loggers = {}
-    @@log_dir = nil
     @@dummy_client = nil
-    @@completed_logs = {}
-    @@log_tasks = Queue.new
-    @@semaphore = Mutex.new
 
-    def self.start_server
-        @@thread = Thread.new do
-           #Thread.current.priority = 2
+    def initialize
+        @log_dir   = nil
+        @loggers   = {}
+        @semaphore = Mutex.new
+        @log_tasks = Queue.new
+        @completed_logs = {}
 
-            while true
-                device, severity, message = *@@log_tasks.pop
-
-                if message == EOT
-                    self.close_logger(device)
-                    next
-                end
-
-                break if message == EOS
-
-                @@loggers[device].add(severity, message)
+        @processing_thread = Thread.new { process_log_data }
+        server = TCPServer.new('localhost', Portage3::Logger::PORT)
+        loop do
+            Thread.start(server.accept) do |connection|
+                process_connection(connection)
             end
         end
-
-        @@dummy_client = Portage3::Logger.get_client({
-            'dummy' => true,
-            'id'    => self.name
-        })
     end
 
-    def self.set_log_dir(log_dir)
-        return true unless @@log_dir.nil?
+    def set_log_dir(log_dir)
+        return true unless @log_dir.nil?
         return false if log_dir.nil?
         return false if log_dir.empty?
 
@@ -65,31 +55,31 @@ module Portage3::Logger
         return false unless File.directory?(log_dir)
         return false unless File.writable?(log_dir)
 
-        @@log_dir = log_dir
+        @log_dir = log_dir
         return true
     end
 
-    def self.init_device(params)
-        unless (log_file = self.get_logfile(params))
+    def init_device(params)
+        unless (log_file = get_logfile(params))
             return false unless params.has_key?('dummy')
         end
 
         if params['dummy']
             log_file = '/dev/null'
         else
-            @@completed_logs[params['id']] = Queue.new
+            @completed_logs[params['id']] = Queue.new
         end
 
         logger = Logger.new(log_file)
         logger.formatter = SimpleLog.new
         logger.level = params["debug"] ? Logger::DEBUG : Logger::INFO
-        @@semaphore.synchronize { @@loggers[params['id']] = logger }
+        @semaphore.synchronize { @loggers[params['id']] = logger }
 
         true
     end
 
-    def self.get_logfile(params)
-        return false if @@log_dir.nil?
+    def get_logfile(params)
+        return false if @log_dir.nil?
 
         return false if params['id'].nil?
         return false if params['id'].empty?
@@ -99,7 +89,7 @@ module Portage3::Logger
 
         log_file_name = params["file"].match(/[^:]+$/).to_s.downcase
         log_file_name = log_file_name.sub(/^task_/, '') + '.' + EXT
-        log_file_path = File.join(@@log_dir, log_file_name)
+        log_file_path = File.join(@log_dir, log_file_name)
 
         if File.exist?(log_file_path)
             mtime_str = File.mtime(log_file_path).strftime(Utils::TIMESTAMP)
@@ -110,53 +100,86 @@ module Portage3::Logger
         return log_file_path
     end
 
-    def self.add_data4logging(item)
-        @@log_tasks << item
+    def add_data4logging(item)
+        @log_tasks << item
     end
 
-    def self.close_logger(device)
-        @@loggers[device].info('going to close log device')
-        @@loggers[device].close
-        @@semaphore.synchronize { @@loggers.delete(device) }
-        @@completed_logs[device] << 1 if @@completed_logs.has_key?(device)
+    def close_logger(device)
+        @loggers[device].info('going to close log device')
+        @loggers[device].close
+        @semaphore.synchronize { @loggers.delete(device) }
+        @completed_logs[device] << 1 if @completed_logs.has_key?(device)
     end
 
-    def self.wait_loggers_while_close
+    def wait_loggers_while_close
         # TODO do we need a timeout here?
-        @@completed_logs.each_value { |queue| queue.pop }
+        @completed_logs.each_value { |queue| queue.pop }
+    end
+
+    def process_log_data
+        while true
+            device, message, severity = *@log_tasks.pop
+
+            if message == EOT
+                close_logger(device)
+                next
+            end
+
+            break if message == EOS
+
+            @loggers[device].add(severity, message)
+        end
+    end
+
+    def self.start_server
+        unless Utils.port_open?(PORT)
+            pid = fork { self.new }
+            Process.detach(pid)
+            # need to wait a bit
+            # accessing a server immediately after its start causes error
+            sleep(0.2)
+            pid
+        else
+            STDOUT.puts 'previous logger server still running'
+        end
+
+        if @@dummy_client.nil?
+            @@dummy_client = Portage3::Logger.get_client({
+                'dummy' => true,
+                'id'    => self.name
+            })
+        end
     end
 
     def self.shutdown_server
-        @@dummy_client.shutdown_server
+        @@dummy_client.shutdown_server if @@dummy_client
     end
 
     def self.get_client(params)
-        Portage3::Logger::Client.new(params)
+        Client.new(params)
     end
 end
 
-class Portage3::Logger::Client
-    SERVER = Portage3::Logger
+class Portage3::Logger::Client < Portage3::Client
+    def initialize(params = {})
+        # TODO hardcoded port & host
+        super("localhost", Portage3::Logger::PORT, params)
 
-    def initialize(params)
-        #TODO missed id check
-        unless params.is_a?(Hash)
-            throw "'logger': passed value is not a Hash"
+        @tmp_id = nil
+
+        # TODO also need to handle case when socket was not created
+        unless get('init_device', params)
+           STDOUT.puts "'get_logger': Required parameters missed!"
+           #STDOUT.puts "'get_logger': Required parameters missed!"\
+               #"\nSTDOUT will be used"
+           #@logger = Logger.new(STDOUT)
         end
-
-        unless SERVER.init_device(params)
-           throw "Logger::init_device: Required parameters was not passed!"
-        end
-
-        @id        = params['id']
-        @tmp_id    = nil
-        @semaphore = Mutex.new
 
         self
     end
 
     def set_log_dir(log_dir)
-        SERVER.set_log_dir(log_dir)
+        put('set_log_dir', log_dir)
     end
 
     def unknown(message) log(message, Logger::UNKNOWN) end
@@ -167,12 +190,10 @@ class Portage3::Logger::Client
     def debug(message) log(message, Logger::DEBUG) end
 
     def group_log(messages)
-        @semaphore.synchronize {
-            messages.each { |message|
-                message, priority, id = *message
-                @tmp_id = id
-                log(message, priority || Logger::INFO)
-            }
+        messages.each { |message|
+            message, priority, id = *message
+            @tmp_id = id
+            log(message, priority || Logger::INFO)
         }
 
         @tmp_id = nil
@@ -184,15 +205,21 @@ class Portage3::Logger::Client
 
     def finish_logging
         info(Portage3::Logger::EOT)
+        close
     end
 
     def shutdown_server
-        SERVER.wait_loggers_while_close
+        put('wait_loggers_while_close')
         info(Portage3::Logger::EOS)
     end
 
     private
     def log(message, priority)
-        SERVER.add_data4logging([@tmp_id || @id, priority, message])
+        if @logger
+            #@logger.add(priority, message)
+        else
+            put('add_data4logging', [@tmp_id || @id, message, priority])
+        end
     end
 end
+
