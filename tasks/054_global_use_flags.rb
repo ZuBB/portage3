@@ -11,7 +11,7 @@ require 'source'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;021_repositories;052_use_flag_types'
+    self::DEPENDS = '008_sources;021_repositories;053_use_flag_basic_stuff'
     self::SOURCE = 'profiles'
     self::REPO = 'gentoo'
     self::TYPE = 'global'

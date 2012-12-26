@@ -12,7 +12,7 @@ require 'useflag'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;021_repositories;031_categories;041_packages;052_use_flag_types'
+    self::DEPENDS = '021_repositories;041_packages;053_use_flag_basic_stuff'
     self::SOURCE = 'profiles'
     self::REPO = 'gentoo'
     self::TYPE = 'local'

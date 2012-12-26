@@ -12,10 +12,10 @@ require 'useflag'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;021_repositories;052_use_flag_types'
+    self::DEPENDS = '008_sources;021_repositories;053_use_flag_basic_stuff'
     self::SOURCE = 'profiles'
     self::REPO = 'gentoo'
-    self::TYPE = 'hidden'
+    self::TYPE = 'expand'
 
     self::SQL = {
         'insert' => <<-SQL
@@ -30,7 +30,7 @@ klass = Class.new(Tasks::Runner) do
         content = IO.read(filename).split("\n")
         exceptions = Parser.get_multi_line_ini_value(content, 'USE_EXPAND_HIDDEN').split
 
-        Dir.glob(File.join(params['profiles_home'], 'desc', '*desc')).select { |file|
+        Dir.glob(File.join(params['profiles_home'], 'desc', '*desc')).reject { |file|
             exceptions.include?(File.basename(file, '.desc').upcase)
         }
     end
