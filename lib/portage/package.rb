@@ -96,6 +96,7 @@ class Package < Category
             end
         end
 
+        db_client.close
         results.values
     end
 end
