@@ -63,13 +63,14 @@ class Tasks::Scheduler
                 Thread.current['deps'] = []
                 Thread.current['name'] = name
                 Thread.current['queue'] = Queue.new
+                Thread.current['conn'] = Portage3::Database.get_client
 
                 check_task_dependencies(name)
 
                 # TODO other params
                 params = {}
                 params['name'] = name
-                params['start'] = Time.now
+                params['connection'] = Thread.current['conn']
 
                 @task_specs['all'][name].new(params)
                 send_signal2deps(name)
@@ -178,7 +179,8 @@ class Tasks::Scheduler
 
         if @task_specs['deps'].has_key?(name)
             @task_specs['deps'][name].each do |dependency|
-                count = @db_client.get_1value(SQL['check'], dependency)
+                db_client = Thread.current['conn']
+                count = db_client.get_1value(SQL['check'], dependency)
                 Thread.current['deps'] << dependency if count == 1
             end
 
@@ -252,14 +254,14 @@ class Tasks::Scheduler
     end
 
     def self.set_shared_data(key, sql_query)
-        if @@database.nil?
-            @@database = Portage3::Database::get_client
-        end
-
         unless @@semaphore.synchronize { @@shared_data.include?(key) }
             @@semaphore.synchronize {
-                @@shared_data[key] = Hash[@@database.select(sql_query)]
+                @@database = Portage3::Database::Client.new
+                @@shared_data[key] = Hash[
+                    @@database.get_and_close('select', sql_query)
+                ]
             }
         end
     end
 end
+
