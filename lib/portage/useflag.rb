@@ -103,7 +103,8 @@ class UseFlag
             join ebuilds e on e.id = fs.ebuild_id
             where e.package_id = ? and (f.type_id BETWEEN 4 and 6);
         SQL
-        all_flags = Database.select(sql_query, package_id).flatten
+        db_client = Portage3::Database.get_client
+        all_flags = db_client.select(sql_query, package_id).flatten
 
         asterix_index = flags.index { |i| i.include?('*') }
         asterix_flag = flags.delete_at(asterix_index)
