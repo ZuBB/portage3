@@ -196,15 +196,17 @@ class Ebuild < Package
             end
         end
 
+        db_client.close
         results
     end
 
     def self.get_ebuilds(params = {})
-        Portage3::Database.get_client.select(<<-SQL
+        db_client = Portage3::Database.get_client
+        result = db_client.select(<<-SQL
             SELECT
                 r.name,
-                r.parent_folder,
-                r.repository_folder,
+                parent_folder,
+                repository_folder,
                 c.name,
                 p.name,
                 version,
@@ -220,10 +222,13 @@ class Ebuild < Package
             );
         SQL
         )
+        db_client.close
+        result
     end
 
     def self.get_ebuilds_data(field)
-        Portage3::Database.get_client.select(<<-SQL
+        db_client = Portage3::Database.get_client
+        result = db_client.select(<<-SQL
             SELECT
                 r.id,
                 r.parent_folder,
@@ -245,6 +250,8 @@ class Ebuild < Package
             );
         SQL
         )
+        db_client.close
+        result
     end
 
     def self.generate_ebuild_params(params)
