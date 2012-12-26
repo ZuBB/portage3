@@ -16,6 +16,7 @@ class Tasks::Runner
     def initialize(params)
         start_time = Time.now
 
+        @shared_data = {}
         @jobs        = nil
         @id          = self.class.get_task_id
         @stats       = {'timings' => []}
@@ -63,7 +64,9 @@ class Tasks::Runner
 
         if defined?(set_shared_data) == 'method'
             @logger.info("found 'get_shared_data' method, executing")
+           #@cached = Tasks::Scheduler.create_client_socket
             set_shared_data
+           #@cached.close
             store_timeframe(__method__, start_time, Time.now)
         end
     end
@@ -163,25 +166,24 @@ class Tasks::Runner
     end
 
     def request_data(key, sql_query)
-        Tasks::Scheduler.set_shared_data(key, sql_query)
+       #Tasks::Scheduler.set_shared_data(key, sql_query)
+        @shared_data[key] = Hash[@database.select(sql_query)]
     end
 
     def shared_data(data_key, item_key)
-        shared_data = Tasks::Scheduler.class_variable_get('@@shared_data')
-
-        unless shared_data.has_key?(data_key)
+        unless @shared_data.has_key?(data_key)
             @logger.error("shared data does not have '#{data_key}' object")
             return nil
         end
 
-        unless shared_data[data_key].has_key?(item_key)
+        unless @shared_data[data_key].has_key?(item_key)
             message = "object '#{data_key}' of shared data does not have"\
                 "'#{item_key}' value"
-            @logger.warn(message)
+            @logger.error(message)
             return nil
         end
 
-        shared_data[data_key][item_key]
+        @shared_data[data_key][item_key]
     end
 
     def get_logger_client(params)
