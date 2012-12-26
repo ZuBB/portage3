@@ -23,7 +23,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        Database.select(PProfile::SQL['names']).flatten
+        Portage3::Database.get_client.select(PProfile::SQL['names']).flatten
     end
 
     def set_shared_data
