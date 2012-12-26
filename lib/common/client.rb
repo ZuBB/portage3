@@ -14,7 +14,9 @@ class Portage3::Client
         if params.has_key?('id')
             @id = set_id(params['id'])
         else
+            puts 'before random'
             @id = set_id(Digest::MD5.hexdigest(Random.rand.to_s))
+            puts 'after random'
         end
 
     end
@@ -50,6 +52,7 @@ class Portage3::Client
     end
 
     def get2(params)
+        put(params)
 		result = nil
 		begin
 			result = @socket.gets
