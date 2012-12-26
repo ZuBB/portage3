@@ -181,7 +181,7 @@ class Portage3::Database
     end
 
     def self.start_server(db_filename)
-        unless Portage3::Database.valid_db_filename?(db_filename)
+        unless self.valid_db_filename?(db_filename)
             throw "Can not create/use db file at `#{db_filename}"
         end
 
