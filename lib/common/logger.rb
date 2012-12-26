@@ -144,15 +144,15 @@ class Portage3::Logger
         end
 
         if @@dummy_client.nil?
-            @@dummy_client = Portage3::Logger.get_client({
-                'dummy' => true,
-                'id'    => self.name
-            })
+            @@dummy_client = Portage3::Logger.get_client({'dummy' => true})
         end
     end
 
     def self.shutdown_server
-        @@dummy_client.shutdown_server if @@dummy_client
+        unless @@dummy_client.nil?
+            @@dummy_client.shutdown_server
+           #@@dummy_client = nil
+        end
     end
 
     def self.get_client(params)
@@ -215,11 +215,7 @@ class Portage3::Logger::Client < Portage3::Client
 
     private
     def log(message, priority)
-        if @logger
-            #@logger.add(priority, message)
-        else
             put('add_data4logging', [@tmp_id || @id, message, priority])
-        end
     end
 end
 
