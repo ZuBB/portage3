@@ -184,7 +184,7 @@ class Tasks::Scheduler
                 Thread.current['deps'] << dependency if count == 1
             end
 
-            while Thread.current['deps'].sort != @task_specs['deps'][name]
+            while Thread.current['deps'].uniq.sort != @task_specs['deps'][name]
                 Thread.current['deps'] << Thread.current['queue'].pop
             end
         end
