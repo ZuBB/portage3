@@ -88,6 +88,7 @@ class Category < Repository
             end
         end
 
+        db_client.close
         results.values
     end
 end
