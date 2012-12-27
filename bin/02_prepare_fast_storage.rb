@@ -84,7 +84,7 @@ unless File.writable?(root_path)
 end
 
 space_available = `df -kP #{root_path}`.split("\n")[1].split(" ")[3].to_i
-portage_size = `du -s #{root_path}/portage`.split[0].to_i rescue 0
+portage_size = `du -s #{root_path}/`.split[0].to_i rescue 0
 required_space = options["required_space"] * 1024
 
 if portage_size + space_available < required_space
