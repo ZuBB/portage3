@@ -9,7 +9,7 @@ require 'logger'
 module Portage3::Logger
     # blog.grayproductions.net/articles/the_books_are_wrong_about_logger
     class SimpleLog < Logger::Formatter
-        TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+        TIME_FORMAT = "%H:%M:%S.%6N"
         def call(severity, time, program_name, message)
             items = ['[' + time.strftime(TIME_FORMAT) + ']']
             items << (severity + ':').rjust(6, ' ')
