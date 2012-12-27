@@ -64,9 +64,21 @@ OptionParser.new do |opts|
     end
 end.parse!
 
+sys_tree_home = nil
 settings = Utils.get_settings
 portage_home = Utils.get_tree_home
 root_path = File.dirname(portage_home)
+
+if Utils::SETTINGS['gentoo_os']
+    sys_tree_home = Parser.get_multi_line_ini_value(
+        IO.readlines(File.join(
+            File.dirname(__FILE__),
+            '../',
+            'data',
+            'emerge_info'
+        )), 'PORTDIR'
+    )
+end
 
 unless File.exist?(root_path)
     puts "\nERROR: '#{root_path}' location can not be found on target system"
@@ -78,13 +90,13 @@ unless File.directory?(root_path)
     exit(1)
 end
 
-unless File.writable?(root_path)
+if portage_home != sys_tree_home && !File.writable?(root_path)
     puts "\nERROR: '#{root_path}' is not writable on target system"
     exit(1)
 end
 
 space_available = `df -kP #{root_path}`.split("\n")[1].split(" ")[3].to_i
-portage_size = `du -s #{root_path}/`.split[0].to_i rescue 0
+portage_size = `du -s #{portage_home} 2> /dev/null`.split[0].to_i rescue 0
 required_space = options["required_space"] * 1024
 
 if portage_size + space_available < required_space
@@ -130,6 +142,16 @@ if portage_size > 0 && !options["recreate_tree"] && !options['sync_tree']
 end
 
 if options["recreate_tree"] || !File.exist?(portage_home)
+    unless File.size?(soft_link)
+        puts 'something is wrong with snapshot. please redownload it'
+        exit(false)
+    end
+
+    if portage_home != sys_tree_home
+        puts "Can not modify #{portage_home}!"
+        exit(false)
+    end
+
     print "Starting exctact portage snapshot.. "
     FileUtils.rm_r(portage_home) if File.exist?(portage_home)
     STDOUT.flush
@@ -137,20 +159,12 @@ if options["recreate_tree"] || !File.exist?(portage_home)
     puts "Done"
 end
 
-if Utils::SETTINGS['gentoo_os']
-    sys_tree_home = Parser.get_multi_line_ini_value(
-        IO.readlines(File.join(
-            File.dirname(__FILE__),
-            '../',
-            'data',
-            'emerge_info'
-        )), 'PORTDIR'
-    )
-else
-    sys_tree_home = nil
-end
+if options['sync_tree']
+    if portage_home == sys_tree_home
+        puts "Can not modify #{portage_home}!"
+        exit(false)
+    end
 
-if options['sync_tree'] && root_path != sys_tree_home
     print "Starting syncing portage snapshot with system tree.. "
     STDOUT.flush
     command = 'rsync -a --delete'
