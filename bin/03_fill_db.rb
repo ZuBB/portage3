@@ -73,7 +73,7 @@ OptionParser.new do |opts|
 
     # parsing 'db_filename' option if present
     opts.on("-f", "--database-file STRING", "Custom path to new database file") do |value|
-        if File.exists?(value)
+        if File.exists?(value) && !File.writable?(value)
             puts "ERROR: file '#{value}' already exists!"
             exit(1)
         end
