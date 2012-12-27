@@ -26,7 +26,7 @@
         },
         "simple (/tmp)": {
             "description": "Uses '/tmp' and requires 0.7+ Gb (distro agnostic)",
-            "tree_home": "/tmp",
+            "tree_home": "/tmp/portage",
             "log_home": "/tmp",
             "db_home": "/tmp"
         }
