@@ -12,13 +12,19 @@
             "log_home": "/dev/shm",
             "db_home": "/dev/shm"
         },
-        "native": {
-            "description": "Applicable only for Gentoo Linux (uses $PORTDIR)",
-            "tree_home": "${PORTDIR}",
+        "inside": {
+            "description": "All things are inside ${APPROOT}/data folder",
+            "tree_home": "${APPROOT}/data/portage",
             "log_home": "${APPROOT}/data",
             "db_home": "${APPROOT}/data"
         },
-        "simple": {
+        "native": {
+            "description": "Applicable only for Gentoo Linux (uses $PORTDIR)",
+            "tree_home": "${PORTDIR}",
+            "log_home": "/tmp",
+            "db_home": "/tmp"
+        },
+        "simple (/tmp)": {
             "description": "Uses '/tmp' and requires 0.7+ Gb (distro agnostic)",
             "tree_home": "/tmp",
             "log_home": "/tmp",
