@@ -16,7 +16,7 @@ class Tasks::Runner
     def initialize(params)
         start_time = Time.now
 
-        @jobs        = Queue.new
+        @jobs        = nil
         @id          = self.class.get_task_id
         @stats       = {'timings' => []}
         @logger      = get_logger_client(params)
@@ -52,7 +52,7 @@ class Tasks::Runner
         start_time = Time.now
 
         if defined?(get_data) == 'method'
-            get_data(Utils.get_pathes).each { |item| @jobs << item }
+            @jobs = get_data(Utils.get_pathes)
             @stats['total'] = @jobs.size
             store_timeframe(__method__, start_time, Time.now)
         end
@@ -81,28 +81,14 @@ class Tasks::Runner
     def fill_table
         start_time = Time.now
 
-        threads = self.class::THREADS rescue 1
-        Thread.abort_on_exception = true
-
-        pool = Array.new(threads) do |i|
-            Thread.new do
-                Thread.current["name"] = "worker ##{i + 1}"
-                Thread.current['count'] = 0
-
-                while @jobs.size > 0 do
-                    item2process = @jobs.pop
-                    if defined?(process_item) == 'method'
-                        process_item(item2process)
-                    else
-                        send_data4insert(item2process)
-                    end
-                    Thread.current['count'] += 1
-                end
+        while @jobs.size > 0 do
+            item2process = @jobs.shift
+            if defined?(process_item) == 'method'
+                process_item(item2process)
+            else
+                send_data4insert({'data' => item2process})
             end
         end
-
-        pool.each { |thread| thread.join }
-        pool.each { |thread| @stats[thread['name']] = thread['count'] }
 
         store_timeframe(__method__, start_time, Time.now)
     end
@@ -134,6 +120,7 @@ class Tasks::Runner
         start_time = Time.now
         @database.insert_end(class_name)
         @stats.merge!(@database.get_stats)
+        @database.close
         store_timeframe(__method__, start_time, Time.now)
     end
 
@@ -206,7 +193,10 @@ class Tasks::Runner
     end
 
     def get_database_client(params)
-        Portage3::Database.get_client({'id' => @id})
+        database = params['conn']
+        database ||= Portage3::Database.get_client({'id' => @id})
+        database.set_id(@id)
+        database
     end
 
     def self.get_task_id
@@ -217,3 +207,4 @@ class Tasks::Runner
         ].join('|'))
     end
 end
+
