@@ -31,10 +31,10 @@ module Utils
                 msg = 'Can not parse settings file!'
             end
         else
-            msg = 'Can not find settings file!'
+            puts 'Error: can not find settings file!'
+            exit(false)
         end
 
-        throw msg unless msg.nil?
         data
     end
 
