@@ -147,7 +147,7 @@ if options["recreate_tree"] || !File.exist?(portage_home)
         exit(false)
     end
 
-    if portage_home != sys_tree_home
+    if portage_home == sys_tree_home
         puts "Can not modify #{portage_home}!"
         exit(false)
     end
