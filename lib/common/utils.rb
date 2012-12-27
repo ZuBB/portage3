@@ -4,6 +4,7 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'timeout'
 require 'rubygems'
 require 'json'
 
@@ -70,6 +71,20 @@ module Utils
 
     def self.get_database
         Dir.glob(File.join(self.get_db_home, '*.sqlite')).sort.last
+    end
+
+    def self.port_open?(port, ip = '127.0.0.1', seconds = 1)
+        Timeout::timeout(seconds) do
+            begin
+                TCPSocket.new(ip, port).close
+                true
+            rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+                false
+            end
+        end
+        rescue Timeout::Error
+
+        false
     end
 
     SETTINGS = Utils.get_settings unless $0.end_with?('01_generate_config.rb')
