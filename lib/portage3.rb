@@ -14,9 +14,12 @@ end
 
 Thread.abort_on_exception = true
 
+require 'common/server'
+require 'common/client'
 require 'common/database'
 require 'common/logger'
 require 'common/utils'
 
 # TODO this is a temporary solution
 require 'common/parser'
+
