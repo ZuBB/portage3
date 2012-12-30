@@ -14,11 +14,11 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         path = File.join(params['profiles_home'], 'profiles.desc')
-        results = %x[grep -oP '\t[a-z]*$' #{path}].split("\n") rescue []
-        # drop first item since its a header
-        results.shift
-        # drop duplicates and strip leading \t
-        results.uniq.map { |status| status.strip }
+        IO.readlines(path)
+        .reject { |line| line.start_with?('#') }
+        .reject { |line| /^\s*$/ =~ line }
+        .map { |line| line.split.last }
+        .uniq
     end
 end
 
