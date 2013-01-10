@@ -39,25 +39,44 @@ end
 
 def fill_database(options)
     scripts_dir = File.join(File.dirname(__FILE__), "../tasks")
+    options['skip'] = Tasks::Scheduler.expand_skip_param(options['skip'])
 
-    Dir.glob(File.join(scripts_dir, "/*.rb")).sort.each do |script|
+    Dir.glob(File.join(scripts_dir, "*.rb")).sort.each do |script|
         task_filename = File.basename(script)
-        if /\d{3}_[\w_]+\.rb$/ =~ task_filename
-            options['task_filenames'] << task_filename
-            require_relative(script)
-        end
+
+        # skip this file unless its name matches our regexp
+        next unless /^\d{3}_[\w_]+\.rb$/ =~ task_filename
+
+        # get index of the task
+        index = task_filename.match(/^\d{3}/).to_s.to_i
+
+        # filter tasks that was not requested
+        # greater than
+        next unless index >= options['from']
+        # less than
+        next unless index < options['until']
+        # skip than
+        next if options['skip'].include?(index)
+
+        options['task_filenames'] << task_filename
+        require_relative(script)
     end
 
-    filler = Tasks::Scheduler.new(options)
-    filler.run_specified_tasks
-    filler.finalize
+    if options['task_filenames'].empty?
+        puts 'No tasks were selected to run!'
+        exit(false)
+    else
+        filler = Tasks::Scheduler.new(options)
+        filler.run_specified_tasks
+        filler.finalize
+    end
 end
 
 # hash with options
 options = {
     "from" => 1,
     "until" => 999,
-    "skip" => [],
+    "skip" => '',
     "task_filenames" => [],
     "show_db" => true,
     "sql_src_home" => '../sql'
@@ -127,14 +146,13 @@ OptionParser.new do |opts|
         options["skip"] = value
     end
 
-    # parsing 'untill' option if present
-    opts.on("-u", "--run-untill STRING", "Run all scripts untill script with specified index") do |value|
+    # parsing 'until' option if present
+    opts.on("-u", "--run-until STRING", "Run all scripts until script with specified index") do |value|
         options["until"] = value.to_i
     end
 
     # parsing 'task' option if present
     opts.on("-t", "--task STRING", "Run the task with specified index. Overrides any of '-r', '-s', '-u'") do |value|
-        options["skip"] = []
         options["from"] = value.to_i
         options["until"] = value.to_i + 1
     end

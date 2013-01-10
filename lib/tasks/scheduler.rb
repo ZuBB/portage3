@@ -35,7 +35,6 @@ class Tasks::Scheduler
             'rdeps' => {},
             'trds'  => {},
             '2run'  => [],
-            '4run'  => []
         }
 
         create_communication_pipes
@@ -43,13 +42,10 @@ class Tasks::Scheduler
         account_all_tasks
         get_dependencies
         get_reverse_dependencies
-
-        expand_skip_param
-        #expand_task_by_index
     end
 
     def run_specified_tasks
-        return if (@task_specs['2run'] = get_tasks_by_range.dup).empty?
+        @task_specs['2run'] = @task_specs['all'].keys
 
         if dead_dependencies?
             @logger.error("Unsatisfied dependencie(s). have to terminate")
@@ -160,19 +156,6 @@ class Tasks::Scheduler
         symbol.to_s.match(TAKS_INDEX).to_a[1].to_i
     end
 
-    def get_tasks_by_range
-        # TODO fix bug with 0 tasks to run
-        _from  = @options['from']
-        _skip  = @options['skip']
-        _until = @options['until']
-
-        @task_specs['4run'] = @task_specs['all']
-        .keys
-        .select { |name| self.class.get_task_index(name) >= _from }
-        .select { |name| self.class.get_task_index(name) < _until }
-        .reject { |name| _skip.include?(self.class.get_task_index(name)) }
-    end
-
     def check_task_dependencies(name)
         @logger.info("#{name}: checking dependencies")
 
@@ -235,10 +218,8 @@ class Tasks::Scheduler
         end
     end
 
-    def expand_skip_param
-        return if @options['skip'].empty?
-        @options['skip'] = @options['skip']
-        .split(',')
+    def self.expand_skip_param(skip)
+        skip.split(',')
         .map do |i|
             if i.include?('-')
                 ends = i.split('-')
