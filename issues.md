@@ -1,3 +1,10 @@
+
+- [x] new script for getting data/setting/check available apps/props/pathes
+- [x] calling scripts for all in theirs forlder
+- [ ] new path of make.conf
+
+
+
 #### Short term tasks
 * ~~Script class~~
     + ~~**convert scripts to tasks; run unblocking tasks in parallel**~~
@@ -30,10 +37,6 @@
     + examples for use flags stuff, dependancies, installed stuff
     + statistics on what is in db
 * readme
-
-- [x] new script for getting data/setting/check available apps/props/pathes
-- [x] calling scripts for all in theirs forlder
-- [ ] new path of make.conf
 
 #### Long term tasks
 * Python
