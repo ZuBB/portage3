@@ -31,6 +31,10 @@
     + statistics on what is in db
 * readme
 
+ - [x] new script for getting data/setting/check available apps/props/pathes
+ - [x] calling scripts for all in theirs forlder
+ - [ ] new path of make.conf
+
 #### Long term tasks
 * Python
     + select python sqlite wrapper (apsw vs pysqlite vs..)
