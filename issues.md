@@ -22,9 +22,9 @@
     + dependancies: db, scripts
     + ~~installed stuff: db, scripts, 'missed' ebuilds~~, use flags
 * setup scripts
-    + ~~new script for getting data/setting/check available apps/props/pathes~~
-    + ~~calling scripts for all in theirs forlder~~
-    + new path of make.conf
+    - [x] new script for getting data/setting/check available apps/props/pathes
+    - [x] calling scripts for all in theirs forlder
+    - [ ] new path of make.conf
 * ~~deal with pathes~~
 * examples
     + examples for use flags stuff, dependancies, installed stuff
