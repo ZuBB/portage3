@@ -80,7 +80,7 @@ class Tasks::Runner
         end
     end
 
-    def fill_table
+    def fill_table_old
         start_time = Time.now
 
         threads = self.class::THREADS rescue 1
@@ -105,6 +105,21 @@ class Tasks::Runner
 
         pool.each { |thread| thread.join }
         pool.each { |thread| @stats[thread['name']] = thread['count'] }
+
+        store_timeframe(__method__, start_time, Time.now)
+    end
+
+    def fill_table
+        start_time = Time.now
+
+        while @jobs.size > 0 do
+            item2process = @jobs.pop
+            if defined?(process_item) == 'method'
+                process_item(item2process)
+            else
+                send_data4insert(item2process)
+            end
+        end
 
         store_timeframe(__method__, start_time, Time.now)
     end
