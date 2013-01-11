@@ -44,7 +44,7 @@ Next list of ruby gems are also mandatory
 In Gentoo Linux you can use next commans to install all of them
 
 ```
-emerge -vta =dev-lang/ruby-1.9* =dev-db/sqlite-3.7* dev-libs/libxml2 dev-libs/libxslt
+emerge -vtNa =dev-lang/ruby-1.9* =dev-db/sqlite-3.7* dev-libs/libxml2 dev-libs/libxslt
 gem install sqlite3 json nokogiri
 ```
 
