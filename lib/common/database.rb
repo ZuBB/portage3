@@ -155,9 +155,13 @@ module Portage3::Database
         @@completed_tasks[id] << id
     end
 
+    def self.wait_task_completion(id)
+        # wait till task is completed
+        @@completed_tasks[id].pop
+    end
+
     def self.get_task_stats(id)
-        # to be sure we get all stats, we need to wait till task is completed
-        @@stats[@@completed_tasks[id].pop]
+        @@stats[id]
     end
 
     def self.start_transaction
@@ -264,6 +268,10 @@ class Portage3::Database::Client
 
     def commit_transaction
         SERVER.commit_transaction
+    end
+
+    def wait_4_end_confirmation
+        SERVER.wait_task_completion(@id)
     end
 
     def get_stats

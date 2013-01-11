@@ -45,7 +45,9 @@ class Tasks::Runner
         process_post_insert_check_method
         process_post_insert_method
 
-        end_db_stuff(class_name)
+        send_end_mark(class_name)
+        wait_4_end_confirmation
+        store_db_stats
     end
 
     def process_get_data_method
@@ -130,9 +132,20 @@ class Tasks::Runner
         end
     end
 
-    def end_db_stuff(class_name)
+    def send_end_mark(class_name)
         start_time = Time.now
         @database.insert_end(class_name)
+        store_timeframe(__method__, start_time, Time.now)
+    end
+
+    def wait_4_end_confirmation
+        start_time = Time.now
+        @database.wait_4_end_confirmation
+        store_timeframe(__method__, start_time, Time.now)
+    end
+
+    def store_db_stats
+        start_time = Time.now
         @stats.merge!(@database.get_stats)
         store_timeframe(__method__, start_time, Time.now)
     end
