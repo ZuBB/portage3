@@ -9,7 +9,10 @@
 
 klass = Class.new(Tasks::Runner) do
     # metatask that depends on basic flags stuff
-    self::DEPENDS = '051_use_flag_states;052_use_flag_types'
+    self::DEPENDS = '008_sources;'\
+                    '021_repositories;'\
+                    '051_use_flag_states;'\
+                    '052_use_flag_types'
     self::SQL = {
         'insert' => 'INSERT INTO flag_states (state, status) VALUES (?, ?);'
     }

@@ -11,7 +11,7 @@ require 'useflag'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;021_repositories;053_use_flag_basic_stuff'
+    self::DEPENDS = '053_use_flag_basic_stuff'
     self::SOURCE = 'profiles'
     self::REPO = 'gentoo'
     self::TYPE = 'hidden'
