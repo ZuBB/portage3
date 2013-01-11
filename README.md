@@ -33,6 +33,8 @@ Next list of packages are mandatory
 * Ruby
 * SQLite
 * rubygems
+* libxml2
+* libxslt
 
 Next list of ruby gems are also mandatory
 * [sqlite-ruby](http://sqlite-ruby.rubyforge.org/)
@@ -42,7 +44,7 @@ Next list of ruby gems are also mandatory
 In Gentoo Linux you can use next commans to install all of them
 
 ```
-emerge -vta =dev-lang/ruby-1.9* =dev-db/sqlite-3.7*
+emerge -vta =dev-lang/ruby-1.9* =dev-db/sqlite-3.7* dev-libs/libxml2 dev-libs/libxslt
 gem install sqlite3 json nokogiri
 ```
 
