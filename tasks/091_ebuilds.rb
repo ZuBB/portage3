@@ -6,7 +6,8 @@
 # Initial Author: Vasyl Zuzyak, 01/16/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'eapi'
+#equire 'eapi'
+require 'source'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
@@ -27,7 +28,7 @@ klass = Class.new(Tasks::Runner) do
 
     def set_shared_data
         request_data('source@id', Source::SQL['@'])
-        request_data('eapi@id', Eapi::SQL['@'])
+       #request_data('eapi@id', Eapi::SQL['@'])
     end
 
     def process_item(params)
