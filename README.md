@@ -72,7 +72,7 @@ Setup
 * go to `bin` dir in your favourite term app
 * run `01_generate_config`. Follow onscreen insctructions
 * run `02_prepare_fast_storage`. You might want to check script params before run
-* run `03_fill_db`. You might want to check script params before run
+* run `03_fill_db`. You need to check script params before run
 
 Now you have most iportant portage data in sqlite database
 
