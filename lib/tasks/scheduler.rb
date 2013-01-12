@@ -56,8 +56,15 @@ class Tasks::Scheduler
             return false
         end
 
+        i = 0
         @task_specs['sort'].each do |name|
+            i += 1
             run_task(name)
+
+            if i == 5
+                @logger.info("slepping")
+                sleep(3)
+            end
         end
     end
 
