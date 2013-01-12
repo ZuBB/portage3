@@ -6,13 +6,12 @@
 # Initial Author: Vasyl Zuzyak, 01/16/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-#equire 'eapi'
 require 'source'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
     self::PRI_INDEX = 2
-    self::DEPENDS = '041_packages' # ;009_eapis
+    self::DEPENDS = '041_packages'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'
     self::SQL = {
@@ -29,7 +28,6 @@ klass = Class.new(Tasks::Runner) do
 
     def set_shared_data
         request_data('source@id', Source::SQL['@'])
-       #request_data('eapi@id', Eapi::SQL['@'])
     end
 
     def process_item(params)
