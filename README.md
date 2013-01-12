@@ -52,13 +52,6 @@ gem install sqlite3 json nokogiri
 **Note1**: `rubygems` should be also installed as dependancy for Ruby automatically.<br>
 **Note2**: maybe you should take care about `ruby_targets` environment variable in `make.conf`
 
-Status
--------
-
-* For now its a JFF project
-* Currently its in experimental status (broken master, dozens of branches, stable API is nonsence, Friday's commits, etc.)
-* Yes, I do have a [roadmap](https://github.com/ZuBB/portage3/blob/master/issues.md)! **Short term tasks** (means prototype is ready) is current milestone. No deadline is assigned. Next one is **Long term tasks** (means unschedulled)
-
 Installation
 -----------
 
@@ -81,4 +74,11 @@ Usage
 -------
 
 Go to `example` dir and use tool(s) you like
+
+Status
+-------
+
+* For now its a JFF project
+* Currently its in experimental status (broken master, dozens of branches, stable API is nonsense, Friday's commits, etc.)
+* Yes, I do have a [roadmap](https://github.com/ZuBB/portage3/blob/master/issues.md)! **Short term tasks** (means prototype is ready) is current milestone. No deadline is assigned. Next one is **Long term tasks** (means unschedulled)
 
