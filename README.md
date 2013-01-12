@@ -3,10 +3,10 @@ Content
 
 1. <a href="#why">Why</a>
 2. <a href="#requirements">Requirements</a>
-3. <a href="#status">Status</a>
-4. <a href="#installation">Installation</a>
-5. <a href="#setup">Setup</a>
-6. <a href="#usage">Usage</a>
+3. <a href="#installation">Installation</a>
+4. <a href="#setup">Setup</a>
+5. <a href="#usage">Usage</a>
+6. <a href="#status">Status</a>
 
 Why
 ---
