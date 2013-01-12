@@ -49,8 +49,6 @@ class Tasks::Scheduler
     end
 
     def run_specified_tasks
-        @task_specs['2run'] = @task_specs['all'].keys
-
         if dead_dependencies?
             @logger.error("Unsatisfied dependencie(s). have to terminate")
             return false
@@ -116,6 +114,8 @@ class Tasks::Scheduler
             message = "#{diff} task(s) have issue with filename/class name"
             @logger.warn(message)
         end
+
+        @task_specs['2run'] = @task_specs['all'].keys
     end
 
     def get_dependencies
@@ -142,7 +142,9 @@ class Tasks::Scheduler
     end
 
     def set_tasks_priorities
-       @task_specs['rdeps'].each_key do |key|
+       @task_specs['rdeps'].keys
+       .select { |key| @task_specs['2run'].include?(key) }
+       .each do |key|
            task_pri = get_task_priority(key, 1)
            pri_index = @task_specs['all'][key].const_get(:PRI_INDEX) rescue 1
            @task_specs['pri'][key] = (task_pri * pri_index).round
@@ -165,6 +167,8 @@ class Tasks::Scheduler
         @task_specs['sort'] = @task_specs['pri'].to_a
         .sort { |a, b| b[1] <=> a[1] }
         .sort { |a, b| b[1] == a[1] ? a[0] <=> b[0] : b[1] <=> a[1] }
+
+        @task_specs['sort'].each { |name| @logger.info(name.inspect) }
     end
 
     def run_task(name)
@@ -258,7 +262,13 @@ class Tasks::Scheduler
         @task_specs['rdeps'][name].each do |d|
             if @task_specs['trds'].has_key?(d)
                 @logger.info("#{name} says to #{d}: I am done")
-                @task_specs['trds'][d]['queue'] << name
+                begin
+                    @task_specs['trds'][d]['queue'] << name
+                rescue
+                    message = "task #{} has not started yet"\
+                        "cant pass 'I am done'. hope for sql"
+                    @logger.info(message)
+                end
             end
         end
     end
