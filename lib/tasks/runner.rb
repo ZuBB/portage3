@@ -161,7 +161,14 @@ class Tasks::Runner
 
     def store_db_stats
         start_time = Time.now
-        @stats.merge!(@database.get_stats)
+
+        db_stats = @database.get_stats
+        params   = ['db_insert']
+        params  << db_stats.delete('start_time')
+        params  << db_stats.delete('end_time')
+        store_timeframe(*params)
+
+        @stats.merge!(db_stats)
         store_timeframe(__method__, start_time, Time.now)
     end
 
