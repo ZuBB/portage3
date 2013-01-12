@@ -11,7 +11,7 @@ module Portage3::Database
     INSERT = 'insert or ignore into completed_tasks (name) VALUES (?);'
     EXT = 'sqlite'
 
-    @@stats = {}
+    @@stats = {'db_inserts' => 0}
     @@completed_tasks = {}
     @@insert_statement = nil
     @@database = nil
@@ -38,6 +38,7 @@ module Portage3::Database
             begin
                 @@statements[hash['id']].execute(*hash['data'])
                 @@stats[hash['id']]['passed'] += 1
+                @@stats['db_inserts'] += 1
             rescue SQLite3::Exception => exception
                 @@stats[hash['id']]['failed'] += 1
                 messages = [
@@ -98,13 +99,19 @@ module Portage3::Database
         return false if     query.empty?
         return false unless @@database.complete?(query)
 
+        self.start_transaction
         self.create_insert_statement
         @@semaphore.synchronize {
-            @@stats[id] = { 'passed' => 0, 'failed' => 0 }
             # NOTE here you may get an exception in next case:
             # statement operates on table that is not created yet
             @@statements[id] = @@database.prepare(query)
             @@completed_tasks[id] = Queue.new
+            @@stats[id] = {
+                'start_time' => Time.now,
+                'end_time'   => nil,
+                'passed'     => 0,
+                'failed'     => 0
+            }
         }
 
         true
@@ -150,6 +157,7 @@ module Portage3::Database
         @@statements[id].close
         @@semaphore.synchronize { @@statements.delete(id) }
         @@logger.info("statement '#{id}' has been closed")
+        @@stats[id]['end_time'] = Time.now
 
         @@insert_statement.execute(task_name)
         @@completed_tasks[id] << id
@@ -196,6 +204,7 @@ module Portage3::Database
         self.commit_transaction
         @@database.close
 
+        @@logger.info("processed #{@@stats['db_inserts']} inserts")
         @@logger.info('closing database')
         @@logger.finish_logging
     end
