@@ -11,6 +11,7 @@ require 'source'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 2
     self::DEPENDS = '041_packages' # ;009_eapis
     self::THREADS = 4
     self::SOURCE = 'ebuilds'

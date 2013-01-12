@@ -9,6 +9,7 @@
 require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 0.1
     self::SQL = {
         'insert' => 'INSERT INTO flag_states (state, status) VALUES (?, ?);'
     }

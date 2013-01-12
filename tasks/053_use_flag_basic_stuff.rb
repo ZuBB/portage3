@@ -8,6 +8,7 @@
 #
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 0.1
     # metatask that depends on basic flags stuff
     self::DEPENDS = '008_sources;'\
                     '021_repositories;'\
