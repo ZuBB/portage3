@@ -31,6 +31,8 @@ class Tasks::Scheduler
         @start_time = Time.now
         @task_specs = {
             'all'   => {},
+            'pri'   => {},
+            'sort'  => [],
             'deps'  => {},
             'rdeps' => {},
             'trds'  => {},
@@ -42,6 +44,8 @@ class Tasks::Scheduler
         account_all_tasks
         get_dependencies
         get_reverse_dependencies
+        set_tasks_priorities
+        sort_tasks_by_pri
     end
 
     def run_specified_tasks
@@ -52,7 +56,7 @@ class Tasks::Scheduler
             return false
         end
 
-        @task_specs['2run'].each do |name|
+        @task_specs['sort'].each do |name|
             run_task(name)
         end
     end
@@ -94,7 +98,9 @@ class Tasks::Scheduler
         Tasks.constants.select { |class_name|
             class_name.to_s.start_with?(Tasks::TASK_NAME_PREFIX)
         }.each { |class_name|
-            @task_specs['all'][class_name.to_s] = Tasks.const_get(class_name)
+            task_name = class_name.to_s
+            @task_specs['all'][task_name] = Tasks.const_get(class_name)
+            @task_specs['pri'][task_name] = 0
         }
 
         # TODO do we need this?
@@ -128,10 +134,38 @@ class Tasks::Scheduler
         end
     end
 
+    def set_tasks_priorities
+       @task_specs['rdeps'].each_key do |key|
+           task_pri = get_task_priority(key, 1)
+           pri_index = @task_specs['all'][key].const_get(:PRI_INDEX) rescue 1
+           @task_specs['pri'][key] = (task_pri * pri_index).round
+       end
+    end
+
+    def get_task_priority(task, level)
+        return 0 unless @task_specs['rdeps'].has_key?(task)
+
+        task_pri = @task_specs['rdeps'][task].size * level
+
+        @task_specs['rdeps'][task].each { |subtask|
+            task_pri += get_task_priority(subtask, level + 1)
+        }
+
+        task_pri
+    end
+
+    def sort_tasks_by_pri
+        @task_specs['sort'] = @task_specs['pri'].to_a
+        .sort { |a, b| b[1] <=> a[1] }
+        .sort { |a, b| b[1] == a[1] ? a[0] <=> b[0] : b[1] <=> a[1] }
+    end
+
     def run_task(name)
+        name, pri = *name
         @task_specs['trds'][name] = Thread.new do
             @logger.info("#{name}: started")
 
+            Thread.current.priority = pri
             Thread.current['deps'] = []
             Thread.current['name'] = name
             Thread.current['queue'] = Queue.new
