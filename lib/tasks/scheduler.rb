@@ -97,11 +97,11 @@ class Tasks::Scheduler
             @task_specs['all'][class_name.to_s] = Tasks.const_get(class_name)
         }
 
+        # TODO do we need this?
         if @options['task_filenames'].size != @task_specs['all'].size
-            unless @options['quiet']
-                # TODO log this
-                puts "#{diff} task(s) have issue with filename/class name"
-            end
+            diff = @options['task_filenames'].size - @task_specs['all'].size
+            message = "#{diff} task(s) have issue with filename/class name"
+            @logger.warn(message)
         end
     end
 
