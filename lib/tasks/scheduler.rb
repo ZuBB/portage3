@@ -53,25 +53,7 @@ class Tasks::Scheduler
         end
 
         @task_specs['2run'].each do |name|
-            @task_specs['trds'][name] = Thread.new do
-                @logger.info("#{name}: started")
-
-                Thread.current['deps'] = []
-                Thread.current['name'] = name
-                Thread.current['queue'] = Queue.new
-
-                check_task_dependencies(name)
-
-                # TODO other params
-                params = {}
-                params['name'] = name
-                params['start'] = Time.now
-
-                @task_specs['all'][name].new(params)
-                send_signal2deps(name)
-
-                @logger.info("#{name}: I am really done")
-            end
+            run_task(name)
         end
     end
 
@@ -143,6 +125,28 @@ class Tasks::Scheduler
                 end
                 @task_specs['rdeps'][dependency] << name
             end
+        end
+    end
+
+    def run_task(name)
+        @task_specs['trds'][name] = Thread.new do
+            @logger.info("#{name}: started")
+
+            Thread.current['deps'] = []
+            Thread.current['name'] = name
+            Thread.current['queue'] = Queue.new
+
+            check_task_dependencies(name)
+
+            # TODO other params
+            params = {}
+            params['name'] = name
+            params['start'] = Time.now
+
+            @task_specs['all'][name].new(params)
+            send_signal2deps(name)
+
+            @logger.info("#{name}: I am really done")
         end
     end
 
