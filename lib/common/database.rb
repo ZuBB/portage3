@@ -99,8 +99,13 @@ module Portage3::Database
         return false if     query.empty?
         return false unless @@database.complete?(query)
 
+        if @@insert_statement.nil? && File.size?(@@db_filename)
+            @@insert_statement = @@database.prepare(INSERT)
+            @@logger.info("insert statement has been just created")
+        end
+
         self.start_transaction
-        self.create_insert_statement
+
         @@semaphore.synchronize {
             # NOTE here you may get an exception in next case:
             # statement operates on table that is not created yet
@@ -115,12 +120,6 @@ module Portage3::Database
         }
 
         true
-    end
-
-    def self.create_insert_statement
-        if @@insert_statement.nil? && File.size?(@@db_filename)
-            @@insert_statement = @@database.prepare(INSERT)
-        end
     end
 
     def self.add_data4insert(item)
@@ -153,14 +152,14 @@ module Portage3::Database
     end
 
     def self.close_statement(id, task_name)
+        @@insert_statement.execute(task_name)
+        @@stats[id]['end_time'] = Time.now
+        @@completed_tasks[id] << id
+
         @@statements[id].reset!
         @@statements[id].close
         @@semaphore.synchronize { @@statements.delete(id) }
         @@logger.info("statement '#{id}' has been closed")
-        @@stats[id]['end_time'] = Time.now
-
-        @@insert_statement.execute(task_name)
-        @@completed_tasks[id] << id
     end
 
     def self.wait_task_completion(id)
