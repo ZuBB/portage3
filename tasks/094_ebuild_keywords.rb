@@ -7,6 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'ebuild'
+require 'source'
 require 'keyword'
 
 klass = Class.new(Tasks::Runner) do
