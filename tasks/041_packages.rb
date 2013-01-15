@@ -10,6 +10,7 @@ require 'source'
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 1.3
     self::DEPENDS = '031_categories'
     self::SOURCE = 'portage tree'
     self::SQL = {

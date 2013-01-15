@@ -10,6 +10,7 @@ require 'eapi'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 1.5
     self::DEPENDS = '091_ebuilds' # ;009_eapis
     self::THREADS = 4
     self::SOURCE = 'ebuilds'

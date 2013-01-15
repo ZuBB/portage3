@@ -10,7 +10,7 @@ require 'source'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::PRI_INDEX = 2
+    self::PRI_INDEX = 1.4
     self::DEPENDS = '041_packages'
     self::THREADS = 4
     self::SOURCE = 'ebuilds'

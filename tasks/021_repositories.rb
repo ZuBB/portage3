@@ -9,6 +9,7 @@
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
+    self::PRI_INDEX = 1.1
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO repositories
