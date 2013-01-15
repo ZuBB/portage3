@@ -32,15 +32,17 @@
 * readme
 
 #### Long term tasks
-* Python
-    + select python sqlite wrapper (apsw vs pysqlite vs..)
-    + rewrite using Python
-    + replace calls of external apps with Python API calls:
-        - env setup
-        - versions compare
-        - portageq
-        - install/uninstall actions
-        - split PF into category and version (current implementation fails for 'net-misc/cisco-vpnclient-3des')
+* Data storage
+    + database vs ...
+    + if database, which exactly will be the best for us
+* Programing language
+    + pick up best PL accordingly to the tasks we have
+* Find a way to use next Portage APIs that is written in Python
+    + env setup
+    + versions compare
+    + portageq
+    + install/uninstall actions
+    + split PF into category and version (current implementation fails for 'net-misc/cisco-vpnclient-3des')
 * Script class
     + rename 'arch' to 'keyword', 'keyword' to keyword_status?
     + keep in mind that need to have easy way to debug specified item(s)
