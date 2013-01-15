@@ -37,9 +37,10 @@
     + rewrite using Python
     + replace calls of external apps with Python API calls:
         - env setup
-        - versions
+        - versions compare
         - portageq
         - install/uninstall actions
+        - split PF into category and version (current implementation fails for 'net-misc/cisco-vpnclient-3des')
 * Script class
     + rename 'arch' to 'keyword', 'keyword' to keyword_status?
     + keep in mind that need to have easy way to debug specified item(s)
