@@ -7,6 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'atom'
+require 'mask'
 require 'source'
 require 'profiles'
 

@@ -13,7 +13,7 @@ klass = Class.new(Tasks::Runner) do
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds
-            (package_id, version, repository_id, source_id)
+            (version, package_id, repository_id, source_id)
             VALUES (?, ?, ?, ?);
         SQL
     }

@@ -7,6 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'atom'
+require 'mask'
 require 'source'
 require 'repository'
 
@@ -41,8 +42,8 @@ klass = Class.new(Tasks::Runner) do
             result = Mask.parse_line(line.strip)
 
             next if result['vrestr'].nil?
-            next if result['vrestr'].eql?('=')
-            next if result['version'].nil?
+            next if !result['vrestr'].eql?('=')
+            next if result['version'].end_with?('*')
 
             send_data4insert({
                 'data' => [

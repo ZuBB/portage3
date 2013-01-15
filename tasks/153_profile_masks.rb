@@ -6,6 +6,7 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
+require 'mask'
 require 'source'
 require 'category'
 
