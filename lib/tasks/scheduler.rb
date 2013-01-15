@@ -54,15 +54,8 @@ class Tasks::Scheduler
             return false
         end
 
-        i = 0
         @task_specs['sort'].each do |name|
-            i += 1
             run_task(name)
-
-            if i == 5
-                @logger.info("slepping")
-                sleep(3)
-            end
         end
     end
 
@@ -172,27 +165,18 @@ class Tasks::Scheduler
     end
 
     def run_task(name)
-        name, pri = *name
-        @task_specs['trds'][name] = Thread.new do
-            @logger.info("#{name}: started")
+        name = name.first
+        @logger.info("#{name}: started")
 
-            Thread.current.priority = pri
-            Thread.current['deps'] = []
-            Thread.current['name'] = name
-            Thread.current['queue'] = Queue.new
+        return unless check_task_dependencies(name)
 
-            check_task_dependencies(name)
+        # TODO other params
+        @task_specs['all'][name].new({
+            'name' => name,
+            'start' => Time.now
+        })
 
-            # TODO other params
-            params = {}
-            params['name'] = name
-            params['start'] = Time.now
-
-            @task_specs['all'][name].new(params)
-            send_signal2deps(name)
-
-            @logger.info("#{name}: I am really done")
-        end
+        @logger.info("#{name}: I am really done")
     end
 
     def get_task_by_index
@@ -209,17 +193,23 @@ class Tasks::Scheduler
         @logger.info("#{name}: checking dependencies")
 
         if @task_specs['deps'].has_key?(name)
+            deps = []
             @task_specs['deps'][name].each do |dependency|
                 count = @db_client.get_1value(SQL['check'], dependency)
-                Thread.current['deps'] << dependency if count == 1
+                deps << dependency if count == 1
             end
 
-            while Thread.current['deps'].uniq.sort != @task_specs['deps'][name]
-                Thread.current['deps'] << Thread.current['queue'].pop
-            end
+            result = deps.uniq.sort == @task_specs['deps'][name]
         end
 
-        @logger.info("#{name}: passed dependency check")
+        if result == false
+            @logger.info("#{name}: dependency was not satisfied")
+        else
+            @logger.info("#{name}: passed dependency check")
+            result = true
+        end
+
+        return result
     end
 
     def dead_dependencies?
