@@ -59,7 +59,7 @@ module InstalledPackage
     end
 
     def self.get_file_content(path_part, filename)
-        content = false
+        content = nil
         filepath = self.get_filepath(path_part, filename, true)
 
 		if filepath.is_a?(String) && File.readable?(filepath)
