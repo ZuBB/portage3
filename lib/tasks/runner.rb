@@ -224,7 +224,7 @@ class Tasks::Runner
 
         unless shared_data[data_key].has_key?(item_key)
             message = "object '#{data_key}' of shared data does not have"\
-                "'#{item_key}' value"
+                " '#{item_key}' value"
             @logger.warn(message)
             return nil
         end
