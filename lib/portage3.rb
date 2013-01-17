@@ -16,6 +16,27 @@ module Portage3
         return old_path if File.exist?(old_path)
         return new_path if File.exist?(new_path)
     end
+
+    def self.portage_settings_home
+        Utils.get_portage_settings_home
+    end
+
+    def self.package_asterisk_content(file)
+        filename = File.join(self.portage_settings_home, file)
+        results = []
+
+        if File.exist?(filename)
+            if File.file?(filename)
+                results = IO.readlines(filename)
+            elsif File.exist?(filename) && File.directory?(filename)
+                Dir[File.join(filename, '**/*')].each { |file|
+                    results += IO.readlines(filename) if File.size?
+                }
+            end
+        end
+
+        results
+    end
 end
 
 Thread.abort_on_exception = true
