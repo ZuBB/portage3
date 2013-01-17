@@ -23,13 +23,12 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         # TODO get correct location for 'make.conf'
-        file_content = IO.readlines('/etc/make.conf')
+        file_content = IO.readlines(Portage3.settings_home)
         Parser.get_multi_line_ini_value(file_content, 'USE').split.uniq
     end
 
     def set_shared_data
         request_data('source@id', Source::SQL['@'])
-        request_data('flag_type@id', UseFlag::SQL['@1'])
         request_data('flag_state@id', UseFlag::SQL['@2'])
         request_data('global_flag@id', UseFlag::SQL['@3'])
     end
