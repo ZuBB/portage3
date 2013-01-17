@@ -29,7 +29,7 @@ klass = Class.new(Tasks::Runner) do
     def set_shared_data
         request_data('repository@id', Repository::SQL['@'])
         request_data('source@id', Source::SQL['@'])
-        request_data('CPN@id', Atom::SQL['@1'])
+        request_data('CPN@id', Atom::SQL['@1'], true)
     end
 
     def process_item(item)
