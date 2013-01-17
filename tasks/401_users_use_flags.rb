@@ -11,7 +11,7 @@ require 'source'
 require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '059_use_flag_stuff;095_ebuild_use_flags'
+    self::DEPENDS = '059_use_flag_stuff'
     self::SOURCE = '/etc/portage'
     self::TYPE = 'unknown'
     self::SQL = {
@@ -29,7 +29,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        IO.readlines('/etc/portage/package.use')
+        Portage3.package_asterisk_content('package.use')
     end
 
     def set_shared_data
