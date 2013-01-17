@@ -17,6 +17,12 @@ class Atom
             JOIN categories c ON p.category_id = c.id;
         SQL
     }
+    SQL['@2'] = <<-SQL
+        SELECT c.name || '/' || p.name || '-' || e.version as CPF, e.id
+        FROM packages p
+        JOIN categories c ON p.category_id = c.id
+        JOIN ebuilds e ON p.id = e.package_id;
+    SQL
 
     def self.get_package(pf)
         package = nil
