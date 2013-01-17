@@ -24,18 +24,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        results = []
-
-        filename = File.join(Utils.get_portage_settings_home, 'package.keywords')
-        if File.exist?(filename) && File.file?(filename)
-            results += IO.readlines(filename)
-        elsif File.exist?(filename) && File.directory?(filename)
-            Dir[File.join(filename, '**/*')].each { |file|
-                results += IO.readlines(filename) if File.size?
-            }
-        end
-
-        results
+        Portage3.package_asterisk_content('package.keywords')
     end
 
     def set_shared_data
