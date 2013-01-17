@@ -49,8 +49,9 @@ class Tasks::Scheduler
     end
 
     def run_specified_tasks
-        if dead_dependencies?
+        if (deps = dead_dependencies).size > 0
             @logger.error("Unsatisfied dependencie(s). have to terminate")
+            @logger.info(deps.inspect)
             return false
         end
 
@@ -212,7 +213,7 @@ class Tasks::Scheduler
         return result
     end
 
-    def dead_dependencies?
+    def dead_dependencies
         all_required_dependencies = []
 
         @task_specs['2run'].each { |scheduled_task|
@@ -226,8 +227,8 @@ class Tasks::Scheduler
         satisfied_dependencies = get_tasks_satisfied_dependencies
         all_satisfied_dependencies = satisfied_dependencies + @task_specs['2run']
 
-        all_required_dependencies.any? { |dependency|
-            !all_satisfied_dependencies.include?(dependency)
+        all_required_dependencies.reject { |dependency|
+            all_satisfied_dependencies.include?(dependency)
         }
     end
 
