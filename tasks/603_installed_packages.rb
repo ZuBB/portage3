@@ -10,7 +10,7 @@ require 'source'
 require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources'
+    self::DEPENDS = '008_sources;602_installed_packages'
     self::SOURCE = '/var/db/pkg'
     self::SQL = {
         'insert' => <<-SQL
