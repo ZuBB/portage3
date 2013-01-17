@@ -278,12 +278,12 @@ class Tasks::Scheduler
         .map { |i| i.to_i }
     end
 
-    def self.set_shared_data(key, sql_query)
+    def self.set_shared_data(key, sql_query, force)
         if @@database.nil?
             @@database = Portage3::Database::get_client
         end
 
-        unless @@semaphore.synchronize { @@shared_data.include?(key) }
+        if !@@semaphore.synchronize { @@shared_data.include?(key) } || force
             @@semaphore.synchronize {
                 @@shared_data[key] = Hash[@@database.select(sql_query)]
             }

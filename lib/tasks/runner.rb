@@ -210,8 +210,8 @@ class Tasks::Runner
         }
     end
 
-    def request_data(key, sql_query)
-        Tasks::Scheduler.set_shared_data(key, sql_query)
+    def request_data(key, sql_query, force = false)
+        Tasks::Scheduler.set_shared_data(key, sql_query, force)
     end
 
     def shared_data(data_key, item_key)
