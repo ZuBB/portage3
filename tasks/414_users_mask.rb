@@ -25,8 +25,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        path_items = [Utils.get_portage_settings_home, self.class::FILE]
-        IO.readlines(File.join(*path_items))
+        Portage3.package_asterisk_content(self.class::FILE)
     end
 
     def set_shared_data
