@@ -12,7 +12,7 @@ require 'source'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '021_repositories;041_packages'
+    self::DEPENDS = '041_packages'
     self::SOURCE = '/etc/portage'
     self::REPO = 'unknown'
     self::SQL = {
@@ -24,14 +24,9 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        lines = []
-
-        ['package.mask', 'package.unmask'].each do |file|
-            filepath = File.join(Utils.get_portage_settings_home, file)
-            lines += IO.readlines(filepath) if File.size?(filepath)
-        end
-
-        lines
+        ['package.mask', 'package.unmask']
+        .map { |file| Portage3.package_asterisk_content(file) }
+        .flatten
     end
 
     def set_shared_data
@@ -47,8 +42,8 @@ klass = Class.new(Tasks::Runner) do
         result = Mask.parse_line(line.strip)
 
         return if result['vrestr'].nil?
-        return if result['vrestr'].eql?('=')
         return if result['version'].nil?
+        return if result['version'].end_with?('*')
 
         send_data4insert({'data' => [
             result["version"].strip,
