@@ -9,7 +9,7 @@
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '091_ebuilds;412_users_mask;607_installed_packages'
+    self::DEPENDS = '412_users_mask;607_installed_packages'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds
