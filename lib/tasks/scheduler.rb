@@ -51,7 +51,7 @@ class Tasks::Scheduler
     def run_specified_tasks
         if (deps = dead_dependencies).size > 0
             @logger.error("Unsatisfied dependencie(s). have to terminate")
-            @logger.info(deps.inspect)
+            @logger.info(deps.uniq.inspect)
             return false
         end
 
@@ -286,6 +286,7 @@ class Tasks::Scheduler
         if !@@semaphore.synchronize { @@shared_data.include?(key) } || force
             @@semaphore.synchronize {
                 @@shared_data[key] = Hash[@@database.select(sql_query)]
+                # TODO: log a warn if size of array is 0
             }
         end
     end
