@@ -365,16 +365,20 @@ create table ipackage_content (
     item VARCHAR NOT NULL,
     -- can't use UNIQUE as we have same objects in FS
     --  under different names and/or packages
-    hash VARCHAR,
+    hash VARCHAR/* UNIQUE*/,
     install_time INTEGER,
-    -- check if its possible to use some check for this
     symlinkto INTEGER,
     FOREIGN KEY (iebuild_id) REFERENCES installed_packages(id),
     FOREIGN KEY (type_id) REFERENCES content_item_types(id),
+    -- TODO: is there better way to reference to the CURRENT table
+    FOREIGN KEY (symlinkto) REFERENCES ipackage_content(id),
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, type_id, item),
-    -- need to enforce somehow next cases
-    --  * hash and install_time can not be NULL in case of type is 'file'
-    --  * install_time can not be NULL in case of type is 'symlink'
+    --  hash can not be NULL in case of type is 'file'
+    CONSTRAINT chk1 CHECK (type_id != 2 OR hash IS NOT NULL),
+    --  install_time can not be NULL in case of type is 'file'
+    CONSTRAINT chk2 CHECK (type_id != 2 OR install_time IS NOT NULL),
+    --  install_time can not be NULL in case of type is 'symlink'
+    CONSTRAINT chk3 CHECK (type_id != 3 OR install_time IS NOT NULL),
     PRIMARY KEY (id)
 );
 
