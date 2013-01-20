@@ -49,7 +49,7 @@ klass = Class.new(Tasks::Runner) do
             symlink_target_id = shared_data('symlink_items@id', symlink_target)
             # TODO find better way to handle this
             unless symlink_target_id
-                @logger.unknown(cline)
+                @logger.unknown(cline.strip)
                 next
             end
 
