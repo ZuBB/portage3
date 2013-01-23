@@ -21,16 +21,10 @@ class UseFlag
             'select id from flag_types where type = "global"'\
         ');',
         'ghost' => <<-SQL
-            SELECT tf.name
-            FROM TMP_TABLE tf
+            SELECT distinct *
+            FROM TMP_TABLE tb
             WHERE NOT EXISTS (
-                SELECT name
-				FROM flags f
-				WHERE
-					f.name = tf.name AND
-                    /* NOTE hardcoded constants */
-                    f.type_id BETWEEN 4 and 6
-
+                SELECT name FROM flags f WHERE f.name = tb.name
             );
         SQL
     }
