@@ -392,6 +392,7 @@ create table ipackage_flagstates (
     state_id INTEGER NOT NULL,
     FOREIGN KEY (flag_id) REFERENCES flags(id),
     FOREIGN KEY (state_id) REFERENCES flag_states(id),
+    FOREIGN KEY (iebuild_id) REFERENCES installed_packages(id),
     CONSTRAINT idx1_unq UNIQUE (iebuild_id, flag_id, state_id),
     PRIMARY KEY (id)
 );
@@ -494,3 +495,10 @@ CREATE TABLE IF NOT EXISTS tmp_installed_packages_ebuilds (
 );
 
 CREATE INDEX tipe on tmp_installed_packages_ebuilds(version, package_id);
+
+
+CREATE TABLE IF NOT EXISTS tmp_dropped_flags (
+    name VARCHAR,
+    type_id INTEGER,
+    source_id INTEGER 
+);
