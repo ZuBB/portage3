@@ -57,6 +57,8 @@ class Tasks::Runner
             get_data(Utils.get_pathes).each { |item| @jobs << item }
             @stats['total'] = @jobs.size
             store_timeframe(__method__, start_time, Time.now)
+        else
+            @logger.warn('`get_data` method is not defined')
         end
     end
 
@@ -225,7 +227,8 @@ class Tasks::Runner
         unless shared_data[data_key].has_key?(item_key)
             message = "object '#{data_key}' of shared data does not have"\
                 " '#{item_key}' value"
-            @logger.warn(message)
+            # TODO what to do with this?
+            #@logger.warn(message)
             return nil
         end
 
