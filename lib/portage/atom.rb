@@ -54,6 +54,48 @@ class Atom
         version
     end
 
+    def self.parse_atom_string(line)
+        result = {}
+
+        # here we do not care what is after atom
+        atom = line.split[0]
+
+        # take care about repo
+        if atom.include?('::')
+            result["repo"] = atom.slice!(/(?=::).+$/)[2..-1]
+        end
+
+        # take care about slot
+        if atom.include?(':')
+            result["slot"] = atom.slice!(/(?=:).+$/)[1..-1]
+        end
+
+        # take care about signs that are before category
+        if /^[^\w]+/ =~ atom
+            result["prefix"] = atom.slice!(/^[^\w]+/)
+        end
+
+        # take care about version restrictions
+        if result["vrestr"]
+            result["vrestr"] = result["prefix"].slice!(/[><=]+$/)
+        end
+
+        # get version multiplier
+        if atom.end_with?('*')
+            result["vmultiplier"] = atom.sub!(/\*+/, '')
+        end
+
+        # get versions
+        unless (version = Atom.get_version(atom)).nil?
+            result["version"] = atom.sub!(/-#{version}/, '')[1..-1]
+        end
+
+        # basic stuff
+        result["category"], result["package"] = atom.split('/')
+        result['atom'] = atom
+        result
+    end
+
     def self.get_ebuilds(params)
         sql_query = 'SELECT id FROM ebuilds WHERE package_id = ?'
         sql_query_params = [params["package_id"]]
