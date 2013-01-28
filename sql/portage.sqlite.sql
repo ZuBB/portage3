@@ -423,12 +423,12 @@ CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
 CREATE INDEX teh on tmp_ebuild_homepages (homepage);
 
 
-CREATE TABLE IF NOT EXISTS tmp_profile_mask_categories (
+CREATE TABLE IF NOT EXISTS tmp_profile_categories (
     name VARCHAR NOT NULL,
     source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpmc on tmp_profile_mask_categories(name);
+CREATE INDEX tpc on tmp_profile_categories(name);
 
 
 CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
