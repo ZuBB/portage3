@@ -431,23 +431,23 @@ CREATE TABLE IF NOT EXISTS tmp_profile_categories (
 CREATE INDEX tpc on tmp_profile_categories(name);
 
 
-CREATE TABLE IF NOT EXISTS tmp_profile_mask_packages (
+CREATE TABLE IF NOT EXISTS tmp_profile_packages (
     name VARCHAR NOT NULL,
     category_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpmp on tmp_profile_mask_packages(name);
+CREATE INDEX tpp on tmp_profile_packages(name);
 
 
-CREATE TABLE IF NOT EXISTS tmp_profile_mask_ebuilds (
+CREATE TABLE IF NOT EXISTS tmp_profile_ebuilds (
     version VARCHAR NOT NULL,
     package_id INTEGER NOT NULL,
     repository_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL
 );
 
-CREATE INDEX tpme on tmp_profile_mask_ebuilds(version, package_id);
+CREATE INDEX tpe on tmp_profile_ebuilds(version, package_id);
 
 
 CREATE TABLE IF NOT EXISTS tmp_etc_portage_mask_ebuilds (
