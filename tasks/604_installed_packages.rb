@@ -9,7 +9,7 @@
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '152_profile_masks;603_installed_packages'
+    self::DEPENDS = '152_profile_categories;603_installed_packages'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO categories (name, source_id) VALUES (?, ?);

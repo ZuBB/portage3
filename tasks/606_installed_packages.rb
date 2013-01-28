@@ -9,7 +9,7 @@
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '154_profile_masks;605_installed_packages'
+    self::DEPENDS = '154_profile_packages;605_installed_packages'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO packages
