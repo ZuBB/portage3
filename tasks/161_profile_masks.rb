@@ -12,7 +12,7 @@ require 'source'
 require 'profiles'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '006_profiles;007_mask_states;157_profile_masks'
+    self::DEPENDS = '006_profiles;007_mask_states;157_profile_ebuild_versions'
     self::THREADS = 4
     self::SOURCE = 'profiles'
     self::SQL = {
