@@ -7,25 +7,24 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'atom'
-require 'mask'
 require 'source'
+require 'profiles'
 require 'repository'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '021_repositories;154_profile_masks'
+    self::DEPENDS = '021_repositories;154_profile_packages'
     self::SOURCE = 'profiles'
     self::REPO = 'unknown'
     self::SQL = {
         'insert' => <<-SQL
-            INSERT INTO tmp_profile_mask_ebuilds
+            INSERT INTO tmp_profile_ebuilds
             (package_id, version, repository_id, source_id)
             VALUES (?, ?, ?, ?);
         SQL
     }
 
     def get_data(params)
-        Dir[File.join(params['profiles_home'], '**/package.mask')]
-        .reject { |i| File.exist?(i.sub('package.mask', 'deprecated')) }
+        PProfile.files_with_atoms(params)
     end
 
     def set_shared_data
@@ -39,18 +38,21 @@ klass = Class.new(Tasks::Runner) do
             next if /^\s*#/ =~ line
             next if /^\s*$/ =~ line
 
-            result = Mask.parse_line(line.strip)
-
-            next if result['vrestr'].nil?
+            result = Atom.parse_atom_string(line.strip)
             next if result['version'].nil?
-            next if result['version'].end_with?('*')
 
             send_data4insert({
                 'data' => [
                     shared_data('CPN@id', result['atom']),
-                    result["version"].strip,
+                    result["version"],
                     shared_data('repository@id', self.class::REPO),
                     shared_data('source@id', self.class::SOURCE)
+                ],
+                'raw_data' => [
+                    result['atom'],
+                    result["version"],
+                    self.class::REPO,
+                    self.class::SOURCE
                 ]
             })
         end

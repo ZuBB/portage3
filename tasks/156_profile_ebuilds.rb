@@ -9,7 +9,7 @@
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '091_ebuilds;155_profile_masks'
+    self::DEPENDS = '091_ebuilds;155_profile_ebuilds'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds
@@ -20,7 +20,7 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         sql_query = Ebuild::SQL['ghost'].dup
-        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_ebuilds')
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_ebuilds')
         Portage3::Database.get_client.select(sql_query)
     end
 end
