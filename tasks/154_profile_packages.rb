@@ -9,7 +9,7 @@
 require 'package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '041_packages;153_profile_masks'
+    self::DEPENDS = '041_packages;153_profile_packages'
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO packages
@@ -20,7 +20,7 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         sql_query = Package::SQL['ghost'].dup
-        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_packages')
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_packages')
         Portage3::Database.get_client.select(sql_query)
     end
 end

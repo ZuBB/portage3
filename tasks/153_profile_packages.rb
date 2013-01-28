@@ -6,24 +6,24 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'mask'
+require 'atom'
 require 'source'
+require 'profiles'
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '152_profile_masks'
+    self::DEPENDS = '152_profile_categories'
     self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => <<-SQL
-            INSERT INTO tmp_profile_mask_packages
+            INSERT INTO tmp_profile_packages
             (name, category_id, source_id)
             VALUES (?, ?, ?);
         SQL
     }
 
     def get_data(params)
-        Dir[File.join(params['profiles_home'], '**/package.mask')]
-        .reject { |i| File.exist?(i.sub('package.mask', 'deprecated')) }
+        PProfile.files_with_atoms(params)
     end
 
     def set_shared_data
@@ -36,9 +36,9 @@ klass = Class.new(Tasks::Runner) do
             next if /^\s*#/ =~ line
             next if /^\s*$/ =~ line
 
-            result = Mask.parse_line(line.strip)
+            result = Atom.parse_atom_string(line)
             send_data4insert({'data' => [
-                result["package"].strip,
+                result['package'],
                 shared_data('category@id', result["category"]),
                 shared_data('source@id', self.class::SOURCE)
             ]})
