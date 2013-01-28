@@ -9,7 +9,7 @@
 require 'ebuild_version'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '156_profile_masks'
+    self::DEPENDS = '156_profile_ebuilds'
     self::THREADS = 4
     self::SQL = {
         'insert' => 'UPDATE ebuilds SET version_order=? WHERE id=?;'
