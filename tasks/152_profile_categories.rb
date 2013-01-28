@@ -16,7 +16,7 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         sql_query = Category::SQL['ghost'].dup
-        sql_query.sub!('TMP_TABLE', 'tmp_profile_mask_categories')
+        sql_query.sub!('TMP_TABLE', 'tmp_profile_categories')
         Portage3::Database.get_client.select(sql_query)
     end
 end
