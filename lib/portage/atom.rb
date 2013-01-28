@@ -76,18 +76,18 @@ class Atom
         end
 
         # take care about version restrictions
-        if result["vrestr"]
+        if result["prefix"]
             result["vrestr"] = result["prefix"].slice!(/[><=]+$/)
         end
 
         # get version multiplier
         if atom.end_with?('*')
-            result["vmultiplier"] = atom.sub!(/\*+/, '')
+            result["vexp"] = atom.sub!(/\*+$/, '')
         end
 
         # get versions
-        unless (version = Atom.get_version(atom)).nil?
-            result["version"] = atom.sub!(/-#{version}/, '')[1..-1]
+        if (version = Atom.get_version(atom))
+            result["version"] = atom.slice!(/-#{version}/)[1..-1]
         end
 
         # basic stuff
