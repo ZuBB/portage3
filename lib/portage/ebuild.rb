@@ -104,13 +104,26 @@ class Ebuild < Package
         metadata_path = File.join(Utils.get_tree_home, 'metadata/md5-cache')
         metadata_filename = "#{package}-#{ebuild_version}"
         metadata_file = File.join(metadata_path, category, metadata_filename)
-        set_prop(IO.read(metadata_file).split("\n"), 'cache')
+        if File.exist?(metadata_file)
+            set_prop(IO.read(metadata_file).split("\n"), 'cache')
+        else
+            # TODO
+            puts "ERROR: file `#{metadata_file}` is missed"
+            @ebuild_cache = []
+        end
         @ebuild_cache
     end
 
     def ebuild_text
         return @ebuild_text unless @ebuild_text.nil?
-        set_prop(IO.read(File.join(package_home, @ebuild)).split("\n"), 'text')
+        ebuild_file = File.join(File.join(package_home, @ebuild))
+        if File.exist?(ebuild_file)
+            set_prop(IO.read(ebuild_file).split("\n"), 'text')
+        else
+            # TODO
+            puts "ERROR: file `#{ebuild_file}` is missed"
+            @ebuild_text = []
+        end
         @ebuild_text
     end
 
