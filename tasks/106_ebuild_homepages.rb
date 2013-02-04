@@ -26,9 +26,18 @@ klass = Class.new(Tasks::Runner) do
     def process_item(params)
         @logger.debug("Ebuild: #{params[3, 3].join('-')}")
 
+        parts = []
         params.last.split.each { |homepage|
-            send_data4insert({'data' => [homepage, params[6]]})
+            if /^(http|ftp)/ =~ homepage
+                send_data4insert({'data' => [homepage, params[6]]})
+            else
+                parts << homepage
+            end
         }
+
+        unless parts.empty?
+            send_data4insert([parts.join(' '), params[6]])
+        end
     end
 end
 
