@@ -12,7 +12,7 @@ class Ebuild
         #return "0_" + @curr_prop + "_DEF" if line.empty?
         return "" if line.empty?
         if line.size == 1
-            line[0].split('=')[1].strip
+            line[0][line[0].index('=') + 1..-1].strip
         else
             
         end
