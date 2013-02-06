@@ -8,14 +8,19 @@ require 'net/ftp'
 require 'net/http'
 require 'portage3'
 
-HTTP_OK_RESP_CODES = ['200', '301', '302']
-HTTP_RECHECK_RESP_CODES = ['503', '405', '500']
+HTTP_OK_RESP_CODES = ['200', '301', '302', '307']
+HTTP_RECHECK_RESP_CODES = ['400', '405', '500', '503']
 HTTP_EXCP_STRS = [
     'Connection reset by peer',
     'end of file reached',
     'Connection refused',
-    'Timeout::Error',
     'execution expired',
+]
+HTTP_RECHECK_HOSTS = [
+    'https://github.com',
+    'https://gitorious.org',
+    'http://gitorious.org',
+    'http://www.emacswiki.org'
 ]
 SQL_QUERY1 = <<-SQL
     select
@@ -30,78 +35,52 @@ SQL_QUERY1 = <<-SQL
 SQL
 SQL_QUERY2 = 'select homepage, null from ebuild_homepages'
 
-def process_item(row)
-    if /^http/ =~ row[1]
-        have_results = check_http_path(row[1])
-    elsif /^ftp/ =~ row[1]
-        return
-        #check_ftp_path(row[1])
+def process_item(homepage)
+    if /^http/ =~ homepage
+        result = check_http_path(homepage)
+    elsif /^ftp/ =~ homepage
+        return #check_ftp_path(row[1])
     else
-        @semaphore.synchronize {
-            @homepages << row[1]
-            @results[row[1]] = {
-                'notices' => ['cant handle this type of URI'],
-                'result'  => false
-            }
+        result = {
+            'exception' => 'cant handle this type of URI',
+            'result'    => false
         }
-        have_results = true
     end
 
-    if have_results
-        print_details(row)
-    else
-        @jobs << row
-    end
+    @homepages[homepage] = result
 end
 
 def check_http_path(idx)
-    if @homepages.include?(idx)
-        return @results[idx]
-    end
-
-    if @semaphore.synchronize { @checking.include?(idx) }
-        return false
-    end
-
-    @semaphore.synchronize {
-        @checking << idx
-    }
-
     result = native_http_check(idx)
-    result['notices'] = []
 
     unless result['result']
         if result['code']
-            if HTTP_RECHECK_RESP_CODES.include?(result['code'])
-                result.merge!(wget_http_check(idx))
+            if HTTP_RECHECK_HOSTS.any? { |host| idx.start_with?(host) }
+                result.merge!(wget_http_check(idx, result.clone))
+            elsif HTTP_RECHECK_RESP_CODES.include?(result['code'])
+                result.merge!(wget_http_check(idx, result.clone))
             end
         elsif result['exception']
             if HTTP_EXCP_STRS.include?(result['exception'])
-                result.merge!(wget_http_check(idx))
+                result.merge!(wget_http_check(idx, result.clone))
             end
         else
             result['notices'] << 'cant handle http error code/status'
         end
     end
 
-    @semaphore.synchronize {
-        @homepages << idx
-        @results[idx] = result
-        @checking.delete_if {|x| x == idx }
-    }
-
-    true
+    result
 end
 
 def native_http_check(idx)
-    result = {}
+    result = { 'notices' => [] }
     url = URI.parse(idx)
     req = Net::HTTP.new(url.host, url.port)
 
-    req.ssl_timeout = 20
-    req.open_timeout = 20
-    req.read_timeout = 20
-    req.continue_timeout = 20
+    req.ssl_timeout = 15
+    req.open_timeout = 15
+    req.read_timeout = 15
+    req.continue_timeout = 15
     if idx.start_with?('https')
         req.use_ssl = true
         req.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -124,12 +103,12 @@ def native_http_check(idx)
     result
 end
 
-def wget_http_check(idx)
-    output = `wget -Sq -t 1 -T 60 #{idx} -O /dev/null 2>&1`.split("\n")
+def wget_http_check(idx, result_old)
+    output = `wget -Snv -t 1 -T 30 '#{idx}' -O /dev/null 2>&1`.split("\n")
     result = { 'notices' => [], 'wget' => true }
 
-    status_index = output.index { |line| /\s+Status/ =~ line }
-    http_index = output.index { |line| /\s+HTTP/ =~ line }
+    status_index = output.index { |line| /^\s+Status/ =~ line }
+    http_index = output.index { |line| /^\s+HTTP/ =~ line }
 
     if status_index.nil? == false
         status = output[status_index].split.drop(1)
@@ -141,8 +120,14 @@ def wget_http_check(idx)
         result['code'] = status[0]
         result['message'] = status[1]
         result['result'] = HTTP_OK_RESP_CODES.include?(result['code'])
-    else
-        result['notices'] << 'wget headers issue'
+    elsif output.empty? == false
+        result['exception'] = output.join(';')
+    elsif output.empty?
+        if result_old['exception'] == 'execution expired'
+            result['notices'] << 'very likely its a \'Connection timed out\' error'
+        else
+            result['notices'] << 'wget headers issue'
+        end
     end
 
     result
@@ -164,15 +149,16 @@ def check_ftp_path(idx)
     true
 end
 
-def print_details(row)
+def print_details(ebuild, homepage)
     output = ['='*10]
-    res = @results[row[1]]
+    res = @homepages[homepage]
+    return if res.nil?
 
     if res['result']
-        output << "ebuild: #{row[0]} - OK"
+       #output << "ebuild: #{ebuild} - OK"
     else
-        output << "ebuild: #{row[0]}"
-        output << "homepage: #{row[1]}"
+        output << "ebuild: #{ebuild}"
+        output << "homepage: #{homepage}"
         if res['exception']
             output << "Exception: #{res['exception']}"
         else
@@ -181,27 +167,19 @@ def print_details(row)
         output << "notices: #{res['notices']}" unless res['notices'].empty?
     end
 
-    print (output << '').join("\n")
+    print (output << '').join("\n") if output.size > 1
 end
 
 Portage3::Logger.start_server
 Portage3::Database.init(Utils.get_database)
 database   = Portage3::Database.get_client
-data       = database.select(SQL_QUERY1)
-@results   = Hash[database.select(SQL_QUERY2)]
-@semaphore = Mutex.new
+@homepages = Hash[database.select(SQL_QUERY2)]
+@data      = Hash[database.select(SQL_QUERY1)]
 @jobs      = Queue.new
-@homepages = []
-@checking  = []
 
-#data = [
-    #['app-admin/fetchlog-0.94', 'http://fetchlog.sourceforge.net/'],
-    #['app-accessibility/emacspeak-ss-1.9.1', 'http://leb.net/blinux/'],
-#]
+@homepages.keys.each { |homepage| @jobs << homepage }
 
-data.each { |row| @jobs << row }
-
-threads = 24
+threads = 32
 Thread.abort_on_exception = true
 
 pool = Array.new(threads) do |i|
@@ -217,4 +195,6 @@ pool = Array.new(threads) do |i|
 end
 
 pool.each { |thread| thread.join }
+
+@data.each_pair { |ebuild, homepage| print_details(ebuild, homepage) }
 
