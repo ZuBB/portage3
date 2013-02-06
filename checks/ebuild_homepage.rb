@@ -164,7 +164,9 @@ def print_details(ebuild, homepage)
         else
             output << "HTTP Response: #{res['code']} #{res['message']}"
         end
-        output << "notices: #{res['notices']}" unless res['notices'].empty?
+        if res.has_key?('notices') && !res['notices'].empty?
+            output << "notices: #{res['notices']}"
+        end
     end
 
     print (output << '').join("\n") if output.size > 1
