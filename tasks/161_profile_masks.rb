@@ -45,7 +45,7 @@ klass = Class.new(Tasks::Runner) do
 
             if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
                 @logger.warn("File `#{filename}` has dead package: #{line.strip}")
-                next 
+                next
             end
 
             if (result_set = Atom.get_ebuilds(result)).size == 0
@@ -74,7 +74,7 @@ klass = Class.new(Tasks::Runner) do
                 next if /^\s*$/ =~ relative_path
                 relative_path.strip!
 
-                new_path = File.join(path, relative_path.strip)
+                new_path = File.join(path, relative_path)
                 process_dir(File.realpath(new_path), profile)
             end
         end
