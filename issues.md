@@ -1,7 +1,6 @@
 #### Short term tasks
 * ~~Script class~~
-    + ~~**convert scripts to tasks; run unblocking tasks in parallel**~~
-    + ~~**check dependant tables before filling current one**~~
+    + ~~**check dependant tasks before running current one**~~
     + ~~shared resources for workers~~
     + ~~log queries and stats~~
     + ~~add '-1' option for max_threads~~
@@ -16,27 +15,29 @@
 * ~~parser~~
     * ~~**new parse method: simple and fast**~~
 * scripts
-    + **scripts to tasks migration**
     + ~~versions: script, compare method, ruby+python tools, verify scripts, check module~~
-    + flags stuff: db, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
-    + dependancies: db, scripts
-    + ~~installed stuff: db, scripts, 'missed' ebuilds~~, use flags
+    + flags stuff: ~~db~~, ~~module~~, ~~ebuilds~~, profiles, ~~make.conf~~, ~~users~~
+    + **dependancies: db, scripts**
+    + ~~installed stuff: db, scripts, 'missed' ebuilds, use flags~~
 * setup scripts
     + ~~new script for getting data/setting/check available apps/props/pathes~~
     + ~~calling scripts for all in theirs forlder~~
-    + new path of make.conf
+    + ~~new path of make.conf~~
 * ~~deal with pathes~~
 * examples
     + examples for use flags stuff, dependancies, installed stuff
     + statistics on what is in db
-* readme
+* documentation
+    + readme
+    + issues
+    + wiki
 
 #### Long term tasks
 * Data storage
     + database vs ...
     + if database, which exactly will be the best for us
 * Programing language
-    + pick up best PL accordingly to the tasks we have
+    + pick up best PL(s) accordingly to the tasks we have
 * Find a way to use next Portage APIs that is written in Python
     + env setup
     + versions compare
@@ -44,6 +45,7 @@
     + install/uninstall actions
     + split PF into category and version (current implementation fails for 'net-misc/cisco-vpnclient-3des')
 * Script class
+    + find a way to run unblocking tasks in parallel
     + rename 'arch' to 'keyword', 'keyword' to keyword_status?
     + keep in mind that need to have easy way to debug specified item(s)
     + make logger (and database) module injectable into Script/Worker class
