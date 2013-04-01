@@ -153,6 +153,47 @@ create table license_group_content (
     PRIMARY KEY (id)
 );
 
+/* ================== START OF EXPERIMENTAL CODE ================== */
+
+create table persons (
+    id INTEGER,
+    name VARCHAR,
+    email VARCHAR NOT NULL UNIQUE,
+    nickname VARCHAR UNIQUE,
+    CONSTRAINT idx1_unq UNIQUE (name, email, nickname),
+    PRIMARY KEY (id)
+);
+
+create table roles (
+    id INTEGER,
+    role VARCHAR NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+create table persons2roles (
+    id INTEGER,
+    person_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
+    FOREIGN KEY (person_id) REFERENCES persons(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    -- CONSTRAINT idx1_unq UNIQUE (person_id, role_id),
+    PRIMARY KEY (id)
+);
+
+-- create table person_roles2packages (
+create table packages2maintainers (
+    id INTEGER,
+    package_id INTEGER NOT NULL,
+    person_id INTEGER NOT NULL,
+    -- persons_role_id INTEGER NOT NULL,
+    -- FOREIGN KEY (persons_role_id) REFERENCES persons2roles(id),
+    FOREIGN KEY (package_id) REFERENCES packages(id),
+    FOREIGN KEY (person_id) REFERENCES persons(id),
+    -- CONSTRAINT idx1_unq UNIQUE (package_id, persons_role_id),
+    PRIMARY KEY (id)
+);
+/* ================== END OF EXPERIMENTAL CODE ================== */
+
 create table repositories (
     -- TODO find best way to handle repos
     --   that used to be in use but are removed now
@@ -218,6 +259,9 @@ create table ebuild_descriptions (
 create table ebuild_homepages (
     id INTEGER,
     homepage VARCHAR NOT NULL UNIQUE,
+    /* both next columns are used for custom feature */
+    status VARCHAR,
+    notice VARCHAR,
     PRIMARY KEY (id)
 );
 
@@ -502,3 +546,16 @@ CREATE TABLE IF NOT EXISTS tmp_dropped_flags (
     type_id INTEGER,
     source_id INTEGER 
 );
+
+
+CREATE TABLE IF NOT EXISTS tmp_package_maintainers (
+    id INTEGER,
+    name VARCHAR,
+    email VARCHAR,
+    role VARCHAR,
+    package_id INTEGER,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX tpm on tmp_package_maintainers (role);
+
