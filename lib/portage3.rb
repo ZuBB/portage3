@@ -9,12 +9,13 @@ require 'thread'
 require 'digest/md5'
 
 module Portage3
-    def self.settings_home
-        old_path = '/etc/make.conf'
-        new_path = '/etc/portage/make.conf'
+    OLD_PATH = '/etc/make.conf'
+    NEW_PATH = '/etc/portage/make.conf'
 
-        return old_path if File.exist?(old_path)
-        return new_path if File.exist?(new_path)
+    def self.settings_home
+        return self::OLD_PATH if File.exist?(self::OLD_PATH)
+        return self::NEW_PATH if File.exist?(self::NEW_PATH)
+        return nil
     end
 
     def self.portage_settings_home
@@ -41,9 +42,13 @@ end
 
 Thread.abort_on_exception = true
 
+# common stuff
 require 'common/database'
 require 'common/logger'
 require 'common/utils'
-
 # TODO this is a temporary solution
 require 'common/parser'
+
+# portage modules
+require 'portage/profiles'
+require 'portage/atom'
