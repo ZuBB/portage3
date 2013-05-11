@@ -6,8 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'profiles'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '008_sources;006_profiles'
@@ -21,7 +19,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        PProfile.files_with_atoms(params)
+        Portage3::Profile.files_with_atoms(params)
     end
 
     def set_shared_data
@@ -33,11 +31,10 @@ klass = Class.new(Tasks::Runner) do
             next if /^\s*#/ =~ line
             next if /^\s*$/ =~ line
 
-            atom = line.split[0]
-            dirty_category = atom.split('/')[0]
-            category = dirty_category.sub(/^[^\w]*/, '')
-            source_id = shared_data('source@id', self.class::SOURCE)
-            send_data4insert([category, source_id])
+            send_data4insert([
+                 Atom.parse_atom_string(line.strip)["category"],
+                shared_data('source@id', self.class::SOURCE)
+            ])
         end
     end
 end
