@@ -98,5 +98,26 @@ class Package < Category
 
         results.values
     end
+
+    def self.list_packages(params = {})
+        db   = Portage3::Database.get_client()
+        res1 = db.select(<<-SQL
+            select parent_folder, repository_folder
+            from repositories
+            where name = 'gentoo';
+        SQL
+        ).flatten
+
+        db.select(<<-SQL
+            SELECT p.id, c.name, p.name
+            FROM packages p
+            JOIN categories c on p.category_id = c.id
+            where p.source_id = 1 and c.source_id = 1;
+        SQL
+        )
+        .map { |item|
+            item.insert(1, *res1)
+        }
+    end
 end
 
