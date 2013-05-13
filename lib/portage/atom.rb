@@ -70,6 +70,13 @@ class Atom
             result["slot"] = atom.slice!(/(?=:).+$/)[1..-1]
         end
 
+        # take care about leading ~
+        # it means match any subrevision of the specified base version.
+        if atom.start_with?('~')
+            atom.sub!(/^~/, '')
+            atom << '*' unless atom.end_with?('*')
+        end
+
         # take care about signs that are before category
         if /^[^\w]+/ =~ atom
             result["prefix"] = atom.slice!(/^[^\w]+/)
@@ -82,7 +89,11 @@ class Atom
 
         # get version multiplier
         if atom.end_with?('*')
-            result["vexp"] = atom.sub!(/\*+$/, '')
+            result["vexp"] = atom.slice!(/\*+$/)
+        end
+
+        if result["vrestr"].nil? && /\*$/ =~ result["vexp"]
+            result["vrestr"]  = '='
         end
 
         # get versions
@@ -108,7 +119,7 @@ class Atom
 
         # NOTE start of section that needs cleanup
         # take care about version that ends with '*'
-        if !params["version"].nil? && params["version"].end_with?('*') && params["vrestr"] == '='
+        if !params["version"].nil? && !params["vexp"].nil? && params["vexp"].end_with?('*') && params["vrestr"] == '='
             sql_query_params << (params["version"].sub('*', '') + '%')
             sql_query << ' AND version like ?'
         # take care about direct version
