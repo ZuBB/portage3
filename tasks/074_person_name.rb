@@ -12,6 +12,7 @@ klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '073_person_email'
     self::SQL = {
         'insert' => 'update persons set name = ? where id = ?;',
+        # http://git.io/px86KA
         'select' => <<-SQL
             select name, count(name) as c
             from tmp_package_maintainers
