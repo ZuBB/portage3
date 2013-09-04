@@ -298,12 +298,11 @@ create table ebuilds_masks (
     profile_id INTEGER,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (ebuild_id) REFERENCES ebuilds(id),
-    FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (state_id) REFERENCES mask_states(id),
+    FOREIGN KEY (arch_id) REFERENCES arches(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    CONSTRAINT chk1 CHECK (arch_id IS NOT NULL OR profile_id IS NOT NULL),
-    -- TODO replace this constraint with trigger(s)
-    --CONSTRAINT idx1_unq UNIQUE (ebuild_id, arch_id, state_id, source_id),
+    FOREIGN KEY (profile_id) REFERENCES profiles(id),
+    CONSTRAINT idx1_unq UNIQUE (ebuild_id, state_id, arch_id, profile_id, source_id),
     PRIMARY KEY (id)
 );
 
