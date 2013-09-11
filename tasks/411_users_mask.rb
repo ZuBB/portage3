@@ -39,7 +39,7 @@ klass = Class.new(Tasks::Runner) do
         return if /^\s*#/ =~ line
         return if /^\s*$/ =~ line
 
-        result = Mask.parse_line(line.strip)
+        result = Atom.parse_atom_string(line.strip)
 
         return if result['vrestr'].nil?
         return if result['version'].nil?

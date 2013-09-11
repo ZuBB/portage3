@@ -19,8 +19,8 @@ klass = Class.new(Tasks::Runner) do
     self::SQL = {
         'insert' => <<-SQL
             INSERT INTO ebuilds_masks
-            (ebuild_id, arch_id, state_id, source_id)
-            VALUES (?, ?, ?, ?);
+            (ebuild_id, state_id, arch_id, profile_id, source_id)
+            VALUES (?, ?, ?, ?, ?);
         SQL
     }
 
@@ -29,6 +29,7 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def set_shared_data
+        request_data('profile@id', Portage3::Profile::SQL['@'])
         request_data('mask_state@id', Mask::SQL['@'])
         request_data('setting@id', Setting::SQL['@'])
         request_data('source@id', Source::SQL['@'])
@@ -40,7 +41,8 @@ klass = Class.new(Tasks::Runner) do
         return if /^\s*#/ =~ line
         return if /^\s*$/ =~ line
 
-        result = Mask.parse_line(line.strip.insert(0, '-'))
+        result = Atom.parse_atom_string(line.strip)
+        result['state'] = result["prefix"] == '-' ? Mask::STATES[0] : Mask::STATES[1]
 
         if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
             @logger.warn("File `#{self.class::FILE}` has dead package: #{line.strip}")
@@ -55,8 +57,9 @@ klass = Class.new(Tasks::Runner) do
         result_set.each { |ebuild_id|
             send_data4insert({'data' => [
                 ebuild_id,
+                shared_data('mask_state@id', result['state']),
                 shared_data('arch@id', shared_data('setting@id', 'arch')),
-                shared_data('mask_state@id', result["state"]),
+                shared_data('profile@id', shared_data('setting@id', 'profile')),
                 shared_data('source@id', self.class::SOURCE)
             ]})
         }
