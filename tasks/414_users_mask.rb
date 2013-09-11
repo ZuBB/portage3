@@ -6,9 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 02/01/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'atom'
-require 'mask'
-require 'source'
 require 'keyword'
 require 'setting'
 
@@ -30,8 +27,8 @@ klass = Class.new(Tasks::Runner) do
 
     def set_shared_data
         request_data('profile@id', Portage3::Profile::SQL['@'])
-        request_data('mask_state@id', Mask::SQL['@'])
-        request_data('setting@id', Setting::SQL['@'])
+        request_data('mask_state@id', Portage3::Mask::SQL['@'])
+        request_data('setting@id', Portage3::Setting::SQL['@'])
         request_data('source@id', Source::SQL['@'])
         request_data('arch@id', Keyword::SQL['@1'])
         request_data('CPN@id', Atom::SQL['@1'])
@@ -42,7 +39,7 @@ klass = Class.new(Tasks::Runner) do
         return if /^\s*$/ =~ line
 
         result = Atom.parse_atom_string(line.strip)
-        result['state'] = result["prefix"] == '-' ? Mask::STATES[1] : Mask::STATES[0]
+        result['state'] = Portage3::Mask.get_mast_state(result["prefix"])
 
         if (result['package_id'] = shared_data('CPN@id', result['atom'])).nil?
             @logger.warn("File `#{self.class::FILE}` has dead package: #{line.strip}")

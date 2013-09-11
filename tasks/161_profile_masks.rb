@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'mask'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '006_profiles;007_mask_states;157_profile_ebuild_versions'
@@ -30,7 +29,7 @@ klass = Class.new(Tasks::Runner) do
         request_data('profile@id', Portage3::Profile::SQL['@'])
         request_data('source@id', Source::SQL['@'])
         request_data('profile@arch_id', Portage3::Profile::SQL['@2'])
-        request_data('mask_state@id', Mask::SQL['@'])
+        request_data('mask_state@id', Portage3::Mask::SQL['@'])
         request_data('CPN@id', Atom::SQL['@1'])
     end
 
@@ -45,6 +44,7 @@ klass = Class.new(Tasks::Runner) do
             .each   { |line|
                 result = Atom.parse_atom_string(line)
                 result['package_id'] = shared_data('CPN@id', result['atom'])
+                result['state'] = Portage3::Mask.get_mast_state(result["prefix"])
 
                 if result['package_id'].nil?
                     @logger.warn("File `#{filename}` has dead package: #{line}")
@@ -59,7 +59,7 @@ klass = Class.new(Tasks::Runner) do
                 result_set.each { |ebuild_id|
                     send_data4insert({'data' => [
                          ebuild_id,
-                         shared_data('mask_state@id', Mask.get_mast_state(result['prefix'])),
+                         shared_data('mask_state@id', result['state']),
                          shared_data('profile@arch_id', profile),
                          shared_data('profile@id', profile),
                          shared_data('source@id', self.class::SOURCE)

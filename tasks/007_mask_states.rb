@@ -14,7 +14,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        Mask::STATES
+        Portage3::Mask::STATES
     end
 end
 

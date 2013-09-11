@@ -28,7 +28,7 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def set_shared_data
-        request_data('setting@id', Setting::SQL['@'])
+        request_data('setting@id', Portage3::Setting::SQL['@'])
         request_data('source@id', Source::SQL['@'])
         request_data('CPN@id', Atom::SQL['@1'])
     end
