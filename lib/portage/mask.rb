@@ -5,7 +5,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 
-class Mask
+class Portage3::Mask
     STATES = ['masked', 'unmasked']
     SQL = {
         '@' => 'SELECT state, id FROM mask_states;'
@@ -14,7 +14,8 @@ class Mask
     def self.get_mast_state(str)
         # take care about leading '-'
         # it means this atom/package should treated as unmasked
-        str == '-' ? STATES[1] : STATES[0]
+        return (str.nil? || str.empty?) ? STATES[0] : STATES[1]
+        return str.include?('-') ? STATES[1] : STATES[0]
     end
 end
 
