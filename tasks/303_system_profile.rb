@@ -7,21 +7,22 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 
-# TODO rewrite with data from data/emerge_infoo
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '004_keywords'
+    self::DEPENDS = '006_profiles'
     self::SQL = {
         'insert' => 'INSERT INTO system_settings (param, value) VALUES (?, ?);'
     }
 
     def get_data(params)
         if Utils::SETTINGS['gentoo_os']
-			var = 'ACCEPT_KEYWORDS'
-			content = IO.readlines(Portage3.settings_home())
-			value = Parser.get_multi_line_ini_value(content, var)
-            [['keyword', value.start_with?('~') ? 'unstable' : 'stable']]
+            config_path_parts = [File.dirname(__FILE__), '../', 'data']
+            settings_dir = File.expand_path(File.join(*config_path_parts))
+            settings_file = File.join(settings_dir, 'emerge_info')
+
+			content = IO.readlines(settings_file)
+            [['profile', Parser.get_multi_line_ini_value(content, 'PROFILE')]]
         else
-            [['keyword', 'stable']]
+            [['profile', 'default/linux/x86/10.0']]
         end
     end
 end
