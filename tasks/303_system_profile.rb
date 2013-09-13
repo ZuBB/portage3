@@ -22,7 +22,7 @@ klass = Class.new(Tasks::Runner) do
 			content = IO.readlines(settings_file)
             [['profile', Parser.get_multi_line_ini_value(content, 'PROFILE')]]
         else
-            [['profile', 'default/linux/x86/10.0']]
+            [['profile', 'default/linux/x86/13.0']]
         end
     end
 end
