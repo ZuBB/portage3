@@ -50,9 +50,10 @@ require 'common/utils'
 require 'common/parser'
 
 # portage modules
-require 'portage/source'
 require 'portage/atom'
-require 'portage/profile'
+require 'portage/keyword'
 require 'portage/mask'
-require 'portage/setting'
+require 'portage/profile'
 require 'portage/set'
+require 'portage/setting'
+require 'portage/source'
