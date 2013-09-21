@@ -58,7 +58,8 @@ class Atom
         result = {}
 
         # here we do not care what is after atom
-        atom = line.split[0]
+        atom, arch = *line.split
+        arch.strip! unless arch.nil?
 
         # take care about repo
         if atom.include?('::')
@@ -103,6 +104,7 @@ class Atom
 
         # basic stuff
         result["category"], result["package"] = atom.split('/')
+        result['arch'] = arch
         result['atom'] = atom
         result
     end
