@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/15/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'keyword'
 
 klass = Class.new(Tasks::Runner) do
     self::SQL = {
@@ -14,7 +13,7 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
-        Keyword::LABELS
+        Portage3::Keyword::LABELS
     end
 end
 

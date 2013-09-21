@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/16/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
 require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do

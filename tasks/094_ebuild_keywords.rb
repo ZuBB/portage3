@@ -7,8 +7,6 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 require 'ebuild'
-require 'source'
-require 'keyword'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '003_arches;004_keywords;093_read_ebuilds_data'
@@ -27,14 +25,14 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def set_shared_data
-        request_data('keyword@id', Keyword::SQL['@2'])
+        request_data('keyword@id', Portage3::Keyword::SQL['@2'])
         request_data('source@id', Source::SQL['@'])
-        request_data('arch@id', Keyword::SQL['@1'])
+        request_data('arch@id', Portage3::Keyword::SQL['@1'])
     end
 
     def process_item(params)
         @logger.debug("Ebuild: #{params[3, 3].join('-')}")
-        Keyword.parse_ebuild_keywords(
+        Portage3::Keyword.parse_ebuild_keywords(
             params.last,
             Tasks::Scheduler.class_variable_get(:@@shared_data)['arch@id'].keys
         ).each do |keyword_obj|

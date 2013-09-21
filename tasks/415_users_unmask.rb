@@ -6,8 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 02/01/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'keyword'
-require 'setting'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '413_users_mask'
@@ -30,7 +28,7 @@ klass = Class.new(Tasks::Runner) do
         request_data('mask_state@id', Portage3::Mask::SQL['@'])
         request_data('setting@id', Portage3::Setting::SQL['@'])
         request_data('source@id', Source::SQL['@'])
-        request_data('arch@id', Keyword::SQL['@1'])
+        request_data('arch@id', Portage3::Keyword::SQL['@1'])
         request_data('CPN@id', Atom::SQL['@1'])
     end
 
