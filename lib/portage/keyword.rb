@@ -4,7 +4,7 @@
 # Initial Author: Vasyl Zuzyak, 01/05/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-module Keyword
+module Portage3::Keyword
     LABELS = ['not work', 'not known', 'unstable', 'stable']
     SYMBOLS = ['-', '?', '~', '']
     SYM2LBL = Hash[SYMBOLS.zip(LABELS)]
@@ -79,33 +79,9 @@ module Keyword
         self.split_keywords(keywords)
     end
 
-    def self.parse_line(line, cur_arch, cur_keyword)
-        result = {}
-
-        atom, arch = *line.split
-        arch.strip! unless arch.nil?
-
-        # take care about trailing ':'
-        # it means slot for this atom/package
-        result["slot"] = atom.slice!(/(?=:).+$/)[1..-1] if atom.include?(':')
-
-        # take care about leading ~
-        # it means match any subversion of the specified base version.
-        if atom.start_with?('~')
-            atom.sub!(/^~/, '')
-            atom << '*' unless atom.end_with?('*')
-        end
-
-        # get version restrictions
-        result["vrestr"] = atom.slice!(Atom::VERSION_RESTRICTION)
-
-        # get versions
-        unless (version = Atom.get_version(atom)).nil?
-            result["version"] = version
-            atom.sub!('-' + version, '')
-        end
-
-        unless arch.nil?
+    # TODO still needs rewrite
+    def self.parse_line(arch, cur_arch)
+        unless arch.nil? || arch.empty?
             arch.sub!(/\*$/, cur_arch) if arch.end_with?('*')
             arch.sub!(/^\*/, '-~') if arch.start_with?('*')
             arch, keyword = *(self.split_keywords(arch)[0])
@@ -115,11 +91,10 @@ module Keyword
             arch = cur_arch
         end
 
-        result['atom']    = atom 
-        result['keyword'] = keyword 
-        result['arch']    = arch 
-
-        result
+        {
+           'keyword' => keyword,
+           'arch'    => arch
+        }
     end
 end
 
