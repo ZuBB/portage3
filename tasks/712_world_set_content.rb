@@ -7,7 +7,7 @@
 # Latest Modification: Vasyl Zuzyak, ...
 #
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '041_packages;501_sets'
+    self::DEPENDS = '041_packages;701_sets'
     self::TARGETS = ['packages']
     self::SQL = {
         'insert' => <<-SQL
