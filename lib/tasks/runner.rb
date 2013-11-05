@@ -20,7 +20,7 @@ class Tasks::Runner
         @id          = self.class.get_task_id
         @stats       = {'timings' => []}
         @logger      = get_logger_client(params)
-        @database    = get_database_client(params)
+        @database    = get_database_client
 
         @logger.info(@id)
         @logger.log_info_block(self.class::SQL['insert'])
@@ -42,7 +42,6 @@ class Tasks::Runner
 
         fill_table
 
-        process_post_insert_check_method
         process_post_insert_method
 
         send_end_mark(class_name)
@@ -124,18 +123,6 @@ class Tasks::Runner
         end
 
         store_timeframe(__method__, start_time, Time.now)
-    end
-
-    def process_post_insert_check_method
-        start_time = Time.now
-
-        if defined?(post_insert_check) == 'method'
-            if @data['run_check']
-                @logger.info("found 'post_insert_check' method, executing")
-                #post_insert_check
-                store_timeframe(__method__, start_time, Time.now)
-            end
-        end
     end
 
     def process_post_insert_method
@@ -243,7 +230,7 @@ class Tasks::Runner
         })
     end
 
-    def get_database_client(params)
+    def get_database_client
         Portage3::Database.get_client({'id' => @id})
     end
 
