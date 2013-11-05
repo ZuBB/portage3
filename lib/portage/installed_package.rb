@@ -31,7 +31,7 @@ module InstalledPackage
         WHERE type_id = (
             SELECT id
             FROM content_item_types
-            WHERE type = '#{ITEM_TYPES['symlink']}'
+            WHERE type = '#{ITEM_TYPES['directory']}'
         );
     SQL
 
@@ -104,7 +104,7 @@ module InstalledPackage
             parts[1]
         else
             path = File.join(File.dirname(parts[0]), parts[1])
-            path = File.expand_path(path) if parts[1].start_with?('.')
+            path = File.expand_path(path) if path.include?('.')
             path
         end
     end
