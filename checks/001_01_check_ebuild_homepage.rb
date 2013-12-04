@@ -8,12 +8,15 @@ require 'net/http'
 require 'portage3'
 require 'optparse'
 
-HTTP_RECHECK_HOSTS = [
-    'https://github.com',
-    'https://gitorious.org',
-    'http://gitorious.org',
-    'http://www.emacswiki.org'
-]
+# http://goo.gl/tPiDyr
+require 'addressable/uri'
+class URI::Parser
+    def split url
+        a = Addressable::URI::parse url
+        [a.scheme, a.userinfo, a.host, a.port, nil, a.path, nil, a.query, a.fragment]
+    end
+end
+
 SQL_QUERY2 = 'select homepage, null from ebuild_homepages'
 SQL_QUERY3 = 'UPDATE ebuild_homepages SET status = ?, notice = ? WHERE homepage = ?;'
 
@@ -24,7 +27,7 @@ def process_item(homepage)
         return #check_ftp_path(row[1])
     else
         result = {
-            'exception' => 'cant handle this type of URI',
+            'exception' => 'can\'t handle this type of URL',
             'result'    => false
         }
     end
@@ -32,46 +35,45 @@ def process_item(homepage)
     @homepages[homepage] = result
 end
 
-def check_http_path(idx)
-    result = native_http_check(idx)
+def check_http_path(url)
+    result = native_http_check(url)
     return if result['result']
 
     needs_recheck =
         case
-        when result['code'].start_with?('3')
+        when result['code'].start_with?('3') && (result['message'] =~ URI::regexp).nil?
             then false
-        when HTTP_RECHECK_HOSTS.any? { |host| idx.start_with?(host) }
+        when result['code'].start_with?('3') && !(result['message'] =~ URI::regexp).nil?
             then true
         when result['code'] != '404'
             then true
-        else
-            result['notices'] = 'cant handle http error code/status'
-            false
         end
 
-    result.merge!(wget_http_check(idx, result)) if needs_recheck
+    result.merge!(wget_http_check(url)) if needs_recheck
     result
 end
 
-def native_http_check(idx)
-    result = { 'notices' => nil }
-    url = URI.parse(idx)
-    req = Net::HTTP.new(url.host, url.port)
+def native_http_check(url)
+    result = {}
+    parsed_url = URI.parse(url)
+    req = Net::HTTP.new(parsed_url.host, parsed_url.port)
 
     req.ssl_timeout      = 15
     req.open_timeout     = 15
     req.read_timeout     = 15
     req.continue_timeout = 15
 
-    if idx.start_with?('https')
+    if url.start_with?('https')
         req.use_ssl = true
         req.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
 
     begin
-        path = '/' + url.path
-        res = req.request_head(path)
-        unless (result['result'] = res.code.start_with?('2'))
+        path = '/' + parsed_url.path
+        res = req.request_get(path)
+        result['result'] = res.code.start_with?('2')
+
+        unless result['result']
             result['code'] = res.code
             result['message'] = res.message
         end
@@ -84,9 +86,9 @@ def native_http_check(idx)
     result
 end
 
-def wget_http_check(idx, result_old)
-    output = `wget -Snv -t 1 -T 30 '#{idx}' -O /dev/null 2>&1`.split("\n")
-    result = { 'notices' => nil }
+def wget_http_check(url)
+    result = {}
+    output = `wget -Snv -t 1 -T 30 '#{url}' -O /dev/null 2>&1`.split("\n")
 
     status_index = output.index { |line| /^\s+Status/ =~ line }
     http_index = output.index { |line| /^\s+HTTP/ =~ line }
@@ -95,37 +97,18 @@ def wget_http_check(idx, result_old)
     if valid_index
         status = output[valid_index].split.drop(1)
         result['code'] = status[0]
-        result['message'] = status[1]
+        result['message'] = status[1..-1].join(' ')
         result['result'] = result['code'].start_with?('2')
+        result.delete('exception') if result['result']
     else
-        old_exception = result_old['exception']
-        new_exception = nil
-
-        if output.empty?
-            if old_exception == 'execution expired'
-                new_exception = 'Connection timed out'
-            else
-                if old_exception.include?('-')
-                    new_exception = old_exception.split('-')[0].strip
-                else
-                    new_exception = old_exception
-                end
-            end
-        else
-            notice = old_exception
-            new_exception = output.join("\n")
-        end
-
-        result['exception'] = new_exception
-        result['notice'] = notice
         result['result'] = false
     end
 
     result
 end
 
-def check_ftp_path(idx)
-    url = URI.parse(idx)
+def check_ftp_path(url)
+    url = URI.parse(url)
     ftp = Net::FTP.new(url.host)
     ftp.login
     begin
@@ -182,6 +165,10 @@ OptionParser.new do |opts|
         options["limit"] = value.to_i
     end
 
+    opts.on("-t", "--threads NUMBER", "Use specified number of threads") do |value|
+        options["threads"] = value.to_i
+    end
+
     opts.on("-s", "--store", "Store results to db") do |value|
         options["store"] = true
     end
@@ -229,15 +216,15 @@ jobs = Queue.new
 @homepages.keys.each { |homepage| jobs << homepage }
 
 if options['single']
-    threads = 1
+    options['threads'] = 1
 elsif options['limit'].nil? == false
-    threads = (options['limit'] / 2).floor
-else
-    threads = 64
+    options['threads'] = (options['limit'] / 2).floor
+elsif options['threads'].nil?
+    options['threads'] = 64
 end
 
 Thread.abort_on_exception = true
-pool = Array.new(threads) do |i|
+pool = Array.new(options['threads']) do |i|
     Thread.new do
         while jobs.size > 0 do
             process_item(jobs.pop)
