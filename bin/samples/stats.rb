@@ -5,78 +5,94 @@
 # Initial Author: Vasyl Zuzyak, 01/04/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-$:.push File.expand_path(File.join(File.dirname(__FILE__), '../lib/common'))
+$:.push File.expand_path(File.join(File.dirname(__FILE__), '../../lib'))
+
 require 'optparse'
-require 'sqlite3'
-#require 'utils'
+require 'portage3'
+require 'text-table'
 
 REPORTS = [
     {
         'descr' => 'Total categories',
-        'query' => 'select count(id) from categories;'
+        'query' => <<-SQL
+            select 'categories' as entity, count(id) as amount
+            from categories;
+        SQL
     },
     {
         'descr' => 'Top 5 categories with max packages',
         'query' => <<-SQL
-            select c.name, count(p.id) as packages_count
-            from packages p
+            select c.name as category, count(p.id) as packages
+            from packages as p
             join categories c on p.category_id=c.id
+            where p.source_id = 1
             group by p.category_id
-            order by packages_count desc
+            order by packages desc
             limit 5;
         SQL
     },
     {
         'descr' => 'Top 5 categories with min packages',
         'query' => <<-SQL
-            select c.name, count(p.id) as packages_count
-            from packages p
+            select c.name as category, count(p.id) as packages
+            from packages as p
             join categories c on p.category_id=c.id
+            where p.source_id = 1
             group by p.category_id
-            order by packages_count asc
+            order by packages asc
             limit 5;
         SQL
     },
     {
         'descr' => 'Total packages',
-        'query' => 'select count(id) from packages;'
-    },
-    {
-        'descr' => 'Top packages by amount of ebuilds per package',
         'query' => <<-SQL
-            select ebuilds_count as ebuilds_per_package, count(id) as packages
-            from (
-                SELECT p.id, COUNT(e.id) AS ebuilds_count
-                FROM ebuilds e
-                JOIN packages p ON e.package_id=p.id
-                GROUP BY p.package_id
-                ORDER BY ebuilds_count ASC
-            ) em
-            group by ebuilds_count
-            order by packages desc;
+            select 'packages' as entity, count(id) as amount from packages;
         SQL
     },
     {
-        'descr' => 'Packages without ebuilds',
+        'descr' => 'Packages by amount of ebuilds per package',
         'query' => <<-SQL
-            select c.category_name, p.name
-            from packages p
-            join categories c on p.category_id=c.id
-            where p.id not in (select package_id from ebuilds)
-            order by c.category_name, p.name asc;
+            SELECT count(id) AS packages, ebuilds AS 'ebuilds per package'
+            FROM (
+                SELECT e.package_id as id, COUNT(e.id) AS ebuilds
+                FROM ebuilds AS e
+                WHERE e.source_id == 2
+                GROUP BY e.package_id
+            ) em
+            GROUP BY ebuilds
+            ORDER BY ebuilds DESC;
+        SQL
+    },
+    {
+        'descr' => 'Top 5 packages by amount of ebuilds per package',
+        'query' => <<-SQL
+            SELECT c.name || '/' || p.name AS package, COUNT(e.id) AS ebuilds
+            FROM ebuilds AS e
+            JOIN packages p ON e.package_id=p.id
+            JOIN categories c ON p.category_id=c.id
+            GROUP BY e.package_id
+            ORDER BY ebuilds DESC
+            LIMIT 5;
         SQL
     },
     {
         'descr' => 'Total ebuilds',
-        'query' => 'select count(id) from ebuilds;'
+        'query' => <<-SQL
+            select 'ebuilds' as entity, count(id) as amount
+            from ebuilds
+            where source_id = 2;
+        SQL
     },
     {
         'descr' => 'Top 5 newest ebuilds',
         'query' => <<-SQL
-            select c.name, p.name, e.version, e.mtime
+            select
+                c.name || '/' || p.name || '-' || e.version AS ebuild,
+                e.mtime as date
             from ebuilds e
             join packages p on e.package_id=p.id
             join categories c on p.category_id=c.id
+            where e.source_id == 2
             order by e.mtime desc
             limit 5;
         SQL
@@ -84,88 +100,96 @@ REPORTS = [
     {
         'descr' => 'Top 5 oldest ebuilds',
         'query' => <<-SQL
-            select c.name, p.name, e.version, e.mtime
+            select
+                c.name || '/' || p.name || '-' || e.version AS ebuild,
+                e.mtime as date
             from ebuilds e
             join packages p on e.package_id=p.id
             join categories c on p.category_id=c.id
+            where e.source_id == 2
             order by e.mtime asc
             limit 5;
         SQL
     },
     {
-        'descr' => 'Top 5 authors that change max amount of ebuilds',
+        'descr' => 'Top 5 ebuild committers',
         'query' => <<-SQL
-            select mauthor, count(e.id) as ebuilds_count
-            from ebuilds
-            group by mauthor.
-            order by ebuilds_count desc
+            select mauthor as committer, count(e.id) as ebuilds
+            from ebuilds as e
+            where e.source_id == 2
+            group by mauthor
+            order by ebuilds desc
             limit 5;
         SQL
     },
     {
-        'descr' => 'Top packages by amount of ebuilds per package',
-        'descr' => 'Top ebuilds by amount of ebuilds per package',
-        # top 5 authors that change min ebuilds
+        'descr' => 'Most inactive contributors by ebuild commits',
         'query' => <<-SQL
-            select ebuilds_count as ebuilds_per_package, count(id) as packages
-            from (
-                SELECT p.id, COUNT(e.id) AS ebuilds_count
-                FROM ebuilds e
-                JOIN packages p ON e.package_id=p.id
-                GROUP BY p.package_id
-                ORDER BY ebuilds_count ASC
-            ) em
-            group by ebuilds_count
-            order by packages desc;
+            select mauthor as contributor, count(e.id) as commits
+            from ebuilds as e
+            where e.source_id == 2
+            group by mauthor
+            having count(e.id) < 4
+            order by commits;
         SQL
     },
+    { 'descr' => 'total eapis' },
+    { 'descr' => 'total slots' },
+    { 'descr' => 'top 5 slots by max amount of ebuilds' },
+    { 'descr' => 'top 5 slots by min amount of ebuilds' },
+    { 'descr' => 'total descriptions' },
+    { 'descr' => 'top 5 descriptions that is widely used' },
+    { 'descr' => 'top 5 descriptions that is seldomly used' },
+    { 'descr' => 'amount of packages where amount of descriptions > 1' },
+    { 'descr' => 'top 5 packages with max amount of descriptions' },
+    { 'descr' => 'total homepages' },
+    { 'descr' => 'top 5 most used homepages' },
+    { 'descr' => 'top 5 rare used homepages' },
+    { 'descr' => 'amount of packages where amount of homepage % amount of ebuilds != 0' },
+    { 'descr' => 'top 5 packages with max (where amount of homepage % amount of ebuilds)' },
+    { 'descr' => 'top 5 most stable arches' },
+    { 'descr' => 'top 5 most unstable arches' },
+    { 'descr' => 'amount of packages that has at least one stable ebuild' },
+    { 'descr' => 'amount of packages that does not have stable ebuilds' },
+    { 'descr' => 'top 5 most masked arches' },
+    { 'descr' => 'top 5 most unmasked arches' },
+    { 'descr' => 'amount of packages that has at least one ebuild masked for any arch' },
+    { 'descr' => 'amount of packages that does not have unmasked ebuilds' },
+    { 'descr' => 'total use_flags by type' },
+    { 'descr' => 'top 5 packages with max ebuilds' },
+    { 'descr' => 'top 5 widely used use_flags' },
+    { 'descr' => 'top 5 packages with max use_flags enabled' },
+    { 'descr' => 'top 5 packages with max use_flags disabled' },
+    { 'descr' => 'total licences' },
+    { 'descr' => 'licences that does not belong to any group' },
+    { 'descr' => 'licence groups that does not have any licence in it' },
+    { 'descr' => 'top 5 most used licences' },
+    { 'descr' => 'top 5 rare used licences' },
+    { 'descr' => 'top by amount of used licences ' },
+    { 'descr' => 'total records' }
 ]
 
-DESCRIPTIONS = <<TXT
-total eapis
-total slots
-top 5 slots by max amount of ebuilds
-top 5 slots by min amount of ebuilds
-total descriptions
-top 5 descriptions that is widely used
-top 5 descriptions that is seldomly used
-amount of packages where amount of descriptions > 1
-top 5 packages with max amount of descriptions
-total homepages
-top 5 most used homepages
-top 5 rare used homepages
-amount of packages where amount of homepage % amount of ebuilds != 0
-top 5 packages with max (where amount of homepage % amount of ebuilds)
-top 5 most stable arches
-top 5 most unstable arches
-amount of packages that has at least one stable ebuild
-amount of packages that does not have stable ebuilds
-top 5 most masked arches
-top 5 most unmasked arches
-amount of packages that has at least one ebuild masked for any arch
-amount of packages that does not have unmasked ebuilds
-total use_flags by type
-top 5 packages with max ebuilds
-top 5 widely used use_flags
-top 5 packages with max use_flags enabled
-top 5 packages with max use_flags disabled
-total licences
-licences that does not belong to any group
-licence groups that does not have any licence in it
-top 5 most used licences
-top 5 rare used licences
-top by amount of used licences 
-total records
-TXT
+Portage3::Logger.start_server
+Portage3::Database.init(Utils.get_database)
+database = Portage3::Database.get_client
 
-#select flag_name, count(*)
-#from use_flags
-#group by flag_name
-#having count(*) > 1
+REPORTS.each_with_index { |report, index|
+    next unless report.has_key?('query')
 
-#test.each { |block|
-    #puts block['descr']
-    #res = database.execute2(block['query'])
-    #puts res.to_table(:first_row_is_head => true).to_s
-#}
+    result = database.execute2(report['query'])
+    next if result.size == 1
+
+    if %w(newest oldest).any? { |w| report['descr'].include?(w) }
+        result.each_with_index { |row, index|
+            next if index == 0
+            row[row.size - 1] = Time.at(row.last.to_i).to_s
+        }
+    end
+
+    puts (' ' * 3) + report['descr']
+    puts result.to_table(:first_row_is_head => true).to_s
+    puts
+}
+
+database.shutdown_server
 
