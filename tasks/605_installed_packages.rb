@@ -12,7 +12,7 @@ require 'category'
 require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '604_installed_packages'
+    self::DEPENDS = '603_installed_packages'
     self::SOURCE = '/var/db/pkg'
     self::SQL = {
         'insert' => <<-SQL

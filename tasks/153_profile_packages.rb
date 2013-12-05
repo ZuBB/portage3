@@ -9,7 +9,7 @@
 require 'category'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '152_profile_categories'
+    self::DEPENDS = '151_profile_categories'
     self::SOURCE = 'profiles'
     self::SQL = {
         'insert' => <<-SQL

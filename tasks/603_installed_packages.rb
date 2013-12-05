@@ -6,18 +6,13 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;602_installed_packages'
+    self::DEPENDS = '151_profile_categories'
     self::SOURCE = '/var/db/pkg'
     self::SQL = {
-        'insert' => <<-SQL
-            INSERT INTO tmp_installed_packages_categories
-            (name, source_id)
-            VALUES (?, ?);
-        SQL
+        'insert' => Category::SQL['insert'],
+        'amount' => Category::SQL['amount']
     }
 
     def get_data(params)
@@ -29,14 +24,17 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def process_item(item)
-        if (category = InstalledPackage.get_file_content(item, 'CATEGORY'))
-            send_data4insert({'data' => [
-                category,
-                shared_data('source@id', self.class::SOURCE),
-            ]})
-        else
+        category = InstalledPackage.get_file_content(item, 'CATEGORY')
+
+        unless category
             @logger.error("File `#{item}CATEGORY` is missed")
+            return
         end
+
+        send_data4insert([
+            category,
+            shared_data('source@id', self.class::SOURCE)
+        ])
     end
 end
 

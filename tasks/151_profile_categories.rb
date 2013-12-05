@@ -8,14 +8,11 @@
 #
 
 klass = Class.new(Tasks::Runner) do
-    self::DEPENDS = '008_sources;006_profiles'
+    self::DEPENDS = '006_profiles;031_categories'
     self::SOURCE = 'profiles'
     self::SQL = {
-        'insert' => <<-SQL
-            INSERT INTO tmp_profile_categories
-            (name, source_id)
-            VALUES (?, ?);
-        SQL
+        'insert' => Category::SQL['insert'],
+        'amount' => Category::SQL['amount']
     }
 
     def get_data(params)
@@ -31,10 +28,15 @@ klass = Class.new(Tasks::Runner) do
             next if /^\s*#/ =~ line
             next if /^\s*$/ =~ line
 
-            send_data4insert([
-                 Atom.parse_atom_string(line.strip)["category"],
-                shared_data('source@id', self.class::SOURCE)
-            ])
+            result = Atom.parse_atom_string(line.strip)
+            source = shared_data('source@id', self.class::SOURCE)
+
+            if result["category"].nil? || result["category"].empty?
+                # TODO log
+                next
+            end
+
+            send_data4insert([result["category"], source])
         end
     end
 end
