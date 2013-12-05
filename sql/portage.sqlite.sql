@@ -466,14 +466,6 @@ CREATE TABLE IF NOT EXISTS tmp_ebuild_homepages (
 CREATE INDEX teh on tmp_ebuild_homepages (homepage);
 
 
-CREATE TABLE IF NOT EXISTS tmp_profile_categories (
-    name VARCHAR NOT NULL,
-    source_id INTEGER NOT NULL
-);
-
-CREATE INDEX tpc on tmp_profile_categories(name);
-
-
 CREATE TABLE IF NOT EXISTS tmp_profile_packages (
     name VARCHAR NOT NULL,
     category_id INTEGER NOT NULL,
@@ -510,14 +502,6 @@ CREATE TABLE IF NOT EXISTS tmp_installed_packages_repos (
 );
 
 CREATE INDEX tipr on tmp_installed_packages_repos(name);
-
-
-CREATE TABLE IF NOT EXISTS tmp_installed_packages_categories (
-    name VARCHAR NOT NULL,
-    source_id INTEGER NOT NULL
-);
-
-CREATE INDEX tipc on tmp_installed_packages_categories(name);
 
 
 CREATE TABLE IF NOT EXISTS tmp_installed_packages_packages (
