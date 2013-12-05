@@ -38,11 +38,10 @@ class Tasks::Runner
     def process_task_methods(class_name)
         process_get_data_method
         process_set_shared_data_method
-        process_pre_insert_method
 
+        process_pre_fill_method
         fill_table
-
-        process_post_insert_method
+        process_post_fill_method
 
         send_end_mark(class_name)
         wait_4_end_confirmation
@@ -71,7 +70,7 @@ class Tasks::Runner
         end
     end
 
-    def process_pre_insert_method
+    def process_pre_fill_method
         start_time = Time.now
 
         if defined?(pre_insert) == 'method'
@@ -125,7 +124,7 @@ class Tasks::Runner
         store_timeframe(__method__, start_time, Time.now)
     end
 
-    def process_post_insert_method
+    def process_post_fill_method
         start_time = Time.now
 
         if defined?(post_insert_task) == 'method'
@@ -152,6 +151,14 @@ class Tasks::Runner
         start_time = Time.now
 
         db_stats = @database.get_stats
+
+        if self.class::SQL.has_key?('amount')
+            db_stats['passed'] = @database.get_1value(
+                self.class::SQL['amount'],
+                shared_data('source@id', self.class::SOURCE)
+            )
+        end
+
         params   = ['db_insert']
         params  << db_stats.delete('start_time')
         params  << db_stats.delete('end_time')
