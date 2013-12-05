@@ -57,3 +57,8 @@ require 'portage/profile'
 require 'portage/set'
 require 'portage/setting'
 require 'portage/source'
+require 'portage/source'
+require 'portage/installed_package'
+
+# old style portage modules
+require 'portage/category'
