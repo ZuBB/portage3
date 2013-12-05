@@ -12,6 +12,8 @@ class Category < Repository
     ENTITY = self.name.downcase
     PROP_SUFFIXES = ['description']
     SQL = {
+        'insert' => 'INSERT OR IGNORE INTO categories (name, source_id) VALUES (?, ?);',
+        'amount' => 'select count(id) from categories where source_id = ?;',
         'category' => 'SELECT name FROM categories WHERE id=?',
         'id' => 'SELECT id FROM categories WHERE name=?',
         'all' => 'SELECT * FROM categories',
