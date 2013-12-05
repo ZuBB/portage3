@@ -130,6 +130,10 @@ module Portage3::Database
         @@database.execute_batch(sql_query, *values)
     end
 
+    def self.execute2(sql_query, *values)
+        @@database.execute2(sql_query, *values)
+    end
+
     def self.safe_execute(*values)
         begin
             @@database.execute_batch(*values)
@@ -251,6 +255,10 @@ class Portage3::Database::Client
 
     def execute(sql_query, *values)
         SERVER.execute(sql_query, *values)
+    end
+
+    def execute2(sql_query, *values)
+        SERVER.execute2(sql_query, *values)
     end
 
     def safe_execute(*values)
