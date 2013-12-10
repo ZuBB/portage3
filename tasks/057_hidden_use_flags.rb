@@ -6,9 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'useflag'
-require 'repository'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '053_use_flag_basic_stuff'

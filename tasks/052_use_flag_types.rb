@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 04/04/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
     self::SQL = {

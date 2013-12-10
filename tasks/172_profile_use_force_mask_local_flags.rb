@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '006_profiles;059_use_flag_stuff'

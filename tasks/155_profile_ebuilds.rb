@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'repository'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '021_repositories;154_profile_packages'

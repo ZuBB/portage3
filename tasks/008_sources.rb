@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/27/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
 
 klass = Class.new(Tasks::Runner) do
     self::SQL = {

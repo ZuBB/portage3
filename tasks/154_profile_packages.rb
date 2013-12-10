@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '041_packages;153_profile_packages'

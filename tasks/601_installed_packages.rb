@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
     self::SQL = {

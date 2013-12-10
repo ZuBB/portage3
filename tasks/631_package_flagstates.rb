@@ -6,9 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'useflag'
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '053_use_flag_basic_stuff;609_installed_packages'

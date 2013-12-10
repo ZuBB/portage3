@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '010_content_item_types;609_installed_packages'

@@ -6,8 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/22/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'useflag'
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '631_package_flagstates'

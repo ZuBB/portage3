@@ -6,10 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'atom'
-require 'source'
-require 'repository'
-require 'installed_package'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '606_installed_packages'

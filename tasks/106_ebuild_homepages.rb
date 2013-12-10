@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 04/20/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '093_read_ebuilds_data'

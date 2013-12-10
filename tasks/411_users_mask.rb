@@ -6,10 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'atom'
-require 'mask'
-require 'source'
-require 'repository'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '041_packages'

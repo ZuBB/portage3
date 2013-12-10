@@ -6,8 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'useflag'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '008_sources;059_use_flag_stuff'

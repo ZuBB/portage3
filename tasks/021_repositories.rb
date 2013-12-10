@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/11/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'repository'
 
 klass = Class.new(Tasks::Runner) do
     self::PRI_INDEX = 1.1

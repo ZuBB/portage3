@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/31/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'mask'
 
 klass = Class.new(Tasks::Runner) do
     self::SQL = {

@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '091_ebuilds;155_profile_ebuilds'

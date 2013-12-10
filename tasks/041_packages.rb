@@ -6,8 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/16/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'source'
-require 'package'
 
 klass = Class.new(Tasks::Runner) do
     self::PRI_INDEX = 1.3

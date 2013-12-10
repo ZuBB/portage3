@@ -6,10 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/19/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'atom'
-require 'source'
-require 'useflag'
-require 'repository'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '041_packages;053_use_flag_basic_stuff'

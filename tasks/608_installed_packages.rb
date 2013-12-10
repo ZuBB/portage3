@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 03/23/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'ebuild'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '412_users_mask;607_installed_packages'

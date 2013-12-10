@@ -6,7 +6,6 @@
 # Initial Author: Vasyl Zuzyak, 01/26/12
 # Latest Modification: Vasyl Zuzyak, ...
 #
-require 'category'
 
 klass = Class.new(Tasks::Runner) do
     self::DEPENDS = '151_profile_categories'
