@@ -46,19 +46,23 @@ Thread.abort_on_exception = true
 require 'common/database'
 require 'common/logger'
 require 'common/utils'
-# TODO this is a temporary solution
 require 'common/parser'
 
 # portage modules
 require 'portage/atom'
+require 'portage/installed_package'
 require 'portage/keyword'
 require 'portage/mask'
 require 'portage/profile'
+require 'portage/repository'
 require 'portage/set'
 require 'portage/setting'
 require 'portage/source'
-require 'portage/source'
-require 'portage/installed_package'
+require 'portage/useflag'
 
 # old style portage modules
 require 'portage/category'
+require 'portage/package'
+require 'portage/ebuild'
+require 'portage/ebuild_version'
+
