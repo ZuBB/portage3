@@ -35,7 +35,7 @@ klass = Class.new(Tasks::Runner) do
     end
 
     def process_item(line)
-        unless (matches = UseFlag::REGEXPS[self.class::TYPE].match(line)).nil?
+        unless (matches = line.match(/([^:]+):(.+) - (.+)/)).nil?
             params    = matches.to_a.drop(1)
             params[0] = shared_data('CPN@id', params[0][0..-2])
 
