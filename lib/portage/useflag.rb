@@ -29,12 +29,16 @@ class UseFlag
         SQL
     }
     REGEXPS = {
+        # app-doc/pms section 8.2
+        'state' => Regexp.new('^[\-\+!]{0,2}'),
+
+        # as it turns out these regexps may not work
+        # https://bugs.gentoo.org/show_bug.cgi?id=523720
+        # besides checks should be happen in other place
         'local'  => Regexp.new("([\\w\\/\\-\\+]+:)?([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)"),
         'expand' => Regexp.new('([\\w\\+\\-@]+)(?:\\s+-\\s+)(.*)'),
         'hidden' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
         'global' => Regexp.new('([\\w\\+\\-]+)(?:\\s+-\\s+)(.*)'),
-        # app-doc/pms section 8.2
-        'state' => Regexp.new('^[\-\+!]{0,2}')
     }
 
     def self.get_shared_data
