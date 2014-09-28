@@ -11,14 +11,12 @@ Content
 Why
 ---
 
-Portage is a package management software for Gentoo Linux.
+Portage is a package management software for Gentoo Linux. Below there are some things that I do not like in it
 
-Below there are some things that I do not like in it
-
-* [ **Slowness** ] Gentoo is all about choice and speed. But its irritating when it takes minutes to do tasks that involves dependancy calculation (`emerge -pvte world` for example)
-* [ **Data duplication** ] It stores all data in plain txt files. There is nothing bad in it. But some type of the data are duplicated couple of times.
-* [ **Miss of app that does all but fast** ] There are couple of apps that do quite general tasks in terms of PM. None of them is not fast enough (except eix)
-* [ **Current db structure does not help** ] There is a possibility to store portage cache in the sqlite database ([1], [2]). However this does not help portage work faster. Also I do not like [structure of the db](https://gist.github.com/4362786) (resides in `/var/cache/edb/dep/usr/portage.sqlite`) that is used
+1. **Slowness** <br> Gentoo is all about choice and speed. But its irritating when it takes minutes to do tasks that involves dependancy calculation (`emerge -pvte world` for example)
+1. **Data duplication** <br> It stores all data in plain txt files. There is nothing bad in it. But some type of the data are duplicated couple of times.
+1. **Current db structure does not help** <br> There is a possibility to store portage cache in the sqlite database ([1], [2]). However this does not help portage work faster. Also I do not like [structure of the db](https://gist.github.com/4362786) (resides in `/var/cache/edb/dep/usr/portage.sqlite`) that is used
+1. **Miss of app that does all but fast** <br> There are couple of apps that do quite general tasks in terms of PM. None of them is not fast enough (except eix)
 
 Possibly there are others..
 
