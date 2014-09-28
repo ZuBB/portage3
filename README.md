@@ -11,7 +11,7 @@ Content
 Why
 ---
 
-Portage ([1](http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=2&chap=1), [2](http://en.wikipedia.org/wiki/Portage_(software\))) is a package management software for Gentoo Linux.
+Portage ([1](http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=2&chap=1), [2](http://en.wikipedia.org/wiki/Portage_(software\))\) is a package management software for Gentoo Linux.
 
 Below there are some things that I do not like in portage
 
