@@ -44,7 +44,7 @@ klass = Class.new(Tasks::Runner) do
         IO.foreach(file) do |line|
             next if line.start_with?('#') || /^\s*$/ =~ line
 
-            unless (matches = UseFlag::REGEXPS[self.class::TYPE].match(line.strip)).nil?
+            unless (matches = line.match(/(.+) - (.+)/)).nil?
                 params = matches.to_a.drop(1)
                 params << type_id
                 params << shared_data('source@id', self.class::SOURCE)
