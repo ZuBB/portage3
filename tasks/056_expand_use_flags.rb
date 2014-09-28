@@ -50,15 +50,6 @@ klass = Class.new(Tasks::Runner) do
                 params << shared_data('source@id', self.class::SOURCE)
                 params << shared_data('repo@id', self.class::REPO)
                 params[0] = use_prefix + '_' + params[0]
-
-                if /\s{2,}/ =~ params[1]
-                    @logger.group_log([
-                        ['Got 2+ space chars in next line Fixing..', 2],
-                        params[1]
-                    ])
-                    params[1].gsub!(/\s{2,}/, ' ')
-                end
-
                 send_data4insert({'data' => params})
             else
                 @logger.group_log([
