@@ -26,6 +26,12 @@ klass = Class.new(Tasks::Runner) do
         package_id = params.delete_at(0);
         metadata_file = File.join(*params, 'metadata.xml')
 
+        # https://bugs.gentoo.org/show_bug.cgi?id=566112
+        unless File.exist?(metadata_file)
+          @logger.error("Something is wrong with next package '#{File.join(*params)}'")
+          return
+        end
+
         Nokogiri::XML(IO.read(metadata_file)).xpath("//maintainer").each { |node|
             email = node.xpath('email').inner_text rescue ''
             name  = node.xpath('name').inner_text  rescue ''
