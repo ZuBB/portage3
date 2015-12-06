@@ -13,7 +13,7 @@ module Portage3::Keyword
     SQL = {
         '@1' => 'SELECT name, id FROM arches;',
         '@2' => 'SELECT name, id FROM keywords;',
-        'pid' => 'SELECT id FROM ebuilds WHERE package_id=?',
+        'eid' => 'SELECT id FROM ebuilds WHERE package_id=?',
         'ids@pid' => 'SELECT id FROM ebuilds WHERE package_id=?',
         'ids@pid&%v' => 'SELECT id FROM ebuilds WHERE package_id=? AND version like ?',
         'id@pid&v_co' => 'SELECT id FROM ebuilds WHERE package_id=? AND version OPERATOR ?',
