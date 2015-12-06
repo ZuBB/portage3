@@ -19,7 +19,7 @@ klass = Class.new(Tasks::Runner) do
             settings_dir = File.expand_path(File.join(*config_path_parts))
             settings_file = File.join(settings_dir, 'emerge_info')
 
-			content = IO.readlines(settings_file)
+            content = IO.readlines(settings_file)
             [['profile', Parser.get_multi_line_ini_value(content, 'PROFILE')]]
         else
             [['profile', 'default/linux/x86/13.0']]

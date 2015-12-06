@@ -20,6 +20,9 @@ klass = Class.new(Tasks::Runner) do
     }
 
     def get_data(params)
+        filepath = Portage3.settings_home
+        return [] if filepath.nil?()
+
         # TODO get correct location for 'make.conf'
         file_content = IO.readlines(Portage3.settings_home)
         Parser.get_multi_line_ini_value(file_content, 'USE').split.uniq

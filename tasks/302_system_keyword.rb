@@ -16,9 +16,9 @@ klass = Class.new(Tasks::Runner) do
 
     def get_data(params)
         if Utils::SETTINGS['gentoo_os']
-			var = 'ACCEPT_KEYWORDS'
-			content = IO.readlines(Portage3.settings_home())
-			value = Parser.get_multi_line_ini_value(content, var)
+            var = 'ACCEPT_KEYWORDS'
+            content = IO.readlines(Portage3.settings_home())
+            value = Parser.get_multi_line_ini_value(content, var)
             [['keyword', value.start_with?('~') ? 'unstable' : 'stable']]
         else
             [['keyword', 'stable']]
