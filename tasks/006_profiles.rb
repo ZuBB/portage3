@@ -25,12 +25,12 @@ klass = Class.new(Tasks::Runner) do
         filename = File.join(params['profiles_home'], 'profiles.desc')
 
         IO.foreach(filename) do |line|
-            break if line.include?('Gentoo Prefix profiles')
             # skip comments
-            next if line.start_with?('# uclibc')
-            # but do not skip uclibc stuff
-            next if line.start_with?('#') && !line.include?('uclibc')
+            next if line.start_with?('#')
+            # skip empty lines
             next if /^\s*$/ =~ line
+
+            # TODO uclibc/embedded multiarch profiles
 
             results << [*line.sub('#', '').strip.split]
         end
