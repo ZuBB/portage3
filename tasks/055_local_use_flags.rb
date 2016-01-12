@@ -45,8 +45,8 @@ klass = Class.new(Tasks::Runner) do
             send_data4insert({'data' => params})
         else
             @logger.group_log([
-                [3, 'Failed to parse next line'],
-                [1, line]
+                ['Failed to parse next line', 3],
+                line
             ])
         end
     end
